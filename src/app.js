@@ -1,6 +1,8 @@
 import React, { useMemo, useState } from "react";
 import { Send, Database, Bot, Link as LinkIcon, BarChart3, Loader2 } from "lucide-react";
 
+const API_URL = "https://nubrakes-copilot.jonathan-libiran.workers.dev/ask";
+
 const EXAMPLES = [
   "What does completed_revenue mean?",
   "What was completed revenue in Chicago yesterday?",
