@@ -55,6 +55,9 @@ const mockResponses = {
   },
 };
 
+const API_URL = "https://nubrakes-copilot.jonathan-libiran.workers.dev/ask";
+const APP_SECRET = "YOUR_APP_SHARED_SECRET";
+
 function StatCard({ icon: Icon, label, value }) {
   return (
     <div className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-200">
@@ -124,33 +127,67 @@ export default function NubrakesAICopilotFrontend() {
   const [loading, setLoading] = useState(false);
 
   const handleAsk = async (question) => {
-    if (!question?.trim()) return;
+    if (!question?.trim() || loading) return;
 
     const userMessage = { role: "user", content: question, meta: null };
     setMessages((prev) => [...prev, userMessage]);
     setInput("");
     setLoading(true);
 
-    await new Promise((resolve) => setTimeout(resolve, 700));
+    try {
+      const res = await fetch(API_URL, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-app-secret": APP_SECRET,
+        },
+        body: JSON.stringify({ question }),
+      });
 
-    const mock = mockResponses[question] || {
-      answer:
-        "This is a frontend prototype. Connect your /ask API to return live answers from your AI copilot.",
-      dataset: "No dataset selected",
-      rows: [],
-    };
+      if (!res.ok) {
+        const text = await res.text();
+        throw new Error(text || `Request failed with ${res.status}`);
+      }
 
-    const assistantMessage = {
-      role: "assistant",
-      content: mock.answer,
-      meta: {
-        dataset: mock.dataset,
-        rows: mock.rows,
-      },
-    };
+      const data = await res.json();
 
-    setMessages((prev) => [...prev, assistantMessage]);
-    setLoading(false);
+      const assistantMessage = {
+        role: "assistant",
+        content: data.answer || "No answer returned.",
+        meta: {
+          dataset: data.dataset_used || data.dataset || "Approved dataset",
+          rows: data.rows || data.supporting_rows || [],
+        },
+      };
+
+      setMessages((prev) => [...prev, assistantMessage]);
+    } catch (error) {
+      const fallback = mockResponses[question];
+
+      const assistantMessage = fallback
+        ? {
+            role: "assistant",
+            content: fallback.answer,
+            meta: {
+              dataset: fallback.dataset,
+              rows: fallback.rows,
+            },
+          }
+        : {
+            role: "assistant",
+            content:
+              "I couldn't reach the live API yet. Update API_URL and APP_SECRET, then try again.",
+            meta: {
+              dataset: "Connection error",
+              rows: [],
+            },
+          };
+
+      setMessages((prev) => [...prev, assistantMessage]);
+      console.error(error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
