@@ -1,15 +1,14 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
   Send,
   Database,
   Bot,
   Link as LinkIcon,
-  Loader2,
   BarChart3,
+  Loader2,
 } from "lucide-react";
 
-const API_URL = "https://nubrakes-copilot.jonathan-libiran.workers.dev/ask";
-const APP_SECRET = "YOUR_APP_SHARED_SECRET";
+const AI_ENDPOINT = "/api/ai";
 
 const EXAMPLES = [
   "What does completed_revenue mean?",
@@ -123,15 +122,16 @@ function StatCard({ icon: Icon, label, value }) {
 }
 
 function TablePreview({ rows }) {
-  if (!rows || rows.length === 0) {
+  const columns = useMemo(() => {
+    if (!rows?.length) return [];
+    return Object.keys(rows[0]);
+  }, [rows]);
+
+  if (!rows?.length) {
     return (
-      <div className="rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-4 text-sm text-slate-500">
-        No supporting rows returned.
-      </div>
+      <div className="text-sm text-slate-500">No supporting rows returned.</div>
     );
   }
-
-  const columns = Object.keys(rows[0]);
 
   return (
     <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white">
@@ -150,8 +150,8 @@ function TablePreview({ rows }) {
             </tr>
           </thead>
           <tbody>
-            {rows.map((row, rowIndex) => (
-              <tr key={rowIndex} className="border-t border-slate-100">
+            {rows.map((row, idx) => (
+              <tr key={idx} className="border-t border-slate-100">
                 {columns.map((col) => (
                   <td
                     key={col}
@@ -169,55 +169,12 @@ function TablePreview({ rows }) {
   );
 }
 
-function MessageBubble({ message }) {
-  const isUser = message.role === "user";
-
-  return (
-    <div className={`flex ${isUser ? "justify-end" : "justify-start"}`}>
-      <div
-        className={`max-w-3xl rounded-3xl px-4 py-3 ${
-          isUser
-            ? "bg-slate-900 text-white"
-            : "bg-slate-50 text-slate-900 ring-1 ring-slate-200"
-        }`}
-      >
-        <div className="text-sm leading-6 whitespace-pre-wrap">
-          {message.content}
-        </div>
-
-        {!isUser && message.meta && (
-          <div className="mt-4 space-y-4">
-            <div className="flex items-center gap-2 text-xs font-medium uppercase tracking-wide text-slate-500">
-              <Database className="h-4 w-4" />
-              Dataset used: {message.meta.dataset || "Approved dataset"}
-            </div>
-
-            <TablePreview rows={message.meta.rows || []} />
-
-            {message.meta.rows?.[0]?.url && (
-              <a
-                href={message.meta.rows[0].url}
-                target="_blank"
-                rel="noreferrer"
-                className="inline-flex items-center gap-2 rounded-2xl bg-slate-900 px-4 py-2 text-sm text-white"
-              >
-                <LinkIcon className="h-4 w-4" />
-                Open dashboard
-              </a>
-            )}
-          </div>
-        )}
-      </div>
-    </div>
-  );
-}
-
-export default function App() {
+export default function NubrakesAICopilotFrontend() {
   const [messages, setMessages] = useState([
     {
       role: "assistant",
       content:
-        "Hi — I’m your NuBrakes AI Copilot. Ask a question about metrics, markets, technicians, stores, or dashboards.",
+        "Ask a question about approved NuBrakes datasets. I’ll return the answer, the dataset used, and a supporting preview.",
       meta: null,
     },
   ]);
@@ -230,80 +187,68 @@ export default function App() {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, loading]);
 
-  async function handleAsk(questionText) {
-    const question = questionText.trim();
-    if (!question || loading) return;
+  const handleAsk = async (question) => {
+    if (!question?.trim() || loading) return;
 
-    setMessages((prev) => [
-      ...prev,
-      { role: "user", content: question, meta: null },
-    ]);
+    const userMessage = { role: "user", content: question, meta: null };
+    setMessages((prev) => [...prev, userMessage]);
     setInput("");
     setLoading(true);
 
     try {
-      const response = await fetch(API_URL, {
+      const res = await fetch(AI_ENDPOINT, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "x-app-secret": APP_SECRET,
         },
         body: JSON.stringify({ question }),
       });
 
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(errorText || `Request failed with ${response.status}`);
+      if (!res.ok) {
+        const text = await res.text();
+        throw new Error(text || `Request failed with ${res.status}`);
       }
 
-      const data = await response.json();
+      const data = await res.json();
 
-      setMessages((prev) => [
-        ...prev,
-        {
-          role: "assistant",
-          content: data.answer || "No answer returned.",
-          meta: {
-            dataset: data.dataset_used || data.dataset || "Approved dataset",
-            rows: data.rows || data.supporting_rows || [],
-          },
+      const assistantMessage = {
+        role: "assistant",
+        content: data.answer || "No answer returned.",
+        meta: {
+          dataset: data.dataset_used || data.dataset || "Approved dataset",
+          rows: data.rows || data.supporting_rows || [],
         },
-      ]);
+      };
+
+      setMessages((prev) => [...prev, assistantMessage]);
     } catch (error) {
       const fallback = mockResponses[question];
 
-      if (fallback) {
-        setMessages((prev) => [
-          ...prev,
-          {
+      const assistantMessage = fallback
+        ? {
             role: "assistant",
             content: fallback.answer,
             meta: {
               dataset: fallback.dataset,
               rows: fallback.rows,
             },
-          },
-        ]);
-      } else {
-        setMessages((prev) => [
-          ...prev,
-          {
+          }
+        : {
             role: "assistant",
             content:
-              "I couldn't reach the live API yet. Check API_URL, APP_SECRET, and your Worker settings, then try again.",
+              "I couldn't reach the live API yet. Make sure your Worker handles /api/ai and try again.",
             meta: {
               dataset: "Connection error",
               rows: [],
             },
-          },
-        ]);
-      }
+          };
 
+      setMessages((prev) => [...prev, assistantMessage]);
       console.error(error);
     } finally {
       setLoading(false);
     }
-  }
+  };
 
   return (
     <div className="min-h-screen bg-slate-100 text-slate-900">
@@ -313,10 +258,12 @@ export default function App() {
             <div className="mb-3 inline-flex rounded-full bg-white/10 px-3 py-1 text-xs font-medium">
               NuBrakes AI Copilot
             </div>
-            <h1 className="text-2xl font-semibold">Self-serve analytics chat</h1>
+            <h1 className="text-2xl font-semibold">
+              Self-serve analytics frontend
+            </h1>
             <p className="mt-3 text-sm leading-6 text-slate-300">
-              A user-friendly chat interface for querying approved NuBrakes
-              datasets and getting structured business answers.
+              A chat-based UI for querying approved aggregated datasets and
+              surfacing supporting records.
             </p>
           </div>
 
@@ -326,8 +273,8 @@ export default function App() {
               label="Datasets"
               value={String(DATASETS.length)}
             />
-            <StatCard icon={BarChart3} label="Mode" value="Live Chat UI" />
-            <StatCard icon={Bot} label="Backend" value="/ask Worker API" />
+            <StatCard icon={BarChart3} label="Mode" value="Prototype" />
+            <StatCard icon={Bot} label="Backend" value="/api/ai" />
           </div>
 
           <div className="rounded-3xl bg-white p-5 shadow-sm ring-1 ring-slate-200">
@@ -347,11 +294,11 @@ export default function App() {
           </div>
         </aside>
 
-        <main className="flex h-[85vh] flex-col rounded-3xl bg-white shadow-sm ring-1 ring-slate-200">
+        <main className="rounded-3xl bg-white shadow-sm ring-1 ring-slate-200">
           <div className="border-b border-slate-200 p-5">
             <div className="text-lg font-semibold">Ask NuBrakes AI Copilot</div>
             <div className="mt-1 text-sm text-slate-500">
-              Ask naturally, then wait for the answer like a normal chat.
+              Example questions below are wired to mocked responses for preview.
             </div>
           </div>
 
@@ -370,9 +317,48 @@ export default function App() {
             </div>
           </div>
 
-          <div className="flex-1 space-y-4 overflow-y-auto p-5">
-            {messages.map((message, index) => (
-              <MessageBubble key={index} message={message} />
+          <div className="h-[520px] space-y-4 overflow-y-auto p-5">
+            {messages.map((message, idx) => (
+              <div
+                key={idx}
+                className={`flex ${
+                  message.role === "user" ? "justify-end" : "justify-start"
+                }`}
+              >
+                <div
+                  className={`max-w-3xl rounded-3xl px-4 py-3 ${
+                    message.role === "user"
+                      ? "bg-slate-900 text-white"
+                      : "bg-slate-50 text-slate-900 ring-1 ring-slate-200"
+                  }`}
+                >
+                  <div className="text-sm leading-6">{message.content}</div>
+
+                  {message.meta && (
+                    <div className="mt-4 space-y-4">
+                      <div className="flex items-center gap-2 text-xs font-medium uppercase tracking-wide text-slate-500">
+                        <Database className="h-4 w-4" />
+                        Dataset used: {message.meta.dataset}
+                      </div>
+
+                      <TablePreview rows={message.meta.rows} />
+
+                      {message.meta.dataset === "dashboard_links.json" &&
+                        message.meta.rows?.[0]?.url && (
+                          <a
+                            href={message.meta.rows[0].url}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="inline-flex items-center gap-2 rounded-2xl bg-slate-900 px-4 py-2 text-sm text-white"
+                          >
+                            <LinkIcon className="h-4 w-4" />
+                            Open dashboard
+                          </a>
+                        )}
+                    </div>
+                  )}
+                </div>
+              </div>
             ))}
 
             {loading && (
@@ -400,7 +386,7 @@ export default function App() {
                 }}
                 placeholder="Ask about metrics, markets, technicians, stores, or dashboards..."
                 rows={2}
-                className="flex-1 resize-none rounded-2xl border border-slate-300 px-4 py-3 text-sm outline-none placeholder:text-slate-400 focus:border-slate-500"
+                className="flex-1 resize-none rounded-2xl border border-slate-300 px-4 py-3 text-sm outline-none ring-0 placeholder:text-slate-400 focus:border-slate-500"
               />
               <button
                 onClick={() => handleAsk(input)}
