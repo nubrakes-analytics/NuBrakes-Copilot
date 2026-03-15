@@ -5,6 +5,17 @@ export default {
   async fetch(request: Request, env: Env): Promise<Response> {
     const url = new URL(request.url);
 
+    if (request.method === "GET" && url.pathname === "/") {
+      return Response.json({
+        ok: true,
+        service: "nubrakes-ai-copilot-api",
+        endpoints: {
+          health: "/health",
+          ask: "/ask"
+        }
+      });
+    }
+
     if (request.method === "GET" && url.pathname === "/health") {
       return Response.json({
         ok: true,
@@ -37,9 +48,7 @@ export default {
         return Response.json(result);
       } catch (error: any) {
         return Response.json(
-          {
-            error: error?.message || "Unknown server error"
-          },
+          { error: error?.message || "Unknown server error" },
           { status: 500 }
         );
       }
