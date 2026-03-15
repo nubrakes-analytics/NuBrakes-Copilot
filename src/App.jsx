@@ -1,15 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import {
-  Send,
-  Database,
-  Bot,
-  Link as LinkIcon,
-  BarChart3,
-  Loader2,
-} from "lucide-react";
-
-const AI_ENDPOINT =
-  "https://nubrakes-copilot.jonathan-libiran.workers.dev/api/ai";
+import { Send, Database, Bot, Link as LinkIcon, BarChart3, Loader2 } from "lucide-react";
 
 const EXAMPLES = [
   "What does completed_revenue mean?",
@@ -28,81 +18,7 @@ const DATASETS = [
   "dashboard_links.json",
 ];
 
-const mockResponses = {
-  "What does completed_revenue mean?": {
-    answer:
-      "Completed revenue is the sum of invoiced customer price for completed jobs using approved NuBrakes reporting logic.",
-    dataset: "metric_definitions.json",
-    rows: [
-      {
-        metric_name: "completed_revenue",
-        definition:
-          "Sum of invoiced customer price for completed jobs using approved NuBrakes reporting logic.",
-      },
-    ],
-  },
-  "What was completed revenue in Chicago yesterday?": {
-    answer:
-      "Completed revenue in Chicago yesterday was $28.5K across 31 completed jobs.",
-    dataset: "daily_market_kpis.json",
-    rows: [
-      {
-        date: "2026-03-14",
-        market: "Chicago",
-        completed_jobs: 31,
-        completed_revenue: 28450,
-      },
-    ],
-  },
-  "Top 5 technicians by completed revenue last week": {
-    answer:
-      "Top technicians by completed revenue last week were John D ($18.2K), Mike S ($17.1K), and Alex R ($14.9K).",
-    dataset: "tech_performance_summary.json",
-    rows: [
-      {
-        tech_name: "John D",
-        market: "Chicago",
-        completed_jobs: 21,
-        completed_revenue: 18234,
-      },
-      {
-        tech_name: "Mike S",
-        market: "Houston",
-        completed_jobs: 19,
-        completed_revenue: 17110,
-      },
-      {
-        tech_name: "Alex R",
-        market: "Chicago",
-        completed_jobs: 16,
-        completed_revenue: 14890,
-      },
-    ],
-  },
-  "Which store has the highest completed revenue?": {
-    answer:
-      "Store HOU-01 has the highest completed revenue in the current sample at $92.4K.",
-    dataset: "store_performance_summary.json",
-    rows: [
-      {
-        store_id: "HOU-01",
-        store_name: "Houston Central",
-        market: "Houston",
-        completed_revenue: 92410,
-      },
-    ],
-  },
-  "Where can I find the ops dashboard?": {
-    answer: "You can find the operations dashboard at the link below.",
-    dataset: "dashboard_links.json",
-    rows: [
-      {
-        topic: "ops",
-        url: "https://yourdomain.com/ops-dashboard",
-      },
-    ],
-  },
-};
+const AI_ENDPOINT = "https://nubrakes-copilot.jonathan-libiran.workers.dev/api/ai";
 
 function StatCard({ icon: Icon, label, value }) {
   return (
@@ -112,9 +28,7 @@ function StatCard({ icon: Icon, label, value }) {
           <Icon className="h-5 w-5 text-slate-700" />
         </div>
         <div>
-          <div className="text-xs uppercase tracking-wide text-slate-500">
-            {label}
-          </div>
+          <div className="text-xs uppercase tracking-wide text-slate-500">{label}</div>
           <div className="text-lg font-semibold text-slate-900">{value}</div>
         </div>
       </div>
@@ -129,11 +43,7 @@ function TablePreview({ rows }) {
   }, [rows]);
 
   if (!rows?.length) {
-    return (
-      <div className="rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-4 text-sm text-slate-500">
-        No supporting rows returned.
-      </div>
-    );
+    return <div className="text-sm text-slate-500">No supporting rows returned.</div>;
   }
 
   return (
@@ -143,10 +53,7 @@ function TablePreview({ rows }) {
           <thead className="bg-slate-50 text-left text-slate-600">
             <tr>
               {columns.map((col) => (
-                <th
-                  key={col}
-                  className="whitespace-nowrap px-4 py-3 font-medium"
-                >
+                <th key={col} className="px-4 py-3 font-medium whitespace-nowrap">
                   {col}
                 </th>
               ))}
@@ -156,10 +63,7 @@ function TablePreview({ rows }) {
             {rows.map((row, idx) => (
               <tr key={idx} className="border-t border-slate-100">
                 {columns.map((col) => (
-                  <td
-                    key={col}
-                    className="whitespace-nowrap px-4 py-3 text-slate-800"
-                  >
+                  <td key={col} className="px-4 py-3 whitespace-nowrap text-slate-800">
                     {String(row[col])}
                   </td>
                 ))}
@@ -184,9 +88,11 @@ function MessageBubble({ message }) {
             : "bg-slate-50 text-slate-900 ring-1 ring-slate-200"
         }`}
       >
-        <div className="whitespace-pre-wrap text-sm leading-6">
-          {message.content}
+        <div className="mb-2 text-[11px] font-semibold uppercase tracking-[0.2em] opacity-70">
+          {isUser ? "You" : "NuBrakes AI Copilot"}
         </div>
+
+        <div className="whitespace-pre-wrap text-sm leading-6">{message.content}</div>
 
         {!isUser && message.meta && (
           <div className="mt-4 space-y-4">
@@ -215,7 +121,7 @@ function MessageBubble({ message }) {
   );
 }
 
-export default function App() {
+export default function NubrakesAICopilotFrontend() {
   const [messages, setMessages] = useState([
     {
       role: "assistant",
@@ -232,7 +138,7 @@ export default function App() {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, loading]);
 
-  async function handleAsk(questionText) {
+  const handleAsk = async (questionText) => {
     const question = questionText.trim();
     if (!question || loading) return;
 
@@ -265,41 +171,29 @@ export default function App() {
           role: "assistant",
           content: data.answer || "No answer returned.",
           meta: {
-            dataset: data.dataset || "Approved dataset",
-            rows: data.rows || [],
+            dataset: data.dataset || data.dataset_used || "Approved dataset",
+            rows: data.rows || data.supporting_rows || [],
           },
         },
       ]);
     } catch (error) {
-      const fallback = mockResponses[question];
-
       setMessages((prev) => [
         ...prev,
-        fallback
-          ? {
-              role: "assistant",
-              content: fallback.answer,
-              meta: {
-                dataset: fallback.dataset,
-                rows: fallback.rows,
-              },
-            }
-          : {
-              role: "assistant",
-              content:
-                "I couldn't reach the live API yet. Make sure your Worker handles /api/ai and try again.",
-              meta: {
-                dataset: "Connection error",
-                rows: [],
-              },
-            },
+        {
+          role: "assistant",
+          content:
+            "I couldn't reach the live AI API. Please check that the Worker is deployed and that /api/ai is returning a valid response.",
+          meta: {
+            dataset: "Connection error",
+            rows: [],
+          },
+        },
       ]);
-
       console.error(error);
     } finally {
       setLoading(false);
     }
-  }
+  };
 
   return (
     <div className="min-h-screen bg-slate-100 text-slate-900">
@@ -311,31 +205,21 @@ export default function App() {
             </div>
             <h1 className="text-2xl font-semibold">Self-serve analytics chat</h1>
             <p className="mt-3 text-sm leading-6 text-slate-300">
-              A user-friendly chat interface for querying approved NuBrakes
-              datasets and getting structured business answers.
+              A user-friendly chat interface for querying approved NuBrakes datasets and getting structured business answers.
             </p>
           </div>
 
           <div className="grid gap-3">
-            <StatCard
-              icon={Database}
-              label="Datasets"
-              value={String(DATASETS.length)}
-            />
-            <StatCard icon={BarChart3} label="Mode" value="Live Chat UI" />
+            <StatCard icon={Database} label="Datasets" value={String(DATASETS.length)} />
+            <StatCard icon={BarChart3} label="Mode" value="Live AI Chat" />
             <StatCard icon={Bot} label="Backend" value="/api/ai" />
           </div>
 
           <div className="rounded-3xl bg-white p-5 shadow-sm ring-1 ring-slate-200">
-            <div className="mb-3 text-sm font-semibold text-slate-900">
-              Available datasets
-            </div>
+            <div className="mb-3 text-sm font-semibold text-slate-900">Available datasets</div>
             <div className="space-y-2">
               {DATASETS.map((dataset) => (
-                <div
-                  key={dataset}
-                  className="rounded-2xl bg-slate-50 px-3 py-2 text-sm text-slate-700 ring-1 ring-slate-200"
-                >
+                <div key={dataset} className="rounded-2xl bg-slate-50 px-3 py-2 text-sm text-slate-700 ring-1 ring-slate-200">
                   {dataset}
                 </div>
               ))}
