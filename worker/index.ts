@@ -1,5 +1,26 @@
+export interface Env {
+  DATA_BASE_URL?: string;
+  OPENAI_API_KEY?: string;
+}
+
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+  "Access-Control-Allow-Headers": "Content-Type",
+};
+
+function json(data: unknown, status = 200) {
+  return new Response(JSON.stringify(data), {
+    status,
+    headers: {
+      "Content-Type": "application/json",
+      ...corsHeaders,
+    },
+  });
+}
+
 export default {
-  async fetch(request: Request, env: Env): Promise<Response> {
+  async fetch(request: Request): Promise<Response> {
     const url = new URL(request.url);
 
     if (request.method === "OPTIONS") {
@@ -12,40 +33,35 @@ export default {
         service: "nubrakes-ai-copilot-api",
         endpoints: {
           health: "/health",
-          metric: "/api/metric",
           ai: "/api/ai",
+          metric: "/api/metric",
         },
       });
     }
 
     if (request.method === "GET" && url.pathname === "/health") {
-      return json({ ok: true, service: "nubrakes-ai-copilot-api" });
+      return json({
+        ok: true,
+        service: "nubrakes-ai-copilot-api",
+      });
     }
 
-    if (request.method === "POST" && url.pathname === "/api/metric") {
-      try {
-        const body = (await request.json()) as { metric_query?: string };
-        const metricQuery = body.metric_query?.trim();
-
-        if (!metricQuery) {
-          return json({ error: "Missing metric_query" }, 400);
-        }
-
-        const result = await findMetricDefinition(metricQuery, env);
-        return json(result);
-      } catch (error) {
-        const message =
-          error instanceof Error ? error.message : "Unknown server error";
-        return json({ error: message }, 500);
-      }
-    }
-
-    // PASTE IT HERE, replacing the current /api/ai block
     if (request.method === "POST" && url.pathname === "/api/ai") {
       return json({
         answer: "Worker route is working.",
         dataset: "test",
         rows: [],
+      });
+    }
+
+    if (request.method === "POST" && url.pathname === "/api/metric") {
+      return json({
+        found: true,
+        metric: {
+          metric_id: "rev_total",
+          display_name: "Total Revenue",
+          description: "Test metric response.",
+        },
       });
     }
 
