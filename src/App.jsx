@@ -211,7 +211,7 @@ export default function NubrakesAICopilotFrontend() {
   <div className="min-h-screen bg-[#F7F2F0] text-[#0E2468]">
     <div className="mx-auto grid max-w-7xl gap-6 p-6 lg:grid-cols-[320px_minmax(0,1fr)]">
       <aside className="space-y-6">
-        <div className="rounded-3xl bg-white p-6 text-white shadow-sm">
+        <div className="rounded-3xl bg-white p-6 text-white shadow-sm ring-1 ring-[#CDB7B7]">
           <div>
             <div className="mb-3 inline-flex items-center gap-2 rounded-full bg-white/20 px-3 py-1">
               <img
@@ -228,7 +228,7 @@ export default function NubrakesAICopilotFrontend() {
               Self-serve analytics chat
             </h1>
 
-            <p className="mt-3 text-sm leading-6 text-[#F7D9D3]">
+            <p className="mt-3 text-sm leading-6 text-[#817E7F]">
               A user-friendly chat interface for querying approved NuBrakes
               datasets and getting structured business answers.
             </p>
