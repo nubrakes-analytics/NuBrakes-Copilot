@@ -211,7 +211,7 @@ export default function NubrakesAICopilotFrontend() {
   <div className="min-h-screen bg-[#F7F2F0] text-[#0E2468]">
     <div className="mx-auto grid max-w-7xl gap-6 p-6 lg:grid-cols-[320px_minmax(0,1fr)]">
       <aside className="space-y-6">
-        <div className="rounded-3xl bg-[#E63F2B] p-6 text-white shadow-sm">
+        <div className="rounded-3xl bg-white p-6 text-white shadow-sm">
           <div>
             <div className="mb-3 inline-flex items-center gap-2 rounded-full bg-white/20 px-3 py-1">
               <img
