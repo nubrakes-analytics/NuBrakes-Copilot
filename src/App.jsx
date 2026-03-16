@@ -9,19 +9,11 @@ import {
 } from "lucide-react";
 
 const EXAMPLES = [
-  "What does completed_revenue mean?",
-  "What was completed revenue in Chicago yesterday?",
-  "Top 5 technicians by completed revenue last week",
-  "Which store has the highest completed revenue?",
-  "Where can I find the ops dashboard?",
+  "What does average order value mean?",
 ];
 
 const DATASETS = [
   "metric_definitions.json",
-  "daily_market_kpis.json",
-  "weekly_market_kpis.json",
-  "tech_performance_summary.json",
-  "store_performance_summary.json",
   "dashboard_links.json",
 ];
 
