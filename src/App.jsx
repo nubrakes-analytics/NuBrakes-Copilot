@@ -217,7 +217,7 @@ export default function NubrakesAICopilotFrontend() {
               <img
                 src="/nubrakes-ai-copilot.svg"
                 alt="NuBrakes AI Copilot logo"
-                className="h-10 w-12"
+                className="h-18 w-20"
               />
               <span className="text-sm font-semibold text-[#0E2468]">
                 NuBrakes AI Copilot
