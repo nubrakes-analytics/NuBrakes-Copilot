@@ -220,7 +220,7 @@ async function handleAiQuestion(
     "If no metric is found, say so clearly.";
 
   const firstResponse = await createOpenAIResponse(env, {
-    model: "gpt-5",
+    model: "gpt-4.1",
     instructions: systemPrompt,
     input: question,
     tools: TOOLS,
@@ -249,7 +249,7 @@ async function handleAiQuestion(
   const toolResult = await executeTool(toolCall.name, parsedArgs);
 
   const secondResponse = await createOpenAIResponse(env, {
-    model: "gpt-5",
+    model: "gpt-4.1",
     previous_response_id: firstResponse.id,
     input: [
       {
