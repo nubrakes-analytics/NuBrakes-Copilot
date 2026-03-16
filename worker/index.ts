@@ -1,6 +1,5 @@
 export interface Env {
   OPENAI_API_KEY?: string;
-  DATA_BASE_URL: string;
 }
 
 type MetricDefinition = {
@@ -46,12 +45,8 @@ function normalize(text: string) {
   return text.toLowerCase().trim().replace(/[_-]+/g, " ");
 }
 
-async function loadMetricDefinitions(env: Env): Promise<MetricDefinition[]> {
-  const base = env.DATA_BASE_URL?.replace(/\/$/, "");
-  if (!base) {
-    throw new Error("DATA_BASE_URL is missing");
-  }
-
+async function loadMetricDefinitions(): Promise<MetricDefinition[]> {
+  const base = "https://nubrakes-analytics.github.io/NuBrakes-Copilot/data";
   const url = `${base}/metric_definitions.json`;
 
   const response = await fetch(url, {
@@ -76,7 +71,6 @@ async function loadMetricDefinitions(env: Env): Promise<MetricDefinition[]> {
 
   return data;
 }
-
 async function findMetricDefinition(metricQuery: string, env: Env) {
   const metrics = await loadMetricDefinitions(env);
   const q = normalize(metricQuery);
