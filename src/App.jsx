@@ -212,101 +212,33 @@ export default function NubrakesAICopilotFrontend() {
       <div className="mx-auto grid max-w-7xl gap-6 p-6 lg:grid-cols-[320px_minmax(0,1fr)]">
         <aside className="space-y-6">
           <div className="rounded-3xl bg-[#E63F2B] p-6 text-white shadow-sm">
-  <div className="mb-3 inline-flex rounded-full bg-[#CDB7B7]/20 px-3 py-1 text-2xl font-semibold text-white">
-    NuBrakes AI Copilot
-  </div>
+  <div className="mb-3 inline-flex items-center gap-2 rounded-full bg-[#CDB7B7]/20 px-3 py-1 text-2xl font-semibold text-white">
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    viewBox="0 0 1536 1024"
+    className="h-6 w-6 shrink-0"
+    fill="none"
+  >
+    <path
+      d="M94 876C78 876 66 868 60 856C54 844 56 830 64 816L392 182C401 164 420 152 440 152H1000C1019 152 1037 162 1047 178C1057 194 1058 214 1048 231L887 521C875 543 847 551 826 539C804 527 796 499 808 478L954 214H474L143 848C133 866 114 876 94 876Z"
+      fill="#F53B12"
+    />
+    <path
+      d="M540 876C520 876 502 866 492 848C482 830 483 809 493 792L627 550C637 532 655 521 675 521C695 521 713 531 723 548L780 646H935L1189 182C1199 164 1217 152 1237 152H1341C1361 152 1379 162 1389 180C1399 198 1398 219 1388 236L1070 846C1060 864 1042 876 1022 876H540Z"
+      fill="#F53B12"
+    />
+    <path
+      d="M1118 152C1128 201 1151 224 1200 234C1151 244 1128 267 1118 316C1108 267 1085 244 1036 234C1085 224 1108 201 1118 152Z"
+      fill="#000000"
+    />
+    <path
+      d="M1193 244C1199 271 1212 284 1239 290C1212 296 1199 309 1193 336C1187 309 1174 296 1147 290C1174 284 1187 271 1193 244Z"
+      fill="#000000"
+    />
+  </svg>
 
-  <div className="mb-3">
-    <svg
-      width="180"
-      viewBox="0 0 1024 512"
-      fill="none"
-      xmlns="http://www.w3.org/2000/svg"
-      className="h-auto w-[180px]"
-    >
-      <path
-        d="M64 448
-           L256 96
-           C266 78 284 64 304 64
-           H620
-           C650 64 669 96 654 122
-           L557 296
-           C548 312 525 312 516 296
-           L462 200
-           C455 188 442 180 428 180
-           H352
-           C338 180 325 188 318 200
-           L170 470
-           C161 486 144 496 126 496
-           H90
-           C69 496 55 473 64 448Z"
-        fill="#F84B1F"
-      />
-
-      <path
-        d="M320 448
-           L432 240
-           C442 222 468 222 478 240
-           L547 366
-           C554 378 567 384 580 384
-           H684
-           C698 384 711 376 718 364
-           L928 96
-           C938 78 956 64 976 64
-           H1012
-           C1033 64 1047 87 1038 112
-           L842 464
-           C833 482 815 496 795 496
-           H352
-           C330 496 316 472 320 448Z"
-        fill="#F84B1F"
-      />
-
-      <path
-        d="M238 448
-           L382 184
-           C392 166 410 156 430 156
-           H472
-           C492 156 510 166 520 184
-           L604 334
-           C612 348 627 356 643 356
-           H714
-           C734 356 752 346 762 329
-           L822 224
-           C836 200 871 199 886 223
-           L920 278
-           C930 294 930 315 920 331
-           L817 496
-           H371
-           C344 496 327 466 340 442
-           L447 248
-           C455 233 444 216 427 216
-           H392
-           C376 216 361 225 353 239
-           L219 496
-           H182
-           C160 496 146 472 156 452
-           L238 448Z"
-        fill="black"
-      />
-
-      <g transform="translate(740 96)">
-        <path
-          d="M0 34
-             C18 34 30 30 38 22
-             C46 14 50 2 50 -18
-             C50 2 54 14 62 22
-             C70 30 82 34 100 34
-             C82 34 70 38 62 46
-             C54 54 50 66 50 86
-             C50 66 46 54 38 46
-             C30 38 18 34 0 34Z"
-          fill="black"
-        />
-      </g>
-    </svg>
-  </div>
-
+  <span>NuBrakes AI Copilot</span>
+</div>
   <h1 className="text-2xl font-semibold">Self-serve analytics chat</h1>
   <p className="mt-3 text-sm leading-6 text-[#CDB7B7]">
     A user-friendly chat interface for querying approved NuBrakes
