@@ -1,5 +1,5 @@
 export interface Env {
-  OPENAI_API_KEY?: string;
+  OPENAI_API_KEY: string;
 }
 
 type MetricDefinition = {
@@ -19,6 +19,10 @@ type MetricDefinition = {
   is_primary: boolean;
   tags: string[];
 };
+
+type MetricLookupResult =
+  | { found: true; metric: MetricDefinition }
+  | { found: false; message: string };
 
 type ChatResponse = {
   answer: string;
@@ -83,7 +87,7 @@ async function loadMetricDefinitions(): Promise<MetricDefinition[]> {
   );
 }
 
-async function findMetricDefinition(metricQuery: string) {
+async function findMetricDefinition(metricQuery: string): Promise<MetricLookupResult> {
   const metrics = await loadMetricDefinitions();
   const q = normalize(metricQuery);
 
@@ -119,26 +123,146 @@ async function findMetricDefinition(metricQuery: string) {
   };
 }
 
-async function handleAiQuestion(question: string): Promise<ChatResponse> {
-  const metricResult = await findMetricDefinition(question);
+async function executeTool(toolName: string, args: Record<string, unknown>) {
+  if (toolName === "find_metric_definition") {
+    const metricQuery = String(args.metric_query || "").trim();
 
-  if (metricResult.found) {
+    if (!metricQuery) {
+      return { found: false, message: "Missing metric_query" };
+    }
+
+    return await findMetricDefinition(metricQuery);
+  }
+
+  return { error: `Unknown tool: ${toolName}` };
+}
+
+const TOOLS = [
+  {
+    type: "function",
+    name: "find_metric_definition",
+    description:
+      "Find the official definition and metadata for a NuBrakes metric. Use this when the user asks what a metric means, how it is defined, or asks about a named KPI like total revenue, cancellation rate, or gross margin.",
+    parameters: {
+      type: "object",
+      properties: {
+        metric_query: {
+          type: "string",
+          description:
+            "Metric name, alias, id, or natural language metric phrase like total revenue or cancellation rate.",
+        },
+      },
+      required: ["metric_query"],
+      additionalProperties: false,
+    },
+  },
+];
+
+async function createOpenAIResponse(
+  env: Env,
+  payload: Record<string, unknown>
+) {
+  const response = await fetch("https://api.openai.com/v1/responses", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${env.OPENAI_API_KEY}`,
+    },
+    body: JSON.stringify(payload),
+  });
+
+  if (!response.ok) {
+    const text = await response.text();
+    throw new Error(`OpenAI request failed: ${response.status} ${text}`);
+  }
+
+  return (await response.json()) as {
+    id?: string;
+    output?: Array<{
+      type: string;
+      name?: string;
+      arguments?: string;
+      call_id?: string;
+    }>;
+    output_text?: string;
+  };
+}
+
+async function handleAiQuestion(question: string, env: Env): Promise<ChatResponse> {
+  const systemPrompt =
+    "You are the NuBrakes AI Copilot. " +
+    "Use tools when the user asks what a metric means or asks for a KPI definition. " +
+    "Do not invent metric definitions. " +
+    "If a tool returns a metric, answer in clear business language. " +
+    "If no metric is found, say so clearly.";
+
+  const firstResponse = await createOpenAIResponse(env, {
+    model: "gpt-5",
+    input: [
+      { role: "system", content: systemPrompt },
+      { role: "user", content: question },
+    ],
+    tools: TOOLS,
+    tool_choice: "auto",
+  });
+
+  const toolCall = (firstResponse.output || []).find(
+    (item) => item.type === "function_call"
+  );
+
+  if (!toolCall || !toolCall.name || !toolCall.call_id) {
     return {
-      answer: `${metricResult.metric.display_name}: ${metricResult.metric.description}`,
-      dataset: "metric_definitions.json",
-      rows: [metricResult.metric],
+      answer: firstResponse.output_text || "No answer returned.",
+      dataset: "OpenAI response",
+      rows: [],
     };
   }
 
+  let parsedArgs: Record<string, unknown> = {};
+  try {
+    parsedArgs = JSON.parse(toolCall.arguments || "{}");
+  } catch {
+    parsedArgs = {};
+  }
+
+  const toolResult = await executeTool(toolCall.name, parsedArgs);
+
+  const secondResponse = await createOpenAIResponse(env, {
+    model: "gpt-5",
+    input: [
+      { role: "system", content: systemPrompt },
+      { role: "user", content: question },
+      {
+        type: "function_call_output",
+        call_id: toolCall.call_id,
+        output: JSON.stringify(toolResult),
+      },
+    ],
+    tools: TOOLS,
+  });
+
+  let rows: Array<Record<string, unknown>> = [];
+  let dataset = "metric_definitions.json";
+
+  if (
+    toolResult &&
+    typeof toolResult === "object" &&
+    "found" in toolResult &&
+    toolResult.found === true &&
+    "metric" in toolResult
+  ) {
+    rows = [(toolResult as { metric: MetricDefinition }).metric];
+  }
+
   return {
-    answer: `I couldn't find a metric definition for: ${question}`,
-    dataset: "metric_definitions.json",
-    rows: [],
+    answer: secondResponse.output_text || "No answer returned.",
+    dataset,
+    rows,
   };
 }
 
 export default {
-  async fetch(request: Request): Promise<Response> {
+  async fetch(request: Request, env: Env): Promise<Response> {
     const url = new URL(request.url);
 
     if (request.method === "OPTIONS") {
@@ -205,7 +329,7 @@ export default {
           return json({ error: "Missing question" }, 400);
         }
 
-        const result = await handleAiQuestion(question);
+        const result = await handleAiQuestion(question, env);
         return json(result);
       } catch (error) {
         const message =
