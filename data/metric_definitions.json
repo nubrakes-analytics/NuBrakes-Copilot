@@ -1,8 +1,4 @@
-{
-  "version": "1.0.0",
-  "last_updated": "2025-03-15",
-  "owner": "NuBrakes Analytics Team",
-  "metrics": [
+[
     {
       "metric_id": "rev_total",
       "display_name": "Total Revenue",
@@ -291,6 +287,3 @@
       "source_column": "dispatch_time_minutes",
       "is_primary": false,
       "tags": ["operations", "speed"]
-    }
-  ]
-}
