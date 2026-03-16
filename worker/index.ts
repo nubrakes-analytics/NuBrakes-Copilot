@@ -259,8 +259,33 @@ async function handleAiQuestion(
     rows = [(toolResult as { metric: MetricDefinition }).metric];
   }
 
+  let answer = secondResponse.output_text?.trim();
+
+  if (!answer) {
+    if (
+      toolResult &&
+      typeof toolResult === "object" &&
+      "found" in toolResult &&
+      toolResult.found === true &&
+      "metric" in toolResult
+    ) {
+      const metric = (toolResult as { metric: MetricDefinition }).metric;
+      answer = `${metric.display_name}: ${metric.description}`;
+    } else if (
+      toolResult &&
+      typeof toolResult === "object" &&
+      "found" in toolResult &&
+      toolResult.found === false &&
+      "message" in toolResult
+    ) {
+      answer = String(toolResult.message);
+    } else {
+      answer = "No answer returned.";
+    }
+  }
+
   return {
-    answer: secondResponse.output_text || "No answer returned.",
+    answer,
     dataset,
     rows,
   };
