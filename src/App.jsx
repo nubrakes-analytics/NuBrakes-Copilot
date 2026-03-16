@@ -9,7 +9,7 @@ import {
 } from "lucide-react";
 
 const EXAMPLES = [
-  "What does completed_revenue mean?",
+  "What does average order value mean?",
   "Where can I find the ops dashboard?",
 ];
 
