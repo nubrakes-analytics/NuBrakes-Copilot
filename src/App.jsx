@@ -8,14 +8,9 @@ import {
   Loader2,
 } from "lucide-react";
 
-const EXAMPLES = [
-  "What does average order value mean?",
-];
+const EXAMPLES = ["What does average order value mean?"];
 
-const DATASETS = [
-  "metric_definitions.json",
-  "dashboard_links.json",
-];
+const DATASETS = ["metric_definitions.json", "dashboard_links.json"];
 
 const AI_ENDPOINT =
   "https://nubrakes-copilot.jonathan-libiran.workers.dev/api/ai";
@@ -142,7 +137,7 @@ export default function NubrakesAICopilotFrontend() {
     {
       role: "assistant",
       content:
-        "Hi — I’m your NuBrakes AI Copilot. Ask a question about metrics, markets, technicians, stores, or dashboards.",
+        "Hi — I’m your NuBrakes AI Copilot. Ask a question about metrics or dashboards.",
       meta: null,
     },
   ]);
@@ -154,7 +149,7 @@ export default function NubrakesAICopilotFrontend() {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, loading]);
 
-  const handleAsk = async (questionText) => {
+  async function handleAsk(questionText) {
     const question = questionText.trim();
     if (!question || loading) return;
 
@@ -174,12 +169,19 @@ export default function NubrakesAICopilotFrontend() {
         body: JSON.stringify({ question }),
       });
 
+      const text = await res.text();
+
       if (!res.ok) {
-        const text = await res.text();
+        console.error("Worker error response:", text);
         throw new Error(text || `Request failed with ${res.status}`);
       }
 
-      const data = await res.json();
+      let data;
+      try {
+        data = JSON.parse(text);
+      } catch {
+        throw new Error("API returned invalid JSON");
+      }
 
       setMessages((prev) => [
         ...prev,
@@ -193,6 +195,8 @@ export default function NubrakesAICopilotFrontend() {
         },
       ]);
     } catch (error) {
+      console.error("API error:", error);
+
       setMessages((prev) => [
         ...prev,
         {
@@ -205,11 +209,10 @@ export default function NubrakesAICopilotFrontend() {
           },
         },
       ]);
-      console.error(error);
     } finally {
       setLoading(false);
     }
-  };
+  }
 
   return (
     <div className="min-h-screen bg-slate-100 text-slate-900">
@@ -235,7 +238,7 @@ export default function NubrakesAICopilotFrontend() {
               value={String(DATASETS.length)}
             />
             <StatCard icon={BarChart3} label="Mode" value="Live AI Chat" />
-            <StatCard icon={Bot} label="Backend" value="/api/ai" />
+            <StatCard icon={Bot} label="Backend" value="Cloudflare Worker" />
           </div>
 
           <div className="rounded-3xl bg-white p-4 shadow-sm ring-1 ring-slate-200 sm:p-5">
@@ -308,7 +311,7 @@ export default function NubrakesAICopilotFrontend() {
                     handleAsk(input);
                   }
                 }}
-                placeholder="Ask about metrics, markets, technicians, stores, or dashboards..."
+                placeholder="Ask about metrics or dashboards..."
                 rows={2}
                 className="min-h-[56px] w-full resize-none rounded-2xl border border-slate-300 px-4 py-3 text-sm outline-none placeholder:text-slate-400 focus:border-slate-500"
               />
