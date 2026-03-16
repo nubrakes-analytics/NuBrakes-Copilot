@@ -4,19 +4,15 @@ export interface Env {
 
 type MetricDefinition = {
   metric_id: string;
-  display_name: string;
-  aliases?: string[];
+  metric_name: string;
   category: string;
-  sub_category: string;
-  description: string;
+  definition: string;
   unit: string;
-  format: string;
-  direction: string;
+  format_type: string;
+  formula_logic?: string;
   aggregation: string;
-  source_table?: string;
-  source_column?: string;
-  formula?: string;
-  is_primary: boolean;
+  good_direction: string;
+  owner: string;
   tags: string[];
 };
 
