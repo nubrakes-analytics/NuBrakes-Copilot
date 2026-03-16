@@ -9,22 +9,6 @@ type ChatResponse = {
   rows?: Array<Record<string, unknown>>;
 };
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
-  "Access-Control-Allow-Headers": "Content-Type",
-};
-
-function json(data: unknown, status = 200) {
-  return new Response(JSON.stringify(data), {
-    status,
-    headers: {
-      "Content-Type": "application/json",
-      ...corsHeaders,
-    },
-  });
-}
-
 type MetricDefinition = {
   metric_id: string;
   display_name: string;
@@ -74,7 +58,9 @@ async function loadMetricDefinitions(env: Env): Promise<MetricDefinition[]> {
 
   if (!response.ok) {
     const text = await response.text();
-    throw new Error(`Failed to load metric_definitions.json: ${response.status} ${text}`);
+    throw new Error(
+      `Failed to load metric_definitions.json: ${response.status} ${text}`
+    );
   }
 
   const data = (await response.json()) as MetricDefinition[];
@@ -118,6 +104,17 @@ export default {
 
     if (request.method === "OPTIONS") {
       return new Response(null, { headers: corsHeaders });
+    }
+
+    if (request.method === "GET" && url.pathname === "/") {
+      return json({
+        ok: true,
+        service: "nubrakes-ai-copilot-api",
+        endpoints: {
+          health: "/health",
+          metric: "/api/metric",
+        },
+      });
     }
 
     if (request.method === "GET" && url.pathname === "/health") {
