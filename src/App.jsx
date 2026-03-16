@@ -208,123 +208,130 @@ export default function NubrakesAICopilotFrontend() {
   };
 
   return (
-    <div className="min-h-screen bg-[#F7F2F0] text-[#0E2468]">
-      <div className="mx-auto grid max-w-7xl gap-6 p-6 lg:grid-cols-[320px_minmax(0,1fr)]">
-        <aside className="space-y-6">
-          <div className="rounded-3xl bg-[#E63F2B] p-6 text-white shadow-sm">
-  <div>
-  <div className="mb-3 inline-flex items-center gap-2 rounded-full bg-[#CDB7B7]/20 px-3 py-1 text-2xl font-semibold text-white">
-    <img
-      src="/nubrakes-ai-copilot.svg"
-      alt="NuBrakes AI Copilot logo"
-      className="h-6 w-6"
-    />
-    <span className="text-m font-semibold text-[#0E2468]">NuBrakes AI Copilot</span>
-  </div>
-
-  <h1 className="text-2xl font-semibold text-[#0E2468]">Self-serve analytics chat</h1>
-  <p className="mt-3 text-sm leading-6 text-[#CDB7B7]">
-    A user-friendly chat interface for querying approved NuBrakes
-    datasets and getting structured business answers.
-  </p>
-</div>
-          <div className="grid gap-3">
-            <StatCard
-              icon={Database}
-              label="Datasets"
-              value={String(DATASETS.length)}
-            />
-            <StatCard icon={BarChart3} label="Mode" value="Live AI Chat" />
-            <StatCard icon={Bot} label="Backend" value="/api/ai" />
-          </div>
-
-          <div className="rounded-3xl bg-white p-5 shadow-sm ring-1 ring-[#CDB7B7]">
-            <div className="mb-3 text-sm font-semibold text-[#0E2468]">
-              Available datasets
-            </div>
-            <div className="space-y-2">
-              {DATASETS.map((dataset) => (
-                <div
-                  key={dataset}
-                  className="rounded-2xl bg-[#CDB7B7]/25 px-3 py-2 text-sm text-[#0E2468] ring-1 ring-[#CDB7B7]"
-                >
-                  {dataset}
-                </div>
-              ))}
-            </div>
-          </div>
-        </aside>
-
-        <main className="flex h-[85vh] flex-col rounded-3xl bg-white shadow-sm ring-1 ring-[#CDB7B7]">
-          <div className="border-b border-[#CDB7B7] p-5">
-            <div className="text-lg font-semibold">Ask NuBrakes AI Copilot</div>
-            <div className="mt-1 text-sm text-[#817E7F]">
-              Ask naturally, then wait for the answer like a normal chat.
-            </div>
-          </div>
-
-          <div className="border-b border-[#CDB7B7] p-5">
-            <div className="flex flex-wrap gap-2">
-              {EXAMPLES.map((example) => (
-                <button
-                  key={example}
-                  onClick={() => handleAsk(example)}
-                  disabled={loading}
-                  className="rounded-full bg-white px-3 py-2 text-sm text-[#0E2468] transition hover:bg-[#CDB7B7]/40 disabled:cursor-not-allowed disabled:opacity-50 ring-1 ring-[#CDB7B7]"
-                >
-                  {example}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <div className="flex-1 space-y-4 overflow-y-auto p-5">
-            {messages.map((message, index) => (
-              <MessageBubble key={index} message={message} />
-            ))}
-
-            {loading && (
-              <div className="flex justify-start">
-                <div className="inline-flex items-center gap-2 rounded-3xl bg-white px-4 py-3 text-sm text-[#0E2468] ring-1 ring-[#CDB7B7]">
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                  Thinking...
-                </div>
-              </div>
-            )}
-
-            <div ref={messagesEndRef} />
-          </div>
-
-          <div className="border-t border-[#CDB7B7] p-5">
-            <div className="flex gap-3">
-              <textarea
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" && !e.shiftKey) {
-                    e.preventDefault();
-                    handleAsk(input);
-                  }
-                }}
-                placeholder="Ask about metrics, markets, technicians, stores, or dashboards..."
-                rows={2}
-                className="flex-1 resize-none rounded-2xl border border-[#CDB7B7] px-4 py-3 text-sm outline-none placeholder:text-[#817E7F]/80 focus:border-[#6E9CC0]"
+  <div className="min-h-screen bg-[#F7F2F0] text-[#0E2468]">
+    <div className="mx-auto grid max-w-7xl gap-6 p-6 lg:grid-cols-[320px_minmax(0,1fr)]">
+      <aside className="space-y-6">
+        <div className="rounded-3xl bg-[#E63F2B] p-6 text-white shadow-sm">
+          <div>
+            <div className="mb-3 inline-flex items-center gap-2 rounded-full bg-white/20 px-3 py-1">
+              <img
+                src="/nubrakes-ai-copilot.svg"
+                alt="NuBrakes AI Copilot logo"
+                className="h-6 w-6"
               />
-              <button
-                onClick={() => handleAsk(input)}
-                disabled={loading || !input.trim()}
-                className="inline-flex items-center gap-2 rounded-2xl bg-[#0E2468] px-5 py-3 text-sm font-medium text-white transition hover:bg-[#16358F] disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                <Send className="h-4 w-4" />
-                Send
-              </button>
+              <span className="text-sm font-semibold text-[#0E2468]">
+                NuBrakes AI Copilot
+              </span>
             </div>
-            <div className="mt-2 text-xs text-[#817E7F]">
-              Press Enter to send. Use Shift+Enter for a new line.
-            </div>
+
+            <h1 className="text-2xl font-semibold text-[#0E2468]">
+              Self-serve analytics chat
+            </h1>
+
+            <p className="mt-3 text-sm leading-6 text-[#F7D9D3]">
+              A user-friendly chat interface for querying approved NuBrakes
+              datasets and getting structured business answers.
+            </p>
           </div>
-        </main>
-      </div>
+        </div>
+
+        <div className="grid gap-3">
+          <StatCard
+            icon={Database}
+            label="Datasets"
+            value={String(DATASETS.length)}
+          />
+          <StatCard icon={BarChart3} label="Mode" value="Live AI Chat" />
+          <StatCard icon={Bot} label="Backend" value="/api/ai" />
+        </div>
+
+        <div className="rounded-3xl bg-white p-5 shadow-sm ring-1 ring-[#CDB7B7]">
+          <div className="mb-3 text-sm font-semibold text-[#0E2468]">
+            Available datasets
+          </div>
+          <div className="space-y-2">
+            {DATASETS.map((dataset) => (
+              <div
+                key={dataset}
+                className="rounded-2xl bg-[#CDB7B7]/25 px-3 py-2 text-sm text-[#0E2468] ring-1 ring-[#CDB7B7]"
+              >
+                {dataset}
+              </div>
+            ))}
+          </div>
+        </div>
+      </aside>
+
+      <main className="flex h-[85vh] flex-col rounded-3xl bg-white shadow-sm ring-1 ring-[#CDB7B7]">
+        <div className="border-b border-[#CDB7B7] p-5">
+          <div className="text-lg font-semibold">Ask NuBrakes AI Copilot</div>
+          <div className="mt-1 text-sm text-[#817E7F]">
+            Ask naturally, then wait for the answer like a normal chat.
+          </div>
+        </div>
+
+        <div className="border-b border-[#CDB7B7] p-5">
+          <div className="flex flex-wrap gap-2">
+            {EXAMPLES.map((example) => (
+              <button
+                key={example}
+                onClick={() => handleAsk(example)}
+                disabled={loading}
+                className="rounded-full bg-white px-3 py-2 text-sm text-[#0E2468] ring-1 ring-[#CDB7B7] transition hover:bg-[#CDB7B7]/40 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {example}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="flex-1 space-y-4 overflow-y-auto p-5">
+          {messages.map((message, index) => (
+            <MessageBubble key={index} message={message} />
+          ))}
+
+          {loading && (
+            <div className="flex justify-start">
+              <div className="inline-flex items-center gap-2 rounded-3xl bg-white px-4 py-3 text-sm text-[#0E2468] ring-1 ring-[#CDB7B7]">
+                <Loader2 className="h-4 w-4 animate-spin" />
+                Thinking...
+              </div>
+            </div>
+          )}
+
+          <div ref={messagesEndRef} />
+        </div>
+
+        <div className="border-t border-[#CDB7B7] p-5">
+          <div className="flex gap-3">
+            <textarea
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && !e.shiftKey) {
+                  e.preventDefault();
+                  handleAsk(input);
+                }
+              }}
+              placeholder="Ask about metrics, markets, technicians, stores, or dashboards..."
+              rows={2}
+              className="flex-1 resize-none rounded-2xl border border-[#CDB7B7] px-4 py-3 text-sm outline-none placeholder:text-[#817E7F]/80 focus:border-[#6E9CC0]"
+            />
+            <button
+              onClick={() => handleAsk(input)}
+              disabled={loading || !input.trim()}
+              className="inline-flex items-center gap-2 rounded-2xl bg-[#0E2468] px-5 py-3 text-sm font-medium text-white transition hover:bg-[#16358F] disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              <Send className="h-4 w-4" />
+              Send
+            </button>
+          </div>
+          <div className="mt-2 text-xs text-[#817E7F]">
+            Press Enter to send. Use Shift+Enter for a new line.
+          </div>
+        </div>
+      </main>
     </div>
-  );
+  </div>
+);;
 }
