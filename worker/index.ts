@@ -3,6 +3,28 @@ export interface Env {
   DATA_BASE_URL: string;
 }
 
+type ChatResponse = {
+  answer: string;
+  dataset?: string;
+  rows?: Array<Record<string, unknown>>;
+};
+
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+  "Access-Control-Allow-Headers": "Content-Type",
+};
+
+function json(data: unknown, status = 200) {
+  return new Response(JSON.stringify(data), {
+    status,
+    headers: {
+      "Content-Type": "application/json",
+      ...corsHeaders,
+    },
+  });
+}
+
 type MetricDefinition = {
   metric_id: string;
   display_name: string;
