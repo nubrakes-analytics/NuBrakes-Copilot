@@ -212,15 +212,107 @@ export default function NubrakesAICopilotFrontend() {
       <div className="mx-auto grid max-w-7xl gap-6 p-6 lg:grid-cols-[320px_minmax(0,1fr)]">
         <aside className="space-y-6">
           <div className="rounded-3xl bg-[#E63F2B] p-6 text-white shadow-sm">
-            <div className="mb-3 inline-flex rounded-full bg-[#CDB7B7]/20 px-3 py-1 text-2xl font-semibold text-white">
-              NuBrakes AI Copilot
-            </div>
-            <h1 className="text-2xl font-semibold">Self-serve analytics chat</h1>
-            <p className="mt-3 text-sm leading-6 text-[#CDB7B7]">
-              A user-friendly chat interface for querying approved NuBrakes
-              datasets and getting structured business answers.
-            </p>
-          </div>
+  <div className="mb-3 inline-flex rounded-full bg-[#CDB7B7]/20 px-3 py-1 text-2xl font-semibold text-white">
+    NuBrakes AI Copilot
+  </div>
+
+  <div className="mb-3">
+    <svg
+      width="180"
+      viewBox="0 0 1024 512"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      className="h-auto w-[180px]"
+    >
+      <path
+        d="M64 448
+           L256 96
+           C266 78 284 64 304 64
+           H620
+           C650 64 669 96 654 122
+           L557 296
+           C548 312 525 312 516 296
+           L462 200
+           C455 188 442 180 428 180
+           H352
+           C338 180 325 188 318 200
+           L170 470
+           C161 486 144 496 126 496
+           H90
+           C69 496 55 473 64 448Z"
+        fill="#F84B1F"
+      />
+
+      <path
+        d="M320 448
+           L432 240
+           C442 222 468 222 478 240
+           L547 366
+           C554 378 567 384 580 384
+           H684
+           C698 384 711 376 718 364
+           L928 96
+           C938 78 956 64 976 64
+           H1012
+           C1033 64 1047 87 1038 112
+           L842 464
+           C833 482 815 496 795 496
+           H352
+           C330 496 316 472 320 448Z"
+        fill="#F84B1F"
+      />
+
+      <path
+        d="M238 448
+           L382 184
+           C392 166 410 156 430 156
+           H472
+           C492 156 510 166 520 184
+           L604 334
+           C612 348 627 356 643 356
+           H714
+           C734 356 752 346 762 329
+           L822 224
+           C836 200 871 199 886 223
+           L920 278
+           C930 294 930 315 920 331
+           L817 496
+           H371
+           C344 496 327 466 340 442
+           L447 248
+           C455 233 444 216 427 216
+           H392
+           C376 216 361 225 353 239
+           L219 496
+           H182
+           C160 496 146 472 156 452
+           L238 448Z"
+        fill="black"
+      />
+
+      <g transform="translate(740 96)">
+        <path
+          d="M0 34
+             C18 34 30 30 38 22
+             C46 14 50 2 50 -18
+             C50 2 54 14 62 22
+             C70 30 82 34 100 34
+             C82 34 70 38 62 46
+             C54 54 50 66 50 86
+             C50 66 46 54 38 46
+             C30 38 18 34 0 34Z"
+          fill="black"
+        />
+      </g>
+    </svg>
+  </div>
+
+  <h1 className="text-2xl font-semibold">Self-serve analytics chat</h1>
+  <p className="mt-3 text-sm leading-6 text-[#CDB7B7]">
+    A user-friendly chat interface for querying approved NuBrakes
+    datasets and getting structured business answers.
+  </p>
+</div>
 
           <div className="grid gap-3">
             <StatCard
