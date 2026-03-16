@@ -98,6 +98,24 @@ async function findMetricDefinition(metricQuery: string, env: Env) {
   };
 }
 
+async function handleAiQuestion(question: string, env: Env): Promise<ChatResponse> {
+  const metricResult = await findMetricDefinition(question, env);
+
+  if (metricResult.found) {
+    return {
+      answer: `${metricResult.metric.display_name}: ${metricResult.metric.description}`,
+      dataset: "metric_definitions.json",
+      rows: [metricResult.metric],
+    };
+  }
+
+  return {
+    answer: `I couldn't find a metric definition for: ${question}`,
+    dataset: "metric_definitions.json",
+    rows: [],
+  };
+}
+
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
     const url = new URL(request.url);
@@ -113,6 +131,7 @@ export default {
         endpoints: {
           health: "/health",
           metric: "/api/metric",
+          ai: "/api/ai",
         },
       });
     }
@@ -131,6 +150,24 @@ export default {
         }
 
         const result = await findMetricDefinition(metricQuery, env);
+        return json(result);
+      } catch (error) {
+        const message =
+          error instanceof Error ? error.message : "Unknown server error";
+        return json({ error: message }, 500);
+      }
+    }
+
+    if (request.method === "POST" && url.pathname === "/api/ai") {
+      try {
+        const body = (await request.json()) as { question?: string };
+        const question = body.question?.trim();
+
+        if (!question) {
+          return json({ error: "Missing question" }, 400);
+        }
+
+        const result = await handleAiQuestion(question, env);
         return json(result);
       } catch (error) {
         const message =
