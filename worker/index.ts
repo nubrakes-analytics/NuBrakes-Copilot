@@ -123,26 +123,45 @@ async function findMetricDefinition(
   const metrics = await loadMetricDefinitions();
   const q = normalize(metricQuery);
 
-  const match = metrics.find((metric) => {
+  let bestMatch: MetricDefinition | null = null;
+  let bestScore = 0;
+
+  for (const metric of metrics) {
     const metricId = normalize(metric.metric_id);
-    const displayName = normalize(metric.display_name);
-    const aliases = metric.aliases ?? [];
-    const tags = metric.tags ?? [];
+    const metricName = normalize(metric.metric_name);
+    const category = normalize(metric.category);
+    const tags = (metric.tags ?? []).map(normalize);
 
-    return (
-      metricId === q ||
-      displayName === q ||
-      aliases.some((alias) => normalize(alias) === q) ||
-      tags.some((tag) => normalize(tag) === q) ||
-      displayName.includes(q) ||
-      q.includes(displayName) ||
-      aliases.some(
-        (alias) => normalize(alias).includes(q) || q.includes(normalize(alias))
-      )
-    );
-  });
+    let score = 0;
 
-  if (!match) {
+    if (metricId === q) score = Math.max(score, 100);
+    if (metricName === q) score = Math.max(score, 95);
+    if (tags.some((tag) => tag === q)) score = Math.max(score, 90);
+    if (category === q) score = Math.max(score, 70);
+
+    if (metricName.includes(q) || q.includes(metricName)) {
+      score = Math.max(score, 60);
+    }
+
+    if (metricId.includes(q) || q.includes(metricId)) {
+      score = Math.max(score, 55);
+    }
+
+    if (tags.some((tag) => tag.includes(q) || q.includes(tag))) {
+      score = Math.max(score, 50);
+    }
+
+    if (category.includes(q) || q.includes(category)) {
+      score = Math.max(score, 40);
+    }
+
+    if (score > bestScore) {
+      bestScore = score;
+      bestMatch = metric;
+    }
+  }
+
+  if (!bestMatch) {
     return {
       found: false,
       message: `No metric found for query: ${metricQuery}`,
@@ -151,10 +170,9 @@ async function findMetricDefinition(
 
   return {
     found: true,
-    metric: match,
+    metric: bestMatch,
   };
 }
-
 async function executeTool(toolName: string, args: Record<string, unknown>) {
   if (toolName === "find_metric_definition") {
     const metricQuery = String(args.metric_query || "").trim();
@@ -266,7 +284,7 @@ async function handleAiQuestion(
       "metric" in toolResult
     ) {
       const metric = (toolResult as { metric: MetricDefinition }).metric;
-      answer = `${metric.display_name}: ${metric.description}`;
+     answer = `${metric.metric_name}: ${metric.definition}`;
     } else if (
       toolResult &&
       typeof toolResult === "object" &&
