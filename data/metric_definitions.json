@@ -286,4 +286,5 @@
       "source_table": "orders",
       "source_column": "dispatch_time_minutes",
       "is_primary": false,
-      "tags": ["operations", "speed"]
+      "tags": ["operations", "speed"]}
+]
