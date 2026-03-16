@@ -47,12 +47,25 @@ export default {
     }
 
     if (request.method === "POST" && url.pathname === "/api/ai") {
-      return json({
-        answer: "Worker route is working.",
-        dataset: "test",
-        rows: [],
-      });
+  try {
+    const body = (await request.json()) as { question?: string };
+    const question = body.question?.trim();
+
+    if (!question) {
+      return json({ error: "Missing question" }, 400);
     }
+
+    return json({
+      answer: `You asked: ${question}`,
+      dataset: "test",
+      rows: [],
+    });
+  } catch (error) {
+    const message =
+      error instanceof Error ? error.message : "Unknown server error";
+    return json({ error: message }, 500);
+  }
+}
 
     if (request.method === "POST" && url.pathname === "/api/metric") {
       return json({
