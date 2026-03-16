@@ -170,9 +170,10 @@ export default function NubrakesAICopilotFrontend() {
       });
 
       const text = await res.text();
+      console.log("status:", res.status);
+      console.log("raw response:", text);
 
       if (!res.ok) {
-        console.error("Worker error response:", text);
         throw new Error(text || `Request failed with ${res.status}`);
       }
 
@@ -202,7 +203,9 @@ export default function NubrakesAICopilotFrontend() {
         {
           role: "assistant",
           content:
-            "I couldn't reach the live AI API. Please check that the Worker is deployed and that /api/ai is returning a valid response.",
+            error instanceof Error
+              ? error.message
+              : "Unknown error while calling the API.",
           meta: {
             dataset: "Connection error",
             rows: [],
