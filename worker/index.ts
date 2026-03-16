@@ -13,8 +13,9 @@ type MetricDefinition = {
   format: string;
   direction: string;
   aggregation: string;
-  source_table: string;
-  source_column: string;
+  source_table?: string;
+  source_column?: string;
+  formula?: string;
   is_primary: boolean;
   tags: string[];
 };
@@ -63,38 +64,45 @@ async function loadMetricDefinitions(): Promise<MetricDefinition[]> {
     );
   }
 
-  const data = (await response.json()) as MetricDefinition[];
+  const raw = await response.json();
 
-  if (!Array.isArray(data)) {
-    throw new Error("metric_definitions.json did not return an array");
+  if (Array.isArray(raw)) {
+    return raw as MetricDefinition[];
   }
 
-  return data;
+  if (
+    raw &&
+    typeof raw === "object" &&
+    Array.isArray((raw as { metrics?: unknown }).metrics)
+  ) {
+    return (raw as { metrics: MetricDefinition[] }).metrics;
+  }
+
+  throw new Error(
+    "metric_definitions.json did not return an array or { metrics: [] }"
+  );
 }
-async function findMetricDefinition(metricQuery: string, env: Env) {
-  const metrics = await loadMetricDefinitions(env);
+
+async function findMetricDefinition(metricQuery: string) {
+  const metrics = await loadMetricDefinitions();
   const q = normalize(metricQuery);
 
   const match = metrics.find((metric) => {
-    const idMatch = normalize(metric.metric_id) === q;
-    const displayMatch = normalize(metric.display_name) === q;
-    const aliasMatch = metric.aliases?.some((alias) => normalize(alias) === q);
-    const tagMatch = metric.tags?.some((tag) => normalize(tag) === q);
-
-    const partialDisplayMatch =
-      normalize(metric.display_name).includes(q) || q.includes(normalize(metric.display_name));
-
-    const partialAliasMatch = metric.aliases?.some(
-      (alias) => normalize(alias).includes(q) || q.includes(normalize(alias))
-    );
+    const metricId = normalize(metric.metric_id);
+    const displayName = normalize(metric.display_name);
+    const aliases = metric.aliases ?? [];
+    const tags = metric.tags ?? [];
 
     return (
-      idMatch ||
-      displayMatch ||
-      aliasMatch ||
-      tagMatch ||
-      partialDisplayMatch ||
-      partialAliasMatch
+      metricId === q ||
+      displayName === q ||
+      aliases.some((alias) => normalize(alias) === q) ||
+      tags.some((tag) => normalize(tag) === q) ||
+      displayName.includes(q) ||
+      q.includes(displayName) ||
+      aliases.some(
+        (alias) => normalize(alias).includes(q) || q.includes(normalize(alias))
+      )
     );
   });
 
@@ -111,8 +119,8 @@ async function findMetricDefinition(metricQuery: string, env: Env) {
   };
 }
 
-async function handleAiQuestion(question: string, env: Env): Promise<ChatResponse> {
-  const metricResult = await findMetricDefinition(question, env);
+async function handleAiQuestion(question: string): Promise<ChatResponse> {
+  const metricResult = await findMetricDefinition(question);
 
   if (metricResult.found) {
     return {
@@ -130,7 +138,7 @@ async function handleAiQuestion(question: string, env: Env): Promise<ChatRespons
 }
 
 export default {
-  async fetch(request: Request, env: Env): Promise<Response> {
+  async fetch(request: Request): Promise<Response> {
     const url = new URL(request.url);
 
     if (request.method === "OPTIONS") {
@@ -150,7 +158,24 @@ export default {
     }
 
     if (request.method === "GET" && url.pathname === "/health") {
-      return json({ ok: true, service: "nubrakes-ai-copilot-api" });
+      return json({
+        ok: true,
+        service: "nubrakes-ai-copilot-api",
+      });
+    }
+
+    if (request.method === "GET" && url.pathname === "/api/ai") {
+      return json({
+        ok: true,
+        message: "Use POST /api/ai with JSON body: { question }",
+      });
+    }
+
+    if (request.method === "GET" && url.pathname === "/api/metric") {
+      return json({
+        ok: true,
+        message: "Use POST /api/metric with JSON body: { metric_query }",
+      });
     }
 
     if (request.method === "POST" && url.pathname === "/api/metric") {
@@ -162,7 +187,7 @@ export default {
           return json({ error: "Missing metric_query" }, 400);
         }
 
-        const result = await findMetricDefinition(metricQuery, env);
+        const result = await findMetricDefinition(metricQuery);
         return json(result);
       } catch (error) {
         const message =
@@ -180,7 +205,7 @@ export default {
           return json({ error: "Missing question" }, 400);
         }
 
-        const result = await handleAiQuestion(question, env);
+        const result = await handleAiQuestion(question);
         return json(result);
       } catch (error) {
         const message =
