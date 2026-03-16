@@ -212,40 +212,22 @@ export default function NubrakesAICopilotFrontend() {
       <div className="mx-auto grid max-w-7xl gap-6 p-6 lg:grid-cols-[320px_minmax(0,1fr)]">
         <aside className="space-y-6">
           <div className="rounded-3xl bg-[#E63F2B] p-6 text-white shadow-sm">
+  <div>
   <div className="mb-3 inline-flex items-center gap-2 rounded-full bg-[#CDB7B7]/20 px-3 py-1 text-2xl font-semibold text-white">
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    viewBox="0 0 1536 1024"
-    className="h-6 w-6 shrink-0"
-    fill="none"
-  >
-    <path
-      d="M94 876C78 876 66 868 60 856C54 844 56 830 64 816L392 182C401 164 420 152 440 152H1000C1019 152 1037 162 1047 178C1057 194 1058 214 1048 231L887 521C875 543 847 551 826 539C804 527 796 499 808 478L954 214H474L143 848C133 866 114 876 94 876Z"
-      fill="#F53B12"
+    <img
+      src="/nubrakes-ai-copilot.svg"
+      alt="NuBrakes AI Copilot logo"
+      className="h-6 w-6"
     />
-    <path
-      d="M540 876C520 876 502 866 492 848C482 830 483 809 493 792L627 550C637 532 655 521 675 521C695 521 713 531 723 548L780 646H935L1189 182C1199 164 1217 152 1237 152H1341C1361 152 1379 162 1389 180C1399 198 1398 219 1388 236L1070 846C1060 864 1042 876 1022 876H540Z"
-      fill="#F53B12"
-    />
-    <path
-      d="M1118 152C1128 201 1151 224 1200 234C1151 244 1128 267 1118 316C1108 267 1085 244 1036 234C1085 224 1108 201 1118 152Z"
-      fill="#000000"
-    />
-    <path
-      d="M1193 244C1199 271 1212 284 1239 290C1212 296 1199 309 1193 336C1187 309 1174 296 1147 290C1174 284 1187 271 1193 244Z"
-      fill="#000000"
-    />
-  </svg>
+    <span className="text-m font-semibold text-[#0E2468]">NuBrakes AI Copilot</span>
+  </div>
 
-  <span>NuBrakes AI Copilot</span>
-</div>
-  <h1 className="text-2xl font-semibold">Self-serve analytics chat</h1>
+  <h1 className="text-2xl font-semibold text-[#0E2468]">Self-serve analytics chat</h1>
   <p className="mt-3 text-sm leading-6 text-[#CDB7B7]">
     A user-friendly chat interface for querying approved NuBrakes
     datasets and getting structured business answers.
   </p>
 </div>
-
           <div className="grid gap-3">
             <StatCard
               icon={Database}
