@@ -117,11 +117,33 @@ async function loadMetricDefinitions(): Promise<MetricDefinition[]> {
   );
 }
 
+function parseTags(value: unknown): string[] {
+  if (Array.isArray(value)) {
+    return value.map((tag) => normalize(String(tag))).filter(Boolean);
+  }
+
+  if (typeof value === "string") {
+    return value
+      .split("|")
+      .map((tag) => normalize(tag))
+      .filter(Boolean);
+  }
+
+  return [];
+}
+
 async function findMetricDefinition(
   metricQuery: string
 ): Promise<MetricLookupResult> {
   const metrics = await loadMetricDefinitions();
   const q = normalize(metricQuery);
+
+  if (!q) {
+    return {
+      found: false,
+      message: "Metric query is empty",
+    };
+  }
 
   let bestMatch: MetricDefinition | null = null;
   let bestScore = 0;
@@ -130,7 +152,7 @@ async function findMetricDefinition(
     const metricId = normalize(metric.metric_id);
     const metricName = normalize(metric.metric_name);
     const category = normalize(metric.category);
-    const tags = (metric.tags ?? []).map(normalize);
+    const tags = parseTags(metric.tags);
 
     let score = 0;
 
@@ -139,20 +161,22 @@ async function findMetricDefinition(
     if (tags.some((tag) => tag === q)) score = Math.max(score, 90);
     if (category === q) score = Math.max(score, 70);
 
-    if (metricName.includes(q) || q.includes(metricName)) {
-      score = Math.max(score, 60);
-    }
+    if (q.length >= 4) {
+      if (metricName.includes(q) || q.includes(metricName)) {
+        score = Math.max(score, 60);
+      }
 
-    if (metricId.includes(q) || q.includes(metricId)) {
-      score = Math.max(score, 55);
-    }
+      if (metricId.includes(q) || q.includes(metricId)) {
+        score = Math.max(score, 55);
+      }
 
-    if (tags.some((tag) => tag.includes(q) || q.includes(tag))) {
-      score = Math.max(score, 50);
-    }
+      if (tags.some((tag) => tag.includes(q) || q.includes(tag))) {
+        score = Math.max(score, 50);
+      }
 
-    if (category.includes(q) || q.includes(category)) {
-      score = Math.max(score, 40);
+      if (category.includes(q) || q.includes(category)) {
+        score = Math.max(score, 40);
+      }
     }
 
     if (score > bestScore) {
@@ -173,6 +197,7 @@ async function findMetricDefinition(
     metric: bestMatch,
   };
 }
+
 async function executeTool(toolName: string, args: Record<string, unknown>) {
   if (toolName === "find_metric_definition") {
     const metricQuery = String(args.metric_query || "").trim();
