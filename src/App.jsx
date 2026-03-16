@@ -212,7 +212,7 @@ export default function NubrakesAICopilotFrontend() {
       <div className="mx-auto grid max-w-7xl gap-6 p-6 lg:grid-cols-[320px_minmax(0,1fr)]">
         <aside className="space-y-6">
           <div className="rounded-3xl bg-[#E63F2B] p-6 text-white shadow-sm">
-            <div className="mb-3 inline-flex rounded-full bg-[#CDB7B7]/20 px-3 py-1 text-xs font-medium text-white">
+            <div className="mb-3 inline-flex rounded-full bg-[#CDB7B7]/20 px-3 py-1 text-2xl font-semibold text-white">
               NuBrakes AI Copilot
             </div>
             <h1 className="text-2xl font-semibold">Self-serve analytics chat</h1>
