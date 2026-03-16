@@ -1,5 +1,12 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { Send, Database, Bot, Link as LinkIcon, BarChart3, Loader2 } from "lucide-react";
+import {
+  Send,
+  Database,
+  Bot,
+  Link as LinkIcon,
+  BarChart3,
+  Loader2,
+} from "lucide-react";
 
 const EXAMPLES = [
   "What does completed_revenue mean?",
@@ -18,7 +25,8 @@ const DATASETS = [
   "dashboard_links.json",
 ];
 
-const AI_ENDPOINT = "https://nubrakes-copilot.jonathan-libiran.workers.dev/api/ai";
+const AI_ENDPOINT =
+  "https://nubrakes-copilot.jonathan-libiran.workers.dev/api/ai";
 
 function StatCard({ icon: Icon, label, value }) {
   return (
@@ -27,9 +35,13 @@ function StatCard({ icon: Icon, label, value }) {
         <div className="rounded-2xl bg-slate-100 p-2">
           <Icon className="h-5 w-5 text-slate-700" />
         </div>
-        <div>
-          <div className="text-xs uppercase tracking-wide text-slate-500">{label}</div>
-          <div className="text-lg font-semibold text-slate-900">{value}</div>
+        <div className="min-w-0">
+          <div className="text-xs uppercase tracking-wide text-slate-500">
+            {label}
+          </div>
+          <div className="truncate text-lg font-semibold text-slate-900">
+            {value}
+          </div>
         </div>
       </div>
     </div>
@@ -43,7 +55,11 @@ function TablePreview({ rows }) {
   }, [rows]);
 
   if (!rows?.length) {
-    return <div className="text-sm text-slate-500">No supporting rows returned.</div>;
+    return (
+      <div className="rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-4 text-sm text-slate-500">
+        No supporting rows returned.
+      </div>
+    );
   }
 
   return (
@@ -53,7 +69,10 @@ function TablePreview({ rows }) {
           <thead className="bg-slate-50 text-left text-slate-600">
             <tr>
               {columns.map((col) => (
-                <th key={col} className="px-4 py-3 font-medium whitespace-nowrap">
+                <th
+                  key={col}
+                  className="whitespace-nowrap px-3 py-3 font-medium sm:px-4"
+                >
                   {col}
                 </th>
               ))}
@@ -63,7 +82,10 @@ function TablePreview({ rows }) {
             {rows.map((row, idx) => (
               <tr key={idx} className="border-t border-slate-100">
                 {columns.map((col) => (
-                  <td key={col} className="px-4 py-3 whitespace-nowrap text-slate-800">
+                  <td
+                    key={col}
+                    className="whitespace-nowrap px-3 py-3 text-slate-800 sm:px-4"
+                  >
                     {String(row[col])}
                   </td>
                 ))}
@@ -82,7 +104,7 @@ function MessageBubble({ message }) {
   return (
     <div className={`flex ${isUser ? "justify-end" : "justify-start"}`}>
       <div
-        className={`max-w-3xl rounded-3xl px-4 py-3 ${
+        className={`w-full max-w-[92%] rounded-3xl px-4 py-3 sm:max-w-3xl ${
           isUser
             ? "bg-slate-900 text-white"
             : "bg-slate-50 text-slate-900 ring-1 ring-slate-200"
@@ -92,7 +114,9 @@ function MessageBubble({ message }) {
           {isUser ? "You" : "NuBrakes AI Copilot"}
         </div>
 
-        <div className="whitespace-pre-wrap text-sm leading-6">{message.content}</div>
+        <div className="whitespace-pre-wrap text-sm leading-6 sm:text-[15px]">
+          {message.content}
+        </div>
 
         {!isUser && message.meta && (
           <div className="mt-4 space-y-4">
@@ -197,29 +221,41 @@ export default function NubrakesAICopilotFrontend() {
 
   return (
     <div className="min-h-screen bg-slate-100 text-slate-900">
-      <div className="mx-auto grid max-w-7xl gap-6 p-6 lg:grid-cols-[320px_minmax(0,1fr)]">
-        <aside className="space-y-6">
-          <div className="rounded-3xl bg-slate-900 p-6 text-white shadow-sm">
-            <div className="mb-3 inline-flex rounded-full bg-white/10 px-3 py-1 text-xs font-medium">
+      <div className="mx-auto flex max-w-7xl flex-col gap-4 p-3 sm:gap-5 sm:p-4 lg:grid lg:grid-cols-[300px_minmax(0,1fr)] lg:gap-6 lg:p-6 xl:grid-cols-[340px_minmax(0,1fr)]">
+        <aside className="space-y-4 sm:space-y-5 lg:sticky lg:top-6 lg:h-fit">
+          <div className="rounded-3xl bg-slate-900 p-5 text-white shadow-sm sm:p-6">
+            <div className="mb-3 inline-flex rounded-full bg-white/10 px-3 py-1 text-[11px] font-medium uppercase tracking-wide sm:text-xs">
               NuBrakes AI Copilot
             </div>
-            <h1 className="text-2xl font-semibold">Self-serve analytics chat</h1>
+            <h1 className="text-xl font-semibold sm:text-2xl">
+              Self-serve analytics chat
+            </h1>
             <p className="mt-3 text-sm leading-6 text-slate-300">
-              A user-friendly chat interface for querying approved NuBrakes datasets and getting structured business answers.
+              A user-friendly chat interface for querying approved NuBrakes
+              datasets and getting structured business answers.
             </p>
           </div>
 
-          <div className="grid gap-3">
-            <StatCard icon={Database} label="Datasets" value={String(DATASETS.length)} />
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-3 lg:grid-cols-1">
+            <StatCard
+              icon={Database}
+              label="Datasets"
+              value={String(DATASETS.length)}
+            />
             <StatCard icon={BarChart3} label="Mode" value="Live AI Chat" />
             <StatCard icon={Bot} label="Backend" value="/api/ai" />
           </div>
 
-          <div className="rounded-3xl bg-white p-5 shadow-sm ring-1 ring-slate-200">
-            <div className="mb-3 text-sm font-semibold text-slate-900">Available datasets</div>
-            <div className="space-y-2">
+          <div className="rounded-3xl bg-white p-4 shadow-sm ring-1 ring-slate-200 sm:p-5">
+            <div className="mb-3 text-sm font-semibold text-slate-900">
+              Available datasets
+            </div>
+            <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-1">
               {DATASETS.map((dataset) => (
-                <div key={dataset} className="rounded-2xl bg-slate-50 px-3 py-2 text-sm text-slate-700 ring-1 ring-slate-200">
+                <div
+                  key={dataset}
+                  className="rounded-2xl bg-slate-50 px-3 py-2 text-xs text-slate-700 ring-1 ring-slate-200 sm:text-sm"
+                >
                   {dataset}
                 </div>
               ))}
@@ -227,22 +263,24 @@ export default function NubrakesAICopilotFrontend() {
           </div>
         </aside>
 
-        <main className="flex h-[85vh] flex-col rounded-3xl bg-white shadow-sm ring-1 ring-slate-200">
-          <div className="border-b border-slate-200 p-5">
-            <div className="text-lg font-semibold">Ask NuBrakes AI Copilot</div>
+        <main className="flex min-h-[70vh] flex-col overflow-hidden rounded-3xl bg-white shadow-sm ring-1 ring-slate-200 lg:h-[calc(100vh-3rem)] lg:min-h-0">
+          <div className="border-b border-slate-200 p-4 sm:p-5">
+            <div className="text-base font-semibold sm:text-lg">
+              Ask NuBrakes AI Copilot
+            </div>
             <div className="mt-1 text-sm text-slate-500">
               Ask naturally, then wait for the answer like a normal chat.
             </div>
           </div>
 
-          <div className="border-b border-slate-200 p-5">
-            <div className="flex flex-wrap gap-2">
+          <div className="border-b border-slate-200 p-4 sm:p-5">
+            <div className="flex snap-x gap-2 overflow-x-auto pb-1 sm:flex-wrap sm:overflow-visible sm:pb-0">
               {EXAMPLES.map((example) => (
                 <button
                   key={example}
                   onClick={() => handleAsk(example)}
                   disabled={loading}
-                  className="rounded-full bg-slate-100 px-3 py-2 text-sm text-slate-700 transition hover:bg-slate-200 disabled:cursor-not-allowed disabled:opacity-50"
+                  className="shrink-0 rounded-full bg-slate-100 px-3 py-2 text-left text-xs text-slate-700 transition hover:bg-slate-200 disabled:cursor-not-allowed disabled:opacity-50 sm:text-sm"
                 >
                   {example}
                 </button>
@@ -250,7 +288,7 @@ export default function NubrakesAICopilotFrontend() {
             </div>
           </div>
 
-          <div className="flex-1 space-y-4 overflow-y-auto p-5">
+          <div className="flex-1 space-y-4 overflow-y-auto p-3 sm:p-5">
             {messages.map((message, index) => (
               <MessageBubble key={index} message={message} />
             ))}
@@ -267,8 +305,8 @@ export default function NubrakesAICopilotFrontend() {
             <div ref={messagesEndRef} />
           </div>
 
-          <div className="border-t border-slate-200 p-5">
-            <div className="flex gap-3">
+          <div className="border-t border-slate-200 p-3 sm:p-5">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
               <textarea
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
@@ -280,12 +318,12 @@ export default function NubrakesAICopilotFrontend() {
                 }}
                 placeholder="Ask about metrics, markets, technicians, stores, or dashboards..."
                 rows={2}
-                className="flex-1 resize-none rounded-2xl border border-slate-300 px-4 py-3 text-sm outline-none placeholder:text-slate-400 focus:border-slate-500"
+                className="min-h-[56px] w-full resize-none rounded-2xl border border-slate-300 px-4 py-3 text-sm outline-none placeholder:text-slate-400 focus:border-slate-500"
               />
               <button
                 onClick={() => handleAsk(input)}
                 disabled={loading || !input.trim()}
-                className="inline-flex items-center gap-2 rounded-2xl bg-slate-900 px-5 py-3 text-sm font-medium text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50"
+                className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-2xl bg-slate-900 px-5 py-3 text-sm font-medium text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto sm:min-w-[132px]"
               >
                 <Send className="h-4 w-4" />
                 Send
