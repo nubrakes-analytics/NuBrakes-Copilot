@@ -26,43 +26,6 @@ const DATASETS_FALLBACK = [
   },
 ];
 
-function YourComponent() {
-  const [datasets, setDatasets] = useState(DATASETS_FALLBACK);
-
-  useEffect(() => {
-    fetch("data/dataset_list.json")
-      .then(r => {
-        if (!r.ok) throw new Error(`Failed to load dataset list: ${r.status}`);
-        return r.json();
-      })
-      .then(d => {
-        if (Array.isArray(d) && d.length) {
-          setDatasets(d);
-        }
-      })
-      .catch(err => {
-        console.error("dataset_list.json load failed", err);
-      });
-  }, []);
-
-  return React.createElement(
-    "div",
-    null,
-    datasets.map(item =>
-      React.createElement(
-        "a",
-        {
-          key: item.dataset,
-          href: item.link,
-          target: "_blank",
-          rel: "noreferrer"
-        },
-        item.dataset
-      )
-    )
-  );
-}
-
 const AI_ENDPOINT =
   "https://nubrakes-copilot.jonathan-libiran.workers.dev/api/ai";
 
@@ -191,6 +154,24 @@ export default function NubrakesAICopilotFrontend() {
   const [loading, setLoading] = useState(false);
   const messagesEndRef = useRef(null);
 
+const [datasets, setDatasets] = useState(DATASETS_FALLBACK);
+
+useEffect(() => {
+  fetch("/data/dataset_list.json")
+    .then((r) => {
+      if (!r.ok) throw new Error(`Failed to load dataset list: ${r.status}`);
+      return r.json();
+    })
+    .then((d) => {
+      if (Array.isArray(d) && d.length) {
+        setDatasets(d);
+      }
+    })
+    .catch((err) => {
+      console.error("dataset_list.json load failed", err);
+    });
+}, []);
+  
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, loading]);
@@ -284,7 +265,7 @@ export default function NubrakesAICopilotFrontend() {
             <StatCard
               icon={Database}
               label="Datasets"
-              value={String(DATASETS.length)}
+              value={String(datasets.length)}
             />
             <StatCard icon={BarChart3} label="Mode" value="Live AI Chat" />
             <StatCard icon={Bot} label="Backend" value="/api/ai" />
