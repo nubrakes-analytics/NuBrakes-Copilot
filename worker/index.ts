@@ -328,11 +328,12 @@ async function handleAiQuestion(
   env: Env
 ): Promise<ChatResponse> {
   const systemPrompt =
-    "You are the NuBrakes AI Copilot. " +
-    "Use tools when the user asks what a metric means or asks for a KPI definition. " +
-    "Do not invent metric definitions. " +
-    "If a tool returns a metric, answer in clear business language. " +
-    "If no metric is found, say so clearly.";
+  "You are the NuBrakes AI Copilot. " +
+  "Use tools when the user asks what a metric means, asks for a KPI definition, or asks where to find a dashboard. " +
+  "Do not invent metric definitions or dashboard links. " +
+  "If a tool returns a metric, answer in clear business language. " +
+  "If a tool returns dashboard links, summarize the best match clearly. " +
+  "If no result is found, say so clearly.";
 
   const firstResponse = await createOpenAIResponse(env, {
     model: "gpt-4.1",
