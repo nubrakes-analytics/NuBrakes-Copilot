@@ -13,17 +13,55 @@ const EXAMPLES = [
   "Where can I find the ops dashboard?",
 ];
 
-const DATASETS = [
+const DATASETS_FALLBACK = [
   {
+    sheet_name: "metric_definitions",
     dataset: "metric_definitions.json",
     link: "https://docs.google.com/spreadsheets/d/1-HSowpqpc3F1uahwpEFHuI2ecPC09DczantTscYF8pc/edit?gid=0#gid=0",
   },
   {
+    sheet_name: "dashboard_links",
     dataset: "dashboard_links.json",
     link: "https://docs.google.com/spreadsheets/d/1-HSowpqpc3F1uahwpEFHuI2ecPC09DczantTscYF8pc/edit?gid=474904201#gid=474904201",
   },
 ];
 
+function YourComponent() {
+  const [datasets, setDatasets] = useState(DATASETS_FALLBACK);
+
+  useEffect(() => {
+    fetch("data/dataset_list.json")
+      .then(r => {
+        if (!r.ok) throw new Error(`Failed to load dataset list: ${r.status}`);
+        return r.json();
+      })
+      .then(d => {
+        if (Array.isArray(d) && d.length) {
+          setDatasets(d);
+        }
+      })
+      .catch(err => {
+        console.error("dataset_list.json load failed", err);
+      });
+  }, []);
+
+  return React.createElement(
+    "div",
+    null,
+    datasets.map(item =>
+      React.createElement(
+        "a",
+        {
+          key: item.dataset,
+          href: item.link,
+          target: "_blank",
+          rel: "noreferrer"
+        },
+        item.dataset
+      )
+    )
+  );
+}
 
 const AI_ENDPOINT =
   "https://nubrakes-copilot.jonathan-libiran.workers.dev/api/ai";
@@ -257,15 +295,18 @@ export default function NubrakesAICopilotFrontend() {
               Available datasets
             </div>
             <div className="space-y-2">
-              {DATASETS.map((item) => (
-                <a
-                  key={item.dataset}
-                  href={item.link}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="flex items-center justify-between rounded-2xl bg-[#CDB7B7]/25 px-3 py-2 text-sm text-[#0E2468] ring-1 ring-[#CDB7B7] transition hover:bg-[#CDB7B7]/40"
-                >
-                  <span>{item.dataset}</span>
+  {datasets.map((item) => (
+    <a
+      key={item.dataset}
+      href={item.link}
+      target="_blank"
+      rel="noreferrer"
+      className="flex items-center justify-between rounded-2xl bg-[#CDB7B7]/25 px-3 py-2 text-sm text-[#0E2468] ring-1 ring-[#CDB7B7] transition hover:bg-[#CDB7B7]/40"
+    >
+      <span>{item.dataset}</span>
+    </a>
+  ))}
+</div>
                   <LinkIcon className="h-4 w-4 shrink-0" />
                 </a>
               ))}
