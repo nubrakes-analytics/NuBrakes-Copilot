@@ -2,7 +2,7 @@
   {
     "dashboard_name": "Operations Dashboard",
     "category": "Operations",
-    "description": "The Operations Dashboard gives leadership a real-time view of operational health by measuring fulfillment volume, revenue efficiency, technician productivity, margin performance, and service disruption rates. It is intended to support better decisions around staffing, scheduling, cost control, and execution quality.",
+    "description": "The Operations Dashboard gives leadership a real-time view of operational health by measuring fulfillment volume, revenue efficiency, technician productivity, margin performance, and service disruption rates. It is intended to support better decisions around staffing, scheduling, cost control, and execution quality. Other Terms: Ops Dash, Ops Dashboard",
     "url": "https://docs.google.com/spreadsheets/d/1gimnPu06CU-UnA4r5rw7194CeDud0HrWwA1UZJDgnK4/edit?gid=1832836203#gid=1832836203",
     "owner": "Operations",
     "refresh_frequency": "Daily"
