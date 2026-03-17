@@ -304,13 +304,11 @@ export default function NubrakesAICopilotFrontend() {
       className="flex items-center justify-between rounded-2xl bg-[#CDB7B7]/25 px-3 py-2 text-sm text-[#0E2468] ring-1 ring-[#CDB7B7] transition hover:bg-[#CDB7B7]/40"
     >
       <span>{item.dataset}</span>
+      <LinkIcon className="h-4 w-4 shrink-0" />
     </a>
   ))}
 </div>
-                  <LinkIcon className="h-4 w-4 shrink-0" />
-                </a>
-              ))}
-            </div>
+                
           </div>
         </aside>
 
