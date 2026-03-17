@@ -376,45 +376,83 @@ async function handleAiQuestion(
   });
 
   let rows: Array<Record<string, unknown>> = [];
-  const dataset =
+const dataset =
   toolCall.name === "get_dashboard_links"
     ? "dashboard_links.json"
     : "metric_definitions.json";
 
+if (
+  toolCall.name === "find_metric_definition" &&
+  toolResult &&
+  typeof toolResult === "object" &&
+  "found" in toolResult &&
+  toolResult.found === true &&
+  "metric" in toolResult
+) {
+  rows = [(toolResult as { metric: MetricDefinition }).metric];
+}
+
+if (
+  toolCall.name === "get_dashboard_links" &&
+  toolResult &&
+  typeof toolResult === "object" &&
+  "dashboards" in toolResult &&
+  Array.isArray(
+    (toolResult as { dashboards: Array<Record<string, unknown>> }).dashboards
+  )
+) {
+  rows = (
+    toolResult as { dashboards: Array<Record<string, unknown>> }
+  ).dashboards;
+}
+
+let answer = secondResponse.output_text?.trim();
+
+if (!answer) {
   if (
+    toolCall.name === "find_metric_definition" &&
     toolResult &&
     typeof toolResult === "object" &&
     "found" in toolResult &&
     toolResult.found === true &&
     "metric" in toolResult
   ) {
-    rows = [(toolResult as { metric: MetricDefinition }).metric];
-  }
+    const metric = (toolResult as { metric: MetricDefinition }).metric;
+    answer = `${metric.metric_name}: ${metric.definition}`;
+  } else if (
+    toolCall.name === "find_metric_definition" &&
+    toolResult &&
+    typeof toolResult === "object" &&
+    "found" in toolResult &&
+    toolResult.found === false &&
+    "message" in toolResult
+  ) {
+    answer = String(toolResult.message);
+  } else if (
+    toolCall.name === "get_dashboard_links" &&
+    toolResult &&
+    typeof toolResult === "object" &&
+    "dashboards" in toolResult &&
+    Array.isArray(
+      (toolResult as { dashboards: Array<Record<string, unknown>> }).dashboards
+    )
+  ) {
+    const dashboards = (
+      toolResult as { dashboards: Array<Record<string, unknown>> }
+    ).dashboards;
 
-  let answer = secondResponse.output_text?.trim();
-
-  if (!answer) {
-    if (
-      toolResult &&
-      typeof toolResult === "object" &&
-      "found" in toolResult &&
-      toolResult.found === true &&
-      "metric" in toolResult
-    ) {
-      const metric = (toolResult as { metric: MetricDefinition }).metric;
-     answer = `${metric.metric_name}: ${metric.definition}`;
-    } else if (
-      toolResult &&
-      typeof toolResult === "object" &&
-      "found" in toolResult &&
-      toolResult.found === false &&
-      "message" in toolResult
-    ) {
-      answer = String(toolResult.message);
+    if (!dashboards.length) {
+      answer = "No dashboard links found.";
+    } else if (dashboards.length === 1) {
+      const d = dashboards[0];
+      answer = `${String(d.dashboard_name || "Dashboard")}: ${String(d.url || "")}`;
     } else {
-      answer = "No answer returned.";
+      answer = `Found ${dashboards.length} dashboard links.`;
     }
+  } else {
+    answer = "No answer returned.";
   }
+}
 
   return {
     answer,
