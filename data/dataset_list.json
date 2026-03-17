@@ -8,5 +8,10 @@
     "sheet_name": "dashboard_links",
     "dataset": "dashboard_links.json",
     "link": "https://docs.google.com/spreadsheets/d/1-HSowpqpc3F1uahwpEFHuI2ecPC09DczantTscYF8pc/edit?gid=474904201#gid=474904201"
+  },
+  {
+    "sheet_name": "fact_nubrakes_supply_demand_daily",
+    "dataset": "fact_nubrakes_supply_demand_daily.json",
+    "link": "https://docs.google.com/spreadsheets/d/1-HSowpqpc3F1uahwpEFHuI2ecPC09DczantTscYF8pc/edit?gid=941453665#gid=941453665"
   }
 ]
