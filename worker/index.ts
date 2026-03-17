@@ -64,6 +64,36 @@ const TOOLS = [
       additionalProperties: false,
     },
   },
+
+  {
+    type: "function",
+    name: "get_dashboard_links",
+    description:
+      "Fetch dashboard links and metadata from dashboard_links.json. Use this when the user asks where to find a dashboard, wants dashboard recommendations, or asks for dashboards by category, owner, refresh frequency, or keyword.",
+    parameters: {
+      type: "object",
+      properties: {
+        category: {
+          type: "string",
+          description: "Optional category filter such as Operations, Marketing, Sales, Executive, or Finance."
+        },
+        owner: {
+          type: "string",
+          description: "Optional owner filter such as Operations or Marketing."
+        },
+        refresh_frequency: {
+          type: "string",
+          description: "Optional refresh frequency filter such as Daily, Weekly, or Monthly."
+        },
+        keyword: {
+          type: "string",
+          description:
+            "Optional free-text keyword to search across dashboard_name, category, description, owner, and refresh_frequency."
+        }
+      },
+      additionalProperties: false
+    }
+  }
 ];
 
 function json(data: unknown, status = 200) {
@@ -79,6 +109,62 @@ function json(data: unknown, status = 200) {
 function normalize(text: string) {
   return text.toLowerCase().trim().replace(/[_-]+/g, " ");
 }
+
+
+async function getDashboardLinksTool(
+  args: Record<string, unknown> = {}
+) {
+  const response = await fetch(`https://nubrakes-analytics.github.io/NuBrakes-Copilot/data/dashboard_links.json`);
+  if (!response.ok) {
+    throw new Error(`Failed to fetch dashboard links: ${response.status}`);
+  }
+
+  const data = await response.json();
+
+  if (!Array.isArray(data)) {
+    throw new Error("Invalid dashboard links format");
+  }
+
+  const category = String(args.category || "").trim().toLowerCase();
+  const owner = String(args.owner || "").trim().toLowerCase();
+  const refreshFrequency = String(args.refresh_frequency || "").trim().toLowerCase();
+  const keyword = String(args.keyword || "").trim().toLowerCase();
+
+  const filtered = data.filter((item) => {
+    const matchesCategory = !category || String(item.category || "").toLowerCase() === category;
+    const matchesOwner = !owner || String(item.owner || "").toLowerCase() === owner;
+    const matchesRefresh =
+      !refreshFrequency || String(item.refresh_frequency || "").toLowerCase() === refreshFrequency;
+
+    const haystack = [
+      item.dashboard_name,
+      item.category,
+      item.description,
+      item.owner,
+      item.refresh_frequency
+    ]
+      .filter(Boolean)
+      .join(" ")
+      .toLowerCase();
+
+    const matchesKeyword = !keyword || haystack.includes(keyword);
+
+    return matchesCategory && matchesOwner && matchesRefresh && matchesKeyword;
+  });
+
+  return {
+    count: filtered.length,
+    dashboards: filtered.map((item) => ({
+      dashboard_name: item.dashboard_name,
+      category: item.category,
+      description: item.description,
+      url: item.url,
+      owner: item.owner,
+      refresh_frequency: item.refresh_frequency
+    }))
+  };
+}
+
 
 async function loadMetricDefinitions(): Promise<MetricDefinition[]> {
   const base = "https://nubrakes-analytics.github.io/NuBrakes-Copilot/data";
@@ -209,6 +295,10 @@ async function executeTool(toolName: string, args: Record<string, unknown>) {
     return await findMetricDefinition(metricQuery);
   }
 
+  if (toolName === "get_dashboard_links") {
+    return await getDashboardLinksTool(args);
+  }
+
   return { error: `Unknown tool: ${toolName}` };
 }
 
@@ -286,7 +376,10 @@ async function handleAiQuestion(
   });
 
   let rows: Array<Record<string, unknown>> = [];
-  const dataset = "metric_definitions.json";
+  const dataset =
+  toolCall.name === "get_dashboard_links"
+    ? "dashboard_links.json"
+    : "metric_definitions.json";
 
   if (
     toolResult &&
