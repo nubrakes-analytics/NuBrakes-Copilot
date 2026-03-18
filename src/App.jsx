@@ -14,16 +14,6 @@ const EXAMPLES = [
 ];
 
 const DATASETS_FALLBACK = [
-  {
-    sheet_name: "metric_definitions",
-    dataset: "metric_definitions.json",
-    link: "https://docs.google.com/spreadsheets/d/1-HSowpqpc3F1uahwpEFHuI2ecPC09DczantTscYF8pc/edit?gid=0#gid=0",
-  },
-  {
-    sheet_name: "dashboard_links",
-    dataset: "dashboard_links.json",
-    link: "https://docs.google.com/spreadsheets/d/1-HSowpqpc3F1uahwpEFHuI2ecPC09DczantTscYF8pc/edit?gid=474904201#gid=474904201",
-  },
 ];
 
 const AI_ENDPOINT =
