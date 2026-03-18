@@ -375,9 +375,14 @@ async function findDatasetLink(
   let bestScore = 0;
 
   for (const dataset of datasets) {
+    const rawDescription = String(dataset.description || "").trim();
+
+    // skip datasets with blank description
+    if (!rawDescription) continue;
+
     const sheetName = normalize(String(dataset.sheet_name || ""));
     const datasetName = normalize(String(dataset.dataset || ""));
-    const description = normalize(String(dataset.description || ""));
+    const description = normalize(rawDescription);
     const link = String(dataset.link || "").trim();
 
     let score = 0;
