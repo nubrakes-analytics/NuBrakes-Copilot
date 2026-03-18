@@ -17,14 +17,10 @@ type MetricDefinition = {
 };
 
 type DatasetDefinition = {
-  dataset_id?: string;
-  dataset_name?: string;
+  sheet_name?: string;
+  dataset?: string;
+  link?: string;
   description?: string;
-  url?: string;
-  owner?: string;
-  refresh_frequency?: string;
-  category?: string;
-  tags?: string[] | string;
 };
 
 type MetricLookupResult =
@@ -379,44 +375,28 @@ async function findDatasetLink(
   let bestScore = 0;
 
   for (const dataset of datasets) {
-    const datasetId = normalize(String(dataset.dataset_id || ""));
-    const datasetName = normalize(String(dataset.dataset_name || ""));
+    const sheetName = normalize(String(dataset.sheet_name || ""));
+    const datasetName = normalize(String(dataset.dataset || ""));
     const description = normalize(String(dataset.description || ""));
-    const category = normalize(String(dataset.category || ""));
-    const owner = normalize(String(dataset.owner || ""));
-    const tags = parseTags(dataset.tags);
+    const link = String(dataset.link || "").trim();
 
     let score = 0;
 
-    if (datasetId === q) score = Math.max(score, 100);
-    if (datasetName === q) score = Math.max(score, 95);
-    if (description === q) score = Math.max(score, 92);
-    if (tags.some((tag) => tag === q)) score = Math.max(score, 90);
-    if (category === q) score = Math.max(score, 75);
+    if (datasetName === q) score = Math.max(score, 100);
+    if (sheetName === q) score = Math.max(score, 95);
+    if (description === q) score = Math.max(score, 90);
 
-    if (q.length >= 4) {
+    if (q.length >= 3) {
       if (datasetName.includes(q) || q.includes(datasetName)) {
+        score = Math.max(score, 75);
+      }
+
+      if (sheetName.includes(q) || q.includes(sheetName)) {
         score = Math.max(score, 70);
       }
 
       if (description.includes(q) || q.includes(description)) {
         score = Math.max(score, 68);
-      }
-
-      if (datasetId.includes(q) || q.includes(datasetId)) {
-        score = Math.max(score, 65);
-      }
-
-      if (tags.some((tag) => tag.includes(q) || q.includes(tag))) {
-        score = Math.max(score, 60);
-      }
-
-      if (category.includes(q) || q.includes(category)) {
-        score = Math.max(score, 50);
-      }
-
-      if (owner.includes(q) || q.includes(owner)) {
-        score = Math.max(score, 40);
       }
     }
 
@@ -427,11 +407,8 @@ async function findDatasetLink(
       for (const word of queryWords) {
         if (
           datasetName.includes(word) ||
-          description.includes(word) ||
-          datasetId.includes(word) ||
-          category.includes(word) ||
-          owner.includes(word) ||
-          tags.some((tag) => tag.includes(word))
+          sheetName.includes(word) ||
+          description.includes(word)
         ) {
           wordHits += 1;
         }
@@ -440,13 +417,13 @@ async function findDatasetLink(
       score += wordHits * 5;
     }
 
-    if (score > bestScore) {
+    if (score > bestScore && link) {
       bestScore = score;
       bestMatch = dataset;
     }
   }
 
-  if (!bestMatch || !bestMatch.url) {
+  if (!bestMatch || !bestMatch.link) {
     return {
       found: false,
       message: `No dataset link found for query: ${datasetQuery}`,
