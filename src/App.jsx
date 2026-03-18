@@ -10,7 +10,8 @@ import {
 
 const EXAMPLES = [
   "What does average order value mean?",
-  "Where can I find the ops dashboard?",
+  "Where can I find the ops dashboard?", 
+  "Which dataset should I use for supply and demand by market?"
 ];
 
 const DATASETS_FALLBACK = [
