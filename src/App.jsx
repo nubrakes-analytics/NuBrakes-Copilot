@@ -10,15 +10,17 @@ import {
 
 const EXAMPLES = [
   "What does average order value mean?",
-  "Where can I find the ops dashboard?", 
-  "Which dataset should I use for supply and demand by market?"
+  "Where can I find the ops dashboard?",
+  "Which dataset should I use for supply and demand by market?",
 ];
 
-const DATASETS_FALLBACK = [
-];
+const DATASET_LIST_URL =
+  "https://nubrakes-analytics.github.io/NuBrakes-Copilot/data/dataset_list.json";
 
 const AI_ENDPOINT =
   "https://nubrakes-copilot.jonathan-libiran.workers.dev/api/ai";
+
+const DATASETS_FALLBACK = [];
 
 function StatCard({ icon: Icon, label, value }) {
   return (
@@ -59,7 +61,10 @@ function TablePreview({ rows }) {
           <thead className="bg-[#CDB7B7]/25 text-left text-[#817E7F]">
             <tr>
               {columns.map((col) => (
-                <th key={col} className="px-4 py-3 font-medium whitespace-nowrap">
+                <th
+                  key={col}
+                  className="whitespace-nowrap px-4 py-3 font-medium"
+                >
                   {col}
                 </th>
               ))}
@@ -71,9 +76,9 @@ function TablePreview({ rows }) {
                 {columns.map((col) => (
                   <td
                     key={col}
-                    className="px-4 py-3 whitespace-nowrap text-[#0E2468]"
+                    className="whitespace-nowrap px-4 py-3 text-[#0E2468]"
                   >
-                    {String(row[col])}
+                    {String(row[col] ?? "")}
                   </td>
                 ))}
               </tr>
@@ -87,6 +92,8 @@ function TablePreview({ rows }) {
 
 function MessageBubble({ message }) {
   const isUser = message.role === "user";
+  const firstRow = message.meta?.rows?.[0] || null;
+  const link = firstRow?.url || firstRow?.link || null;
 
   return (
     <div className={`flex ${isUser ? "justify-end" : "justify-start"}`}>
@@ -114,15 +121,15 @@ function MessageBubble({ message }) {
 
             <TablePreview rows={message.meta.rows || []} />
 
-            {message.meta.rows?.[0]?.url && (
+            {link && (
               <a
-                href={message.meta.rows[0].url}
+                href={link}
                 target="_blank"
                 rel="noreferrer"
                 className="inline-flex items-center gap-2 rounded-2xl bg-[#E63F2B] px-4 py-2 text-sm text-white hover:bg-[#cf3826]"
               >
                 <LinkIcon className="h-4 w-4" />
-                Open dashboard
+                Open link
               </a>
             )}
           </div>
@@ -137,32 +144,40 @@ export default function NubrakesAICopilotFrontend() {
     {
       role: "assistant",
       content:
-        "Hi — I’m your NuBrakes AI Copilot. Ask a question about metrics, markets, technicians, stores, or dashboards.",
+        "Hi — I’m your NuBrakes AI Copilot. Ask a question about metrics, markets, technicians, stores, dashboards, or datasets.",
       meta: null,
     },
   ]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
+  const [datasets, setDatasets] = useState(DATASETS_FALLBACK);
   const messagesEndRef = useRef(null);
 
-const [datasets, setDatasets] = useState(DATASETS_FALLBACK);
+  useEffect(() => {
+    fetch(DATASET_LIST_URL)
+      .then((r) => {
+        if (!r.ok) {
+          throw new Error(`Failed to load dataset list: ${r.status}`);
+        }
+        return r.json();
+      })
+      .then((d) => {
+        console.log("dataset_list.json response:", d);
 
-useEffect(() => {
-  fetch("/data/dataset_list.json")
-    .then((r) => {
-      if (!r.ok) throw new Error(`Failed to load dataset list: ${r.status}`);
-      return r.json();
-    })
-    .then((d) => {
-      if (Array.isArray(d) && d.length) {
-        setDatasets(d);
-      }
-    })
-    .catch((err) => {
-      console.error("dataset_list.json load failed", err);
-    });
-}, []);
-  
+        const parsed = Array.isArray(d)
+          ? d
+          : d && Array.isArray(d.datasets)
+          ? d.datasets
+          : [];
+
+        setDatasets(parsed);
+      })
+      .catch((err) => {
+        console.error("dataset_list.json load failed", err);
+        setDatasets([]);
+      });
+  }, []);
+
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, loading]);
@@ -206,6 +221,8 @@ useEffect(() => {
         },
       ]);
     } catch (error) {
+      console.error("AI request failed", error);
+
       setMessages((prev) => [
         ...prev,
         {
@@ -218,7 +235,6 @@ useEffect(() => {
           },
         },
       ]);
-      console.error(error);
     } finally {
       setLoading(false);
     }
@@ -228,13 +244,13 @@ useEffect(() => {
     <div className="min-h-screen bg-[#F7F2F0] text-[#0E2468]">
       <div className="mx-auto grid max-w-7xl gap-6 p-6 lg:grid-cols-[320px_minmax(0,1fr)]">
         <aside className="space-y-6">
-          <div className="rounded-3xl bg-white p-6 text-white shadow-sm ring-1 ring-[#CDB7B7]">
+          <div className="rounded-3xl bg-white p-6 shadow-sm ring-1 ring-[#CDB7B7]">
             <div>
-              <div className="mb-3 inline-flex items-center gap-2 rounded-full bg-white/20 px-3 py-1">
+              <div className="mb-3 inline-flex items-center gap-3 rounded-full bg-white/20 px-3 py-1">
                 <img
                   src="/nubrakes-ai-copilot.svg"
                   alt="NuBrakes AI Copilot logo"
-                  className="h-18 w-20"
+                  className="h-16 w-20 object-contain"
                 />
                 <span className="text-sm font-semibold text-[#0E2468]">
                   NuBrakes AI Copilot
@@ -266,21 +282,27 @@ useEffect(() => {
             <div className="mb-3 text-sm font-semibold text-[#0E2468]">
               Available datasets
             </div>
+
             <div className="space-y-2">
-  {datasets.map((item) => (
-    <a
-      key={item.dataset}
-      href={item.link}
-      target="_blank"
-      rel="noreferrer"
-      className="flex items-center justify-between rounded-2xl bg-[#CDB7B7]/25 px-3 py-2 text-sm text-[#0E2468] ring-1 ring-[#CDB7B7] transition hover:bg-[#CDB7B7]/40"
-    >
-      <span>{item.dataset}</span>
-      <LinkIcon className="h-4 w-4 shrink-0" />
-    </a>
-  ))}
-</div>
-                
+              {datasets.length === 0 ? (
+                <div className="rounded-2xl border border-dashed border-[#CDB7B7] bg-[#F7F2F0] px-3 py-2 text-sm text-[#817E7F]">
+                  No datasets loaded.
+                </div>
+              ) : (
+                datasets.map((item, idx) => (
+                  <a
+                    key={item.sheet_name || item.dataset || idx}
+                    href={item.link || "#"}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="flex items-center justify-between rounded-2xl bg-[#CDB7B7]/25 px-3 py-2 text-sm text-[#0E2468] ring-1 ring-[#CDB7B7] transition hover:bg-[#CDB7B7]/40"
+                  >
+                    <span>{item.dataset || item.sheet_name || "Unnamed dataset"}</span>
+                    <LinkIcon className="h-4 w-4 shrink-0" />
+                  </a>
+                ))
+              )}
+            </div>
           </div>
         </aside>
 
@@ -335,7 +357,7 @@ useEffect(() => {
                     handleAsk(input);
                   }
                 }}
-                placeholder="Ask about metrics, markets, technicians, stores, or dashboards..."
+                placeholder="Ask about metrics, markets, technicians, stores, dashboards, or datasets..."
                 rows={2}
                 className="flex-1 resize-none rounded-2xl border border-[#CDB7B7] px-4 py-3 text-sm outline-none placeholder:text-[#817E7F]/80 focus:border-[#6E9CC0]"
               />
