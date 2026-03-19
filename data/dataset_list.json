@@ -22,5 +22,11 @@
     "dataset": "fact_nubrakes_channel_market_kpi_daily.json",
     "link": "https://cdn.jsdelivr.net/gh/nubrakes-analytics/NuBrakes-Copilot@main/data/fact_nubrakes_channel_market_kpi_daily.json",
     "description": "Daily channel-by-market KPI dataset containing Month, Week, Day, market, and Channel Category dimensions, with core performance metrics including leads, jobs booked, canceled jobs, revenue, and jobs completed. Use this dataset to analyze daily lead volume, booking volume, cancellations, completed jobs, and revenue trends by market and channel."
+  },
+  {
+    "sheet_name": "fact_nubrakes_marketing_performance_daily",
+    "dataset": "fact_nubrakes_marketing_performance_daily.json",
+    "link": "https://cdn.jsdelivr.net/gh/nubrakes-analytics/NuBrakes-Copilot@main/data/fact_nubrakes_marketing_performance_daily.json",
+    "description": ""
   }
 ]
