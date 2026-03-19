@@ -295,7 +295,7 @@ export default function NubrakesAICopilotFrontend() {
                     href={item.link || "#"}
                     target="_blank"
                     rel="noreferrer"
-                    className="flex items-center justify-between rounded-2xl bg-[#CDB7B7]/25 px-3 py-2 text-sm text-[#0E2468] ring-1 ring-[#CDB7B7] transition hover:bg-[#CDB7B7]/40"
+                    className="flex items-center justify-between rounded-2xl bg-[#CDB7B7]/25 px-3 py-2 text-xs text-[#0E2468] ring-1 ring-[#CDB7B7] transition hover:bg-[#CDB7B7]/40"
                   >
                    <span className="min-w-0 flex-1 pr-3 break-all">
   {item.dataset || item.sheet_name || "Unnamed dataset"}
