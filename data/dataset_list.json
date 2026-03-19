@@ -27,6 +27,6 @@
     "sheet_name": "fact_nubrakes_marketing_performance_daily",
     "dataset": "fact_nubrakes_marketing_performance_daily.json",
     "link": "https://cdn.jsdelivr.net/gh/nubrakes-analytics/NuBrakes-Copilot@main/data/fact_nubrakes_marketing_performance_daily.json",
-    "description": ""
+    "description": "Daily market-level marketing performance dataset containing ad delivery, traffic, lead generation, booking, completion, revenue, and acquisition efficiency metrics. Includes dimensions for day, week, month, and market, with metrics such as impressions, clicks, ctr, marketing_spend, cpc, leads, cost_per_inquiry, jobs_booked, booking_rate, jobs_completed, conversion_rate, revenue, and mac. Designed for trend analysis, market comparisons, and evaluating the relationship between marketing spend and downstream business outcomes."
   }
 ]
