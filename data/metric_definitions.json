@@ -273,6 +273,19 @@
     "tags": "labor cost % of revenue|labor percent of revenue|labor cost ratio|labor share of revenue|labor cost as % revenue"
   },
   {
+    "metric_id": "marketing_spend_pct_revenue",
+    "metric_name": "Marketing Spend % of Revenue",
+    "category": "Finance",
+    "definition": "Percentage of revenue consumed by marketing spend",
+    "unit": "percent",
+    "format_type": "percent",
+    "formula_logic": "marketing_spend / revenue",
+    "aggregation": "ratio",
+    "good_direction": "down",
+    "owner": "Finance",
+    "tags": "marketing spend % of revenue|marketing spend percent of revenue|marketing spend ratio|marketing spend share of revenue|marketing spend as % revenue"
+  },
+  {
     "metric_id": "available_slots",
     "metric_name": "Available Slots",
     "category": "Operations",
