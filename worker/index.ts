@@ -149,6 +149,77 @@ type QueryMetricValueResult =
       message: string;
     };
 
+type AnalyzeMarketPerformanceResult =
+  | {
+      found: true;
+      metric: MetricDefinition;
+      scope: ParsedBusinessScope;
+      datasets_used: Array<{
+        dataset: string;
+        link?: string;
+        row_count: number;
+      }>;
+      analysis: {
+        business_question: string;
+        metric_id: string;
+        metric_name: string;
+        period: string;
+        comparison_period: string;
+        summary: string;
+        underperforming_markets: Array<{
+          market: string;
+          current_value: string;
+          prior_value: string;
+          delta_value: string;
+          raw_current_value: number | null;
+          raw_prior_value: number | null;
+          raw_delta_value: number | null;
+        }>;
+        observations: string[];
+      };
+    }
+  | {
+      found: false;
+      message: string;
+    };
+
+type AnalyzeMixChangeResult =
+  | {
+      found: true;
+      scope: ParsedBusinessScope;
+      datasets_used: Array<{
+        dataset: string;
+        link?: string;
+        row_count: number;
+      }>;
+      analysis: {
+        business_question: string;
+        mix_dimension: "channel" | "market";
+        base_metric: string;
+        period: string;
+        comparison_period: string;
+        summary: string;
+        changes: Array<{
+          dimension_value: string;
+          current_value: string;
+          prior_value: string;
+          current_share: string;
+          prior_share: string;
+          share_delta: string;
+          raw_current_value: number;
+          raw_prior_value: number;
+          raw_current_share: number;
+          raw_prior_share: number;
+          raw_share_delta: number;
+        }>;
+        observations: string[];
+      };
+    }
+  | {
+      found: false;
+      message: string;
+    };
+
 type OpenAIOutputItem = {
   type: string;
   name?: string;
@@ -332,6 +403,42 @@ const TOOLS = [
       additionalProperties: false,
     },
   },
+  {
+    type: "function",
+    name: "analyze_market_performance",
+    description:
+      "Rank markets for a KPI and identify which markets are underperforming versus the prior period.",
+    parameters: {
+      type: "object",
+      properties: {
+        business_question: {
+          type: "string",
+          description:
+            "A market performance question such as 'Which markets are underperforming?' or 'Worst markets for completed jobs this week?'",
+        },
+      },
+      required: ["business_question"],
+      additionalProperties: false,
+    },
+  },
+  {
+    type: "function",
+    name: "analyze_mix_change",
+    description:
+      "Analyze mix change over time, such as lead mix by channel or market this week versus last week.",
+    parameters: {
+      type: "object",
+      properties: {
+        business_question: {
+          type: "string",
+          description:
+            "A mix change question such as 'What changed in lead mix this week?' or 'How did channel lead mix shift last month?'",
+        },
+      },
+      required: ["business_question"],
+      additionalProperties: false,
+    },
+  },
 ] as const;
 
 export default {
@@ -418,6 +525,21 @@ async function handleRequest(request: Request, env: Env): Promise<Response> {
     hasWord("decrease") ||
     hasWord("changed");
 
+  const looksLikeMarketPerformanceQuestion =
+    hasPhrase("which markets are underperforming") ||
+    hasPhrase("underperforming markets") ||
+    hasPhrase("which markets underperform") ||
+    (hasWord("markets") &&
+      (hasWord("underperforming") ||
+        hasWord("underperform") ||
+        hasWord("worst")));
+
+  const looksLikeMixChangeQuestion =
+    hasPhrase("lead mix") ||
+    hasPhrase("channel mix") ||
+    hasPhrase("market mix") ||
+    (hasWord("mix") && (hasWord("changed") || hasWord("shift") || hasWord("shifted")));
+
   const looksLikeDashboardLinkQuestion =
     hasWord("dashboard") ||
     hasWord("report") ||
@@ -437,6 +559,8 @@ async function handleRequest(request: Request, env: Env): Promise<Response> {
 
   const looksLikeMetricValueQuestion =
     !looksLikeBusinessQuestion &&
+    !looksLikeMarketPerformanceQuestion &&
+    !looksLikeMixChangeQuestion &&
     (hasPhrase("what is") ||
       hasPhrase("whats") ||
       hasPhrase("what was") ||
@@ -514,6 +638,72 @@ async function handleRequest(request: Request, env: Env): Promise<Response> {
             dataset: null,
             rows: [],
             data: result,
+          })
+    );
+  }
+
+  if (looksLikeMarketPerformanceQuestion) {
+    const marketResult = await analyzeMarketPerformance(userMessage);
+
+    return jsonResponse(
+      marketResult.found
+        ? buildAppResponse({
+            answer: stripMarkdownBold(
+              [
+                marketResult.analysis.summary,
+                ...marketResult.analysis.observations.slice(0, 6),
+              ].join("\n")
+            ),
+            dataset:
+              marketResult.datasets_used[0]?.dataset ||
+              marketResult.metric.metric_id,
+            datasetLink: marketResult.datasets_used[0]?.link || null,
+            rows: marketResult.analysis.underperforming_markets.map((m) => ({
+              market: m.market,
+              current_value: m.current_value,
+              prior_value: m.prior_value,
+              delta_value: m.delta_value,
+            })),
+            data: marketResult,
+          })
+        : buildAppResponse({
+            answer: stripMarkdownBold(marketResult.message),
+            dataset: null,
+            rows: [],
+            data: marketResult,
+          })
+    );
+  }
+
+  if (looksLikeMixChangeQuestion) {
+    const mixResult = await analyzeMixChange(userMessage);
+
+    return jsonResponse(
+      mixResult.found
+        ? buildAppResponse({
+            answer: stripMarkdownBold(
+              [
+                mixResult.analysis.summary,
+                ...mixResult.analysis.observations.slice(0, 6),
+              ].join("\n")
+            ),
+            dataset: mixResult.datasets_used[0]?.dataset || "mix_analysis",
+            datasetLink: mixResult.datasets_used[0]?.link || null,
+            rows: mixResult.analysis.changes.map((c) => ({
+              dimension_value: c.dimension_value,
+              current_share: c.current_share,
+              prior_share: c.prior_share,
+              share_delta: c.share_delta,
+              current_value: c.current_value,
+              prior_value: c.prior_value,
+            })),
+            data: mixResult,
+          })
+        : buildAppResponse({
+            answer: stripMarkdownBold(mixResult.message),
+            dataset: null,
+            rows: [],
+            data: mixResult,
           })
     );
   }
@@ -596,6 +786,8 @@ async function handleRequest(request: Request, env: Env): Promise<Response> {
               "Use business_question_drivers when the user asks why a KPI moved or what drove performance. " +
               "Use analyze_business_question when the user asks for an actual driver analysis from linked data. " +
               "Use query_metric_value when the user asks for a direct metric value for a market/channel/time period. " +
+              "Use analyze_market_performance for questions about which markets are underperforming or worst. " +
+              "Use analyze_mix_change for questions about lead mix, channel mix, or market mix changes. " +
               "For business questions about why a KPI changed, prefer analyze_business_question. " +
               "For direct fact lookups like revenue/conversion in a specific month, prefer query_metric_value. " +
               "For dashboard link questions, prefer find_dashboard_link. " +
@@ -787,6 +979,14 @@ async function handleToolCall(name: string, args: Record<string, unknown>) {
       );
     case "query_metric_value":
       return await queryMetricValue(String(args.question || ""));
+    case "analyze_market_performance":
+      return await analyzeMarketPerformance(
+        String(args.business_question || "")
+      );
+    case "analyze_mix_change":
+      return await analyzeMixChange(
+        String(args.business_question || "")
+      );
     default:
       return { error: `Unknown tool: ${name}` };
   }
@@ -1655,6 +1855,374 @@ async function analyzeBusinessQuestion(
       delta_value: formatDeltaValue(deltaMetricValue, metricFormat),
       candidate_drivers: candidateDrivers,
       summary,
+      observations,
+    },
+  };
+}
+
+async function analyzeMarketPerformance(
+  businessQuestion: string
+): Promise<AnalyzeMarketPerformanceResult> {
+  const metricResult = await findMetricDefinition(businessQuestion);
+
+  if (!metricResult.found) {
+    const fallbackMetric = await findMetricDefinition("jobs completed");
+    if (!fallbackMetric.found) {
+      return { found: false, message: metricResult.message };
+    }
+    return analyzeMarketPerformanceWithMetric(
+      businessQuestion,
+      fallbackMetric.metric
+    );
+  }
+
+  return analyzeMarketPerformanceWithMetric(
+    businessQuestion,
+    metricResult.metric
+  );
+}
+
+async function analyzeMarketPerformanceWithMetric(
+  businessQuestion: string,
+  metric: MetricDefinition
+): Promise<AnalyzeMarketPerformanceResult> {
+  const primaryDatasetId = getPrimaryDatasetForMetric(metric.metric_id);
+  if (!primaryDatasetId) {
+    return {
+      found: false,
+      message: `No primary dataset mapping found for metric: ${metric.metric_id}`,
+    };
+  }
+
+  const datasets = await findDatasetsByIds([primaryDatasetId]);
+  const dataset = datasets.find((d) => d.link);
+
+  if (!dataset?.link) {
+    return {
+      found: false,
+      message: `No linked dataset found for metric: ${metric.metric_id}`,
+    };
+  }
+
+  const rows = await loadJsonFromUrl<DatasetRow[]>(String(dataset.link));
+  const loadedRows = Array.isArray(rows) ? rows : [];
+
+  const scope = parseBusinessQuestionScopeFromRows(businessQuestion, loadedRows);
+  const supportsMarket = datasetSupportsAnyField(loadedRows, ["market", "Market"]);
+
+  if (!supportsMarket) {
+    return {
+      found: false,
+      message: `Dataset ${primaryDatasetId} does not support market analysis.`,
+    };
+  }
+
+  const filtered = loadedRows.filter((row) =>
+    rowMatchesOptionalFilters(
+      row,
+      { ...scope, market: undefined },
+      true,
+      datasetSupportsAnyField(loadedRows, [
+        "channel_category",
+        "Channel Category",
+        "channel",
+        "Channel",
+      ])
+    )
+  );
+
+  const scoped = splitRowsCurrentVsPrior(
+    filtered,
+    scope.time_grain,
+    scope.target_bucket
+  );
+
+  if (!scoped.current.length || !scoped.prior.length) {
+    return {
+      found: false,
+      message: `Insufficient current versus prior market rows for ${metric.metric_name}.`,
+    };
+  }
+
+  const markets = Array.from(
+    new Set(
+      [...scoped.current, ...scoped.prior]
+        .map((r) => String(r["market"] || r["Market"] || "").trim())
+        .filter(Boolean)
+    )
+  );
+
+  const formatType = metric.format_type || inferFormatType(metric.metric_id);
+
+  const results = markets
+    .map((market) => {
+      const currentRows = scoped.current.filter(
+        (r) => normalize(String(r["market"] || r["Market"] || "")) === normalize(market)
+      );
+      const priorRows = scoped.prior.filter(
+        (r) => normalize(String(r["market"] || r["Market"] || "")) === normalize(market)
+      );
+
+      const currentValue = computeMetricValue(metric.metric_id, currentRows);
+      const priorValue = computeMetricValue(metric.metric_id, priorRows);
+      const deltaValue = computeDelta(currentValue, priorValue);
+
+      return {
+        market,
+        currentValue,
+        priorValue,
+        deltaValue,
+      };
+    })
+    .filter((r) => r.currentValue !== null || r.priorValue !== null);
+
+  if (!results.length) {
+    return {
+      found: false,
+      message: `No market-level results found for ${metric.metric_name}.`,
+    };
+  }
+
+  const underperforming = results
+    .filter((r) => isUnderperformingMetric(metric, r.currentValue, r.priorValue))
+    .sort((a, b) => {
+      const av = underperformanceScore(metric, a.currentValue, a.priorValue);
+      const bv = underperformanceScore(metric, b.currentValue, b.priorValue);
+      return bv - av;
+    });
+
+  const top = underperforming.slice(0, 5);
+  const observations: string[] = [];
+
+  for (const row of top) {
+    observations.push(
+      `${row.market}: ${formatMetricValue(row.currentValue, formatType)} vs ${formatMetricValue(
+        row.priorValue,
+        formatType
+      )} (${formatDeltaValue(row.deltaValue, formatType)}).`
+    );
+  }
+
+  const summary = top.length
+    ? `Most underperforming markets for ${metric.metric_name} in ${scoped.current_label} versus ${scoped.prior_label}: ${top
+        .map((r) => r.market)
+        .join(", ")}.`
+    : `No markets appear to be underperforming for ${metric.metric_name} in ${scoped.current_label} versus ${scoped.prior_label}.`;
+
+  return {
+    found: true,
+    metric,
+    scope: { ...scope, market: undefined },
+    datasets_used: [
+      {
+        dataset: String(dataset.dataset || dataset.sheet_name || ""),
+        link: dataset.link,
+        row_count: filtered.length,
+      },
+    ],
+    analysis: {
+      business_question: businessQuestion,
+      metric_id: metric.metric_id,
+      metric_name: metric.metric_name,
+      period: scoped.current_label,
+      comparison_period: scoped.prior_label,
+      summary,
+      underperforming_markets: top.map((r) => ({
+        market: r.market,
+        current_value: formatMetricValue(r.currentValue, formatType),
+        prior_value: formatMetricValue(r.priorValue, formatType),
+        delta_value: formatDeltaValue(r.deltaValue, formatType),
+        raw_current_value: r.currentValue,
+        raw_prior_value: r.priorValue,
+        raw_delta_value: r.deltaValue,
+      })),
+      observations,
+    },
+  };
+}
+
+async function analyzeMixChange(
+  businessQuestion: string
+): Promise<AnalyzeMixChangeResult> {
+  const normalized = normalize(businessQuestion);
+  const mixDimension: "channel" | "market" =
+    normalized.includes("market mix") ? "market" : "channel";
+
+  const baseMetric =
+    normalized.includes("job mix") || normalized.includes("completed")
+      ? "jobs_completed"
+      : "leads";
+
+  const primaryDatasetId = getPrimaryDatasetForMetric(baseMetric);
+  if (!primaryDatasetId) {
+    return {
+      found: false,
+      message: `No primary dataset mapping found for mix base metric: ${baseMetric}`,
+    };
+  }
+
+  const datasets = await findDatasetsByIds([primaryDatasetId]);
+  const dataset = datasets.find((d) => d.link);
+
+  if (!dataset?.link) {
+    return {
+      found: false,
+      message: `No linked dataset found for mix analysis.`,
+    };
+  }
+
+  const rows = await loadJsonFromUrl<DatasetRow[]>(String(dataset.link));
+  const loadedRows = Array.isArray(rows) ? rows : [];
+  const scope = parseBusinessQuestionScopeFromRows(businessQuestion, loadedRows);
+
+  const supportsMarket = datasetSupportsAnyField(loadedRows, ["market", "Market"]);
+  const supportsChannel = datasetSupportsAnyField(loadedRows, [
+    "channel_category",
+    "Channel Category",
+    "channel",
+    "Channel",
+  ]);
+
+  if (mixDimension === "market" && !supportsMarket) {
+    return {
+      found: false,
+      message: `Dataset ${primaryDatasetId} does not support market mix analysis.`,
+    };
+  }
+
+  if (mixDimension === "channel" && !supportsChannel) {
+    return {
+      found: false,
+      message: `Dataset ${primaryDatasetId} does not support channel mix analysis.`,
+    };
+  }
+
+  const filtered = loadedRows.filter((row) =>
+    rowMatchesOptionalFilters(
+      row,
+      {
+        ...scope,
+        channel: mixDimension === "channel" ? undefined : scope.channel,
+        market: mixDimension === "market" ? undefined : scope.market,
+      },
+      supportsMarket,
+      supportsChannel
+    )
+  );
+
+  const scoped = splitRowsCurrentVsPrior(
+    filtered,
+    scope.time_grain,
+    scope.target_bucket
+  );
+
+  if (!scoped.current.length || !scoped.prior.length) {
+    return {
+      found: false,
+      message: `Insufficient current versus prior rows for ${mixDimension} mix analysis.`,
+    };
+  }
+
+  const dimAccessor =
+    mixDimension === "channel"
+      ? (row: DatasetRow) =>
+          String(
+            row["channel_category"] ||
+              row["Channel Category"] ||
+              row["channel"] ||
+              row["Channel"] ||
+              ""
+          ).trim()
+      : (row: DatasetRow) => String(row["market"] || row["Market"] || "").trim();
+
+  const currentTotal = computeMetricValue(baseMetric, scoped.current);
+  const priorTotal = computeMetricValue(baseMetric, scoped.prior);
+
+  if (
+    currentTotal === null ||
+    priorTotal === null ||
+    currentTotal === 0 ||
+    priorTotal === 0
+  ) {
+    return {
+      found: false,
+      message: `Unable to compute totals for ${mixDimension} mix analysis.`,
+    };
+  }
+
+  const allValues = Array.from(
+    new Set(
+      [...scoped.current, ...scoped.prior]
+        .map(dimAccessor)
+        .filter(Boolean)
+    )
+  );
+
+  const changes = allValues
+    .map((value) => {
+      const currentRows = scoped.current.filter(
+        (r) => normalize(dimAccessor(r)) === normalize(value)
+      );
+      const priorRows = scoped.prior.filter(
+        (r) => normalize(dimAccessor(r)) === normalize(value)
+      );
+
+      const currentValue = computeMetricValue(baseMetric, currentRows) || 0;
+      const priorValue = computeMetricValue(baseMetric, priorRows) || 0;
+      const currentShare = currentTotal > 0 ? currentValue / currentTotal : 0;
+      const priorShare = priorTotal > 0 ? priorValue / priorTotal : 0;
+      const shareDelta = currentShare - priorShare;
+
+      return {
+        dimension_value: value,
+        current_value: formatMetricValue(currentValue, "number"),
+        prior_value: formatMetricValue(priorValue, "number"),
+        current_share: formatMetricValue(currentShare, "percent"),
+        prior_share: formatMetricValue(priorShare, "percent"),
+        share_delta: formatDeltaValue(shareDelta, "percent"),
+        raw_current_value: currentValue,
+        raw_prior_value: priorValue,
+        raw_current_share: currentShare,
+        raw_prior_share: priorShare,
+        raw_share_delta: shareDelta,
+      };
+    })
+    .sort((a, b) => Math.abs(b.raw_share_delta) - Math.abs(a.raw_share_delta));
+
+  const top = changes.slice(0, 6);
+  const observations: string[] = [];
+
+  for (const row of top) {
+    observations.push(
+      `${row.dimension_value}: ${row.current_share} vs ${row.prior_share} (${row.share_delta}), volume ${row.current_value} vs ${row.prior_value}.`
+    );
+  }
+
+  const summary = top.length
+    ? `${capitalize(baseMetric.replace(/_/g, " "))} ${mixDimension} changed in ${scoped.current_label} versus ${scoped.prior_label}. Biggest share shifts: ${top
+        .slice(0, 3)
+        .map((r) => `${r.dimension_value} (${r.share_delta})`)
+        .join(", ")}.`
+    : `No meaningful ${mixDimension} mix changes found in ${scoped.current_label} versus ${scoped.prior_label}.`;
+
+  return {
+    found: true,
+    scope: { ...scope },
+    datasets_used: [
+      {
+        dataset: String(dataset.dataset || dataset.sheet_name || ""),
+        link: dataset.link,
+        row_count: filtered.length,
+      },
+    ],
+    analysis: {
+      business_question: businessQuestion,
+      mix_dimension: mixDimension,
+      base_metric: baseMetric,
+      period: scoped.current_label,
+      comparison_period: scoped.prior_label,
+      summary,
+      changes: top,
       observations,
     },
   };
@@ -2725,6 +3293,40 @@ function buildAnalysisSummary(args: {
   }
 
   return parts.join(" ");
+}
+
+function isUnderperformingMetric(
+  metric: MetricDefinition,
+  currentValue: number | null,
+  priorValue: number | null
+): boolean {
+  if (currentValue === null || priorValue === null) return false;
+  const direction = normalize(metric.good_direction || "up");
+
+  if (direction === "down") {
+    return currentValue > priorValue;
+  }
+
+  if (direction === "neutral") {
+    return false;
+  }
+
+  return currentValue < priorValue;
+}
+
+function underperformanceScore(
+  metric: MetricDefinition,
+  currentValue: number | null,
+  priorValue: number | null
+): number {
+  if (currentValue === null || priorValue === null) return 0;
+  const direction = normalize(metric.good_direction || "up");
+
+  if (direction === "down") {
+    return currentValue - priorValue;
+  }
+
+  return priorValue - currentValue;
 }
 
 function formatMetricValue(value: number | null, formatType?: string): string {
