@@ -16,9 +16,7 @@ const EXAMPLES = [
   "What was the referral revenue in February 2026?",
   "Why are completed jobs down?",
   "Which markets are underperforming?",
-  "What changed in lead mix this week?",
-  
-
+  "What changed in lead mix this week?"
 ];
 
 const DATASET_LIST_URL =
