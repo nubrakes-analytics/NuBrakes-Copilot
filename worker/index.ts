@@ -436,7 +436,7 @@ async function handleRequest(request: Request, env: Env): Promise<Response> {
           })
     );
   }
-  console.log("before firstResp");
+
   const firstResp = await callOpenAI(env.OPENAI_API_KEY, {
     model: "gpt-5.4-mini",
     input: [
@@ -468,8 +468,6 @@ async function handleRequest(request: Request, env: Env): Promise<Response> {
     tools: TOOLS,
   });
 
-  console.log("after firstResp", !!firstResp?.id);
-
   const outputItems = firstResp.output || [];
   const toolOutputs: Array<{
     type: "function_call_output";
@@ -493,7 +491,7 @@ async function handleRequest(request: Request, env: Env): Promise<Response> {
       });
     }
   }
-console.log("toolOutputs length", toolOutputs.length);
+
   if (toolOutputs.length === 0) {
     return jsonResponse(
       buildAppResponse({
@@ -504,13 +502,13 @@ console.log("toolOutputs length", toolOutputs.length);
       })
     );
   }
-console.log("before secondResp");
+
   const secondResp = await callOpenAI(env.OPENAI_API_KEY, {
     model: "gpt-5.4-mini",
     previous_response_id: firstResp.id,
     input: toolOutputs,
   });
-console.log("after secondResp");
+
   return jsonResponse(
     mergeStructuredToolResultIntoResponse(
       extractResponseText(secondResp) || "No response generated.",
@@ -1122,7 +1120,7 @@ async function buildBusinessQuestionDriverPlan(
 }
 
 function getPrimaryDatasetForMetric(metricId: string): string | null {
-  const id = normalize(metricId);
+  const id = canonicalMetricId(metricId);
 
   const map: Record<string, string> = {
     conversion_rate: "fact_nubrakes_channel_market_kpi_daily",
@@ -1202,18 +1200,6 @@ async function analyzeBusinessQuestion(
 
   const primaryDataset = getPrimaryDatasetForMetric(metric.metric_id);
 
-if (primaryDataset) {
-  const forced = scopedLoaded.filter(
-    (d) => normalize(d.dataset).replace(/\.json$/, "") === normalize(primaryDataset)
-  );
-  if (!forced.length) {
-    return {
-      found: false,
-      message: `Expected primary dataset ${primaryDataset} but it was not found in linked datasets: ${scopedLoaded.map((d) => d.dataset).join(", ")}`,
-    };
-  }
-}
-  
   const kpiLoaded = primaryDataset
     ? scopedLoaded.filter(
         (d) =>
@@ -1250,23 +1236,6 @@ if (primaryDataset) {
   const priorMetricValue = computeMetricValue(metric.metric_id, allPriorRows);
   const deltaMetricValue = computeDelta(currentMetricValue, priorMetricValue);
 
-const debugCounts = {
-  current_label: kpiLoaded[0]?.currentLabel || "unknown",
-  prior_label: kpiLoaded[0]?.priorLabel || "unknown",
-  current_rows: allCurrentRows.length,
-  prior_rows: allPriorRows.length,
-  current_leads: sumField(allCurrentRows, getMetricFieldNames("leads")),
-  prior_leads: sumField(allPriorRows, getMetricFieldNames("leads")),
-  current_jobs_completed: sumField(
-    allCurrentRows,
-    getMetricFieldNames("jobs_completed")
-  ),
-  prior_jobs_completed: sumField(
-    allPriorRows,
-    getMetricFieldNames("jobs_completed")
-  ),
-};
-  
   const driverObservations = candidateDrivers.map((driverId) => {
     const currentValue = computeMetricValue(driverId, allCurrentRows);
     const priorValue = computeMetricValue(driverId, allPriorRows);
@@ -1286,32 +1255,49 @@ const debugCounts = {
   const comparisonSource = kpiLoaded[0];
 
   if (currentMetricValue !== null && priorMetricValue !== null) {
-  observations.push(
-    `${metric.metric_name} was ${formatMetricValue(
-      currentMetricValue,
-      metricFormat
-    )} in ${comparisonSource?.currentLabel || "current period"} vs ${formatMetricValue(
-      priorMetricValue,
-      metricFormat
-    )} in ${comparisonSource?.priorLabel || "prior period"} (${formatDeltaValue(
-      deltaMetricValue,
-      metricFormat
-    )}).`
-  );
-} else {
-  observations.push(
-    `${metric.metric_name} could not be computed from the scoped rows.`
-  );
-  observations.push(
-    `Debug — current rows: ${debugCounts.current_rows}, prior rows: ${debugCounts.prior_rows}.`
-  );
-  observations.push(
-    `Debug — current leads: ${debugCounts.current_leads}, prior leads: ${debugCounts.prior_leads}.`
-  );
-  observations.push(
-    `Debug — current jobs_completed: ${debugCounts.current_jobs_completed}, prior jobs_completed: ${debugCounts.prior_jobs_completed}.`
-  );
-}
+    observations.push(
+      `${metric.metric_name} was ${formatMetricValue(
+        currentMetricValue,
+        metricFormat
+      )} in ${comparisonSource?.currentLabel || "current period"} vs ${formatMetricValue(
+        priorMetricValue,
+        metricFormat
+      )} in ${comparisonSource?.priorLabel || "prior period"} (${formatDeltaValue(
+        deltaMetricValue,
+        metricFormat
+      )}).`
+    );
+  } else {
+    const debugCounts = {
+      current_label: kpiLoaded[0]?.currentLabel || "unknown",
+      prior_label: kpiLoaded[0]?.priorLabel || "unknown",
+      current_rows: allCurrentRows.length,
+      prior_rows: allPriorRows.length,
+      current_leads: sumField(allCurrentRows, getMetricFieldNames("leads")),
+      prior_leads: sumField(allPriorRows, getMetricFieldNames("leads")),
+      current_jobs_completed: sumField(
+        allCurrentRows,
+        getMetricFieldNames("jobs_completed")
+      ),
+      prior_jobs_completed: sumField(
+        allPriorRows,
+        getMetricFieldNames("jobs_completed")
+      ),
+    };
+
+    observations.push(
+      `${metric.metric_name} could not be computed from the scoped rows.`
+    );
+    observations.push(
+      `Debug — current rows: ${debugCounts.current_rows}, prior rows: ${debugCounts.prior_rows}.`
+    );
+    observations.push(
+      `Debug — current leads: ${debugCounts.current_leads}, prior leads: ${debugCounts.prior_leads}.`
+    );
+    observations.push(
+      `Debug — current jobs_completed: ${debugCounts.current_jobs_completed}, prior jobs_completed: ${debugCounts.prior_jobs_completed}.`
+    );
+  }
 
   const rankedDrivers = rankDriverObservations(
     driverObservations,
@@ -1546,8 +1532,8 @@ function splitRowsCurrentVsPrior(
     grain === "day"
       ? ["day", "Day"]
       : grain === "month"
-      ? ["month", "Month"]
-      : ["week", "Week"];
+        ? ["month", "Month"]
+        : ["week", "Week"];
 
   const bucketMap = new Map<string, DatasetRow[]>();
 
@@ -1690,7 +1676,7 @@ function getMetricFieldNames(metricId: string): string[] {
 }
 
 function computeMetricValue(metricId: string, rows: DatasetRow[]): number | null {
-  const id = normalize(metricId);
+  const id = canonicalMetricId(metricId);
 
   const directMetric = sumField(rows, getMetricFieldNames(metricId));
 
@@ -1927,7 +1913,7 @@ function formatDeltaValue(value: number | null, formatType?: string): string {
 }
 
 function inferFormatType(metricId: string): string {
-  const id = normalize(metricId);
+  const id = canonicalMetricId(metricId);
 
   if (
     [
@@ -2000,6 +1986,10 @@ function normalize(value: string): string {
     .trim()
     .replace(/[_-]+/g, " ")
     .replace(/\s+/g, " ");
+}
+
+function canonicalMetricId(value: string): string {
+  return normalize(value).replace(/\s+/g, "_");
 }
 
 function safeJsonParse<T>(value: string, fallback: T): T {
