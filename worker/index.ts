@@ -45,6 +45,14 @@ type ParsedBusinessScope = {
   target_bucket?: string;
 };
 
+type ParsedPointInTimeScope = {
+  time_grain: TimeGrain;
+  market?: string;
+  channel?: string;
+  target_bucket?: string;
+  period_label: string;
+};
+
 type ScopedRows = {
   current: DatasetRow[];
   prior: DatasetRow[];
@@ -105,6 +113,33 @@ type AnalyzeBusinessQuestionResult =
         candidate_drivers: string[];
         summary: string;
         observations: string[];
+      };
+    }
+  | {
+      found: false;
+      message: string;
+    };
+
+type QueryMetricValueResult =
+  | {
+      found: true;
+      metric: MetricDefinition;
+      scope: ParsedPointInTimeScope;
+      datasets_used: Array<{
+        dataset: string;
+        link?: string;
+        row_count: number;
+      }>;
+      result: {
+        question: string;
+        metric_id: string;
+        metric_name: string;
+        value: string;
+        raw_value: number | null;
+        period: string;
+        market?: string;
+        channel?: string;
+        summary: string;
       };
     }
   | {
@@ -242,6 +277,24 @@ const TOOLS = [
       additionalProperties: false,
     },
   },
+  {
+    type: "function",
+    name: "query_metric_value",
+    description:
+      "Return the actual metric value for a specific scope such as market, channel, and time period. Use this for direct factual questions like 'What is Dallas revenue in December 2025?' or 'What is referral conversion rate this February?'",
+    parameters: {
+      type: "object",
+      properties: {
+        question: {
+          type: "string",
+          description:
+            "A direct factual metric lookup question such as 'What is Dallas revenue in December 2025?'",
+        },
+      },
+      required: ["question"],
+      additionalProperties: false,
+    },
+  },
 ] as const;
 
 export default {
@@ -345,6 +398,31 @@ async function handleRequest(request: Request, env: Env): Promise<Response> {
     hasPhrase("use for") ||
     hasPhrase("best dataset");
 
+  const looksLikeMetricValueQuestion =
+    !looksLikeBusinessQuestion &&
+    (
+      hasPhrase("what is") ||
+      hasPhrase("whats") ||
+      hasPhrase("what was") ||
+      hasPhrase("how much") ||
+      hasPhrase("show me") ||
+      hasPhrase("give me")
+    ) &&
+    (
+      hasWord("revenue") ||
+      hasWord("aov") ||
+      hasWord("leads") ||
+      hasWord("conversion") ||
+      hasPhrase("conversion rate") ||
+      hasPhrase("booking rate") ||
+      hasPhrase("cancel rate") ||
+      hasWord("ctr") ||
+      hasWord("cpc") ||
+      hasPhrase("marketing spend") ||
+      hasPhrase("jobs completed") ||
+      hasPhrase("jobs booked")
+    );
+
   const directDatasetMatch = await tryDirectDatasetShortcut(userMessage);
 
   if (directDatasetMatch && looksLikeDatasetLinkQuestion) {
@@ -407,6 +485,33 @@ async function handleRequest(request: Request, env: Env): Promise<Response> {
     );
   }
 
+  if (looksLikeMetricValueQuestion) {
+    const valueResult = await queryMetricValue(userMessage);
+
+    return jsonResponse(
+      valueResult.found
+        ? buildAppResponse({
+            answer: valueResult.result.summary,
+            dataset:
+              valueResult.datasets_used[0]?.dataset ||
+              valueResult.metric.metric_id,
+            datasetLink: valueResult.datasets_used[0]?.link || null,
+            rows: valueResult.datasets_used.map((d) => ({
+              dataset: d.dataset,
+              dataset_link: d.link || null,
+              row_count: d.row_count,
+            })),
+            data: valueResult,
+          })
+        : buildAppResponse({
+            answer: valueResult.message,
+            dataset: null,
+            rows: [],
+            data: valueResult,
+          })
+    );
+  }
+
   if (looksLikeBusinessQuestion) {
     const directAnalysis = await analyzeBusinessQuestion(userMessage);
 
@@ -453,7 +558,9 @@ async function handleRequest(request: Request, env: Env): Promise<Response> {
               "Use find_dataset_link when the user asks for a dataset or raw data link. " +
               "Use business_question_drivers when the user asks why a KPI moved or what drove performance. " +
               "Use analyze_business_question when the user asks for an actual driver analysis from linked data. " +
+              "Use query_metric_value when the user asks for a direct metric value for a market/channel/time period. " +
               "For business questions about why a KPI changed, prefer analyze_business_question. " +
+              "For direct fact lookups like revenue/conversion in a specific month, prefer query_metric_value. " +
               "For dashboard link questions, prefer find_dashboard_link. " +
               "For dataset/raw data link questions, prefer find_dataset_link. " +
               "Keep answers concise, quantitative when possible, and business-focused.",
@@ -585,17 +692,17 @@ function mergeStructuredToolResultIntoResponse(
   }
 
   if ("datasets_used" in r) {
-    const analysisResult = r as AnalyzeBusinessQuestionResult & {
+    const structured = r as {
       datasets_used?: Array<{ dataset: string; link?: string; row_count: number }>;
       metric?: MetricDefinition;
     };
 
-    const datasetsUsed = analysisResult.datasets_used || [];
+    const datasetsUsed = structured.datasets_used || [];
 
     return buildAppResponse({
       answer,
       dataset:
-        datasetsUsed[0]?.dataset || analysisResult.metric?.metric_id || null,
+        datasetsUsed[0]?.dataset || structured.metric?.metric_id || null,
       rows: datasetsUsed.map((d) => ({
         dataset: d.dataset,
         dataset_link: d.link || null,
@@ -627,6 +734,8 @@ async function handleToolCall(name: string, args: Record<string, unknown>) {
       return await analyzeBusinessQuestion(
         String(args.business_question || "")
       );
+    case "query_metric_value":
+      return await queryMetricValue(String(args.question || ""));
     default:
       return { error: `Unknown tool: ${name}` };
   }
@@ -979,6 +1088,9 @@ async function findMetricDefinition(
     "week",
     "month",
     "day",
+    "in",
+    "during",
+    "for",
   ]);
 
   const queryWords = q
@@ -1133,6 +1245,13 @@ function getPrimaryDatasetForMetric(metricId: string): string | null {
     jobs_completed: "fact_nubrakes_channel_market_kpi_daily",
     technician_utilization: "fact_nubrakes_supply_demand_daily",
     available_slots: "fact_nubrakes_supply_demand_daily",
+    ctr: "fact_nubrakes_marketing_performance_daily",
+    clicks: "fact_nubrakes_marketing_performance_daily",
+    impressions: "fact_nubrakes_marketing_performance_daily",
+    marketing_spend: "fact_nubrakes_marketing_performance_daily",
+    cpc: "fact_nubrakes_marketing_performance_daily",
+    cost_per_inquiry: "fact_nubrakes_marketing_performance_daily",
+    mac: "fact_nubrakes_marketing_performance_daily",
   };
 
   return map[id] || null;
@@ -1357,6 +1476,128 @@ async function analyzeBusinessQuestion(
   };
 }
 
+async function queryMetricValue(
+  question: string
+): Promise<QueryMetricValueResult> {
+  const metricResult = await findMetricDefinition(question);
+
+  if (!metricResult.found) {
+    return { found: false, message: metricResult.message };
+  }
+
+  const metric = metricResult.metric;
+  const primaryDataset = getPrimaryDatasetForMetric(metric.metric_id);
+  const relevantDatasets = metric.relevant_datasets || [];
+  const linkedDatasets = await findDatasetsByIds(relevantDatasets);
+
+  const datasetsToUse = linkedDatasets.filter((d) => d.link);
+  const preferredDatasets = primaryDataset
+    ? datasetsToUse.filter(
+        (d) =>
+          normalize(String(d.dataset || d.sheet_name || "")).replace(/\.json$/, "") ===
+          normalize(primaryDataset)
+      )
+    : datasetsToUse;
+
+  const finalDatasets = preferredDatasets.length ? preferredDatasets : datasetsToUse;
+
+  if (!finalDatasets.length) {
+    return {
+      found: false,
+      message: `No linked datasets found for metric: ${metric.metric_id}`,
+    };
+  }
+
+  const loaded = await Promise.all(
+    finalDatasets.map(async (d) => {
+      const rows = await loadJsonFromUrl<DatasetRow[]>(String(d.link));
+      return {
+        dataset: String(d.dataset || d.sheet_name || ""),
+        link: d.link,
+        rows: Array.isArray(rows) ? rows : [],
+      };
+    })
+  );
+
+  const scope = parsePointInTimeScopeFromRows(
+    question,
+    loaded.flatMap((d) => d.rows)
+  );
+
+  const scopedLoaded = loaded.map((d) => {
+    const filteredByDimensions = d.rows.filter((row) =>
+      rowMatchesPointInTimeFilters(row, scope)
+    );
+
+    const bucketRows = filterRowsToTargetBucket(
+      filteredByDimensions,
+      scope.time_grain,
+      scope.target_bucket
+    );
+
+    return {
+      dataset: d.dataset,
+      link: d.link,
+      filteredRows: filteredByDimensions,
+      bucketRows,
+    };
+  });
+
+  const usable = scopedLoaded.filter((d) => d.bucketRows.length > 0);
+
+  if (!usable.length) {
+    return {
+      found: false,
+      message: `No rows found for ${scope.period_label}${
+        scope.market ? ` in ${scope.market}` : ""
+      }${scope.channel ? ` for ${scope.channel}` : ""}.`,
+    };
+  }
+
+  const allRows = usable.flatMap((d) => d.bucketRows);
+  const rawValue = computeMetricValue(metric.metric_id, allRows);
+  const formatType = metric.format_type || inferFormatType(metric.metric_id);
+
+  if (rawValue === null) {
+    return {
+      found: false,
+      message: `Unable to compute ${metric.metric_name} for ${scope.period_label}.`,
+    };
+  }
+
+  const value = formatMetricValue(rawValue, formatType);
+
+  const scopeParts = [
+    scope.market ? `market ${scope.market}` : "",
+    scope.channel ? `channel ${scope.channel}` : "",
+    scope.period_label,
+  ].filter(Boolean);
+
+  const summary = `${metric.metric_name} was ${value} for ${scopeParts.join(", ")}.`;
+
+  return {
+    found: true,
+    metric,
+    scope,
+    datasets_used: scopedLoaded.map((d) => ({
+      dataset: d.dataset,
+      link: d.link,
+      row_count: d.bucketRows.length,
+    })),
+    result: {
+      question,
+      metric_id: metric.metric_id,
+      metric_name: metric.metric_name,
+      value,
+      raw_value: rawValue,
+      period: scope.period_label,
+      market: scope.market,
+      channel: scope.channel,
+      summary,
+    },
+  };
+}
+
 function parseBusinessQuestionScopeFromRows(
   businessQuestion: string,
   rows: DatasetRow[]
@@ -1436,6 +1677,127 @@ function parseBusinessQuestionScopeFromRows(
     market,
     channel,
     target_bucket,
+  };
+}
+
+function parsePointInTimeScopeFromRows(
+  question: string,
+  rows: DatasetRow[]
+): ParsedPointInTimeScope {
+  const q = normalize(question);
+
+  const monthMap: Record<string, string> = {
+    january: "01",
+    february: "02",
+    march: "03",
+    april: "04",
+    may: "05",
+    june: "06",
+    july: "07",
+    august: "08",
+    september: "09",
+    october: "10",
+    november: "11",
+    december: "12",
+  };
+
+  let time_grain: TimeGrain = "month";
+  if (q.includes("today") || q.includes("yesterday") || q.includes("daily")) {
+    time_grain = "day";
+  } else if (q.includes("week") || q.includes("weekly")) {
+    time_grain = "week";
+  }
+
+  const markets = uniqueDimensionValues(rows, ["market", "Market"]);
+  const channels = uniqueDimensionValues(rows, [
+    "channel_category",
+    "Channel Category",
+    "channel",
+    "Channel",
+  ]);
+
+  const market = findBestMentionedDimensionValue(q, markets);
+  const channel = findBestMentionedDimensionValue(q, channels);
+
+  const monthName = Object.keys(monthMap).find((m) => q.includes(m));
+
+  const explicitYearMatch = q.match(/\b(20\d{2})\b/);
+  const explicitYear = explicitYearMatch ? explicitYearMatch[1] : null;
+
+  let target_bucket: string | undefined;
+  let period_label = "latest available period";
+
+  if (monthName) {
+    const monthNum = monthMap[monthName];
+    const availableYears = extractAvailableYears(rows, [
+      "month",
+      "Month",
+      "day",
+      "Day",
+      "week",
+      "Week",
+    ]);
+
+    let yearToUse: string;
+    if (explicitYear) {
+      yearToUse = explicitYear;
+    } else {
+      const yearsWithMonth = availableYears.filter((y) =>
+        rows.some((row) => {
+          const key = getBucketKey(row, ["month", "Month", "day", "Day", "week", "Week"]);
+          return key.startsWith(`${y}-${monthNum}-`);
+        })
+      );
+      yearToUse = String(
+        yearsWithMonth.length ? Math.max(...yearsWithMonth) : new Date().getUTCFullYear()
+      );
+    }
+
+    target_bucket = `${yearToUse}-${monthNum}-01`;
+    period_label = `${capitalize(monthName)} ${yearToUse}`;
+    time_grain = "month";
+  } else if (q.includes("this month")) {
+    const latest = getLatestBucket(rows, "month");
+    if (latest) {
+      target_bucket = latest;
+      period_label = latest;
+      time_grain = "month";
+    }
+  } else if (q.includes("last month")) {
+    const latestAndPrior = getLatestAndPriorBucket(rows, "month");
+    if (latestAndPrior.prior) {
+      target_bucket = latestAndPrior.prior;
+      period_label = latestAndPrior.prior;
+      time_grain = "month";
+    }
+  } else if (q.includes("this week")) {
+    const latest = getLatestBucket(rows, "week");
+    if (latest) {
+      target_bucket = latest;
+      period_label = latest;
+      time_grain = "week";
+    }
+  } else if (q.includes("last week")) {
+    const latestAndPrior = getLatestAndPriorBucket(rows, "week");
+    if (latestAndPrior.prior) {
+      target_bucket = latestAndPrior.prior;
+      period_label = latestAndPrior.prior;
+      time_grain = "week";
+    }
+  } else {
+    const latest = getLatestBucket(rows, time_grain);
+    if (latest) {
+      target_bucket = latest;
+      period_label = latest;
+    }
+  }
+
+  return {
+    time_grain,
+    market,
+    channel,
+    target_bucket,
+    period_label,
   };
 }
 
@@ -1523,6 +1885,30 @@ function rowMatchesOptionalFilters(
   return true;
 }
 
+function rowMatchesPointInTimeFilters(
+  row: DatasetRow,
+  scope: ParsedPointInTimeScope
+): boolean {
+  if (scope.market) {
+    const marketValue = String(row["market"] || row["Market"] || "").trim();
+    if (normalize(marketValue) !== normalize(scope.market)) return false;
+  }
+
+  if (scope.channel) {
+    const channelValue = String(
+      row["channel_category"] ||
+        row["Channel Category"] ||
+        row["channel"] ||
+        row["Channel"] ||
+        ""
+    ).trim();
+
+    if (normalize(channelValue) !== normalize(scope.channel)) return false;
+  }
+
+  return true;
+}
+
 function splitRowsCurrentVsPrior(
   rows: DatasetRow[],
   grain: TimeGrain,
@@ -1571,6 +1957,68 @@ function splitRowsCurrentVsPrior(
     prior: priorKey ? bucketMap.get(priorKey) || [] : [],
     current_label: currentKey,
     prior_label: priorKey || "previous period unavailable",
+  };
+}
+
+function filterRowsToTargetBucket(
+  rows: DatasetRow[],
+  grain: TimeGrain,
+  targetBucket?: string
+): DatasetRow[] {
+  const fieldCandidates =
+    grain === "day"
+      ? ["day", "Day"]
+      : grain === "month"
+        ? ["month", "Month"]
+        : ["week", "Week"];
+
+  if (!targetBucket) {
+    const latest = getLatestBucket(rows, grain);
+    if (!latest) return [];
+    return rows.filter((row) => getBucketKey(row, fieldCandidates) === latest);
+  }
+
+  return rows.filter((row) => getBucketKey(row, fieldCandidates) === targetBucket);
+}
+
+function getLatestBucket(rows: DatasetRow[], grain: TimeGrain): string | undefined {
+  const fieldCandidates =
+    grain === "day"
+      ? ["day", "Day"]
+      : grain === "month"
+        ? ["month", "Month"]
+        : ["week", "Week"];
+
+  const buckets = rows
+    .map((row) => getBucketKey(row, fieldCandidates))
+    .filter(Boolean)
+    .sort((a, b) => Date.parse(a) - Date.parse(b));
+
+  return buckets.length ? buckets[buckets.length - 1] : undefined;
+}
+
+function getLatestAndPriorBucket(
+  rows: DatasetRow[],
+  grain: TimeGrain
+): { latest?: string; prior?: string } {
+  const fieldCandidates =
+    grain === "day"
+      ? ["day", "Day"]
+      : grain === "month"
+        ? ["month", "Month"]
+        : ["week", "Week"];
+
+  const buckets = Array.from(
+    new Set(
+      rows
+        .map((row) => getBucketKey(row, fieldCandidates))
+        .filter(Boolean)
+    )
+  ).sort((a, b) => Date.parse(a) - Date.parse(b));
+
+  return {
+    latest: buckets[buckets.length - 1],
+    prior: buckets.length >= 2 ? buckets[buckets.length - 2] : undefined,
   };
 }
 
@@ -1670,6 +2118,10 @@ function getMetricFieldNames(metricId: string): string[] {
     ],
     cancel_rate: ["cancel_rate", "Cancel Rate", "cancel rate"],
     aov: ["aov", "AOV", "average_order_value", "Average Order Value"],
+    ctr: ["ctr", "CTR"],
+    cpc: ["cpc", "CPC"],
+    cost_per_inquiry: ["cost_per_inquiry", "Cost Per Inquiry"],
+    mac: ["mac", "MAC"],
   };
 
   return map[m] || [metricId];
@@ -1990,6 +2442,10 @@ function normalize(value: string): string {
 
 function canonicalMetricId(value: string): string {
   return normalize(value).replace(/\s+/g, "_");
+}
+
+function capitalize(value: string): string {
+  return value ? value.charAt(0).toUpperCase() + value.slice(1) : value;
 }
 
 function safeJsonParse<T>(value: string, fallback: T): T {
