@@ -115,6 +115,15 @@ type AnalyzeBusinessQuestionResult =
         candidate_drivers: string[];
         summary: string;
         observations: string[];
+        debug?: {
+          uncomputable_drivers?: Array<{
+            driver_id: string;
+            dataset_used: string;
+            missing_reason?: string;
+            current_rows_count: number;
+            prior_rows_count: number;
+          }>;
+        };
       };
     }
   | {
@@ -538,7 +547,8 @@ async function handleRequest(request: Request, env: Env): Promise<Response> {
     hasPhrase("lead mix") ||
     hasPhrase("channel mix") ||
     hasPhrase("market mix") ||
-    (hasWord("mix") && (hasWord("changed") || hasWord("shift") || hasWord("shifted")));
+    (hasWord("mix") &&
+      (hasWord("changed") || hasWord("shift") || hasWord("shifted")));
 
   const looksLikeDashboardLinkQuestion =
     hasWord("dashboard") ||
@@ -984,9 +994,7 @@ async function handleToolCall(name: string, args: Record<string, unknown>) {
         String(args.business_question || "")
       );
     case "analyze_mix_change":
-      return await analyzeMixChange(
-        String(args.business_question || "")
-      );
+      return await analyzeMixChange(String(args.business_question || ""));
     default:
       return { error: `Unknown tool: ${name}` };
   }
@@ -1731,99 +1739,71 @@ async function analyzeBusinessQuestion(
   );
 
   const rankedDrivers = rankDriverObservations(driverObservations);
-
   const observations: string[] = [];
   const metricFormat = metric.format_type || inferFormatType(metric.metric_id);
   const comparisonSource = kpiLoaded[0];
 
-  if (currentMetricValue !== null && priorMetricValue !== null) {
+  if (currentMetricValue === null || priorMetricValue === null) {
     observations.push(
-      `${metric.metric_name} was ${formatMetricValue(
-        currentMetricValue,
-        metricFormat
-      )} in ${comparisonSource?.currentLabel || "current period"} vs ${formatMetricValue(
-        priorMetricValue,
-        metricFormat
-      )} in ${comparisonSource?.priorLabel || "prior period"} (${formatDeltaValue(
-        deltaMetricValue,
-        metricFormat
-      )}).`
-    );
-  } else {
-    const debugCounts = {
-      current_label: kpiLoaded[0]?.currentLabel || "unknown",
-      prior_label: kpiLoaded[0]?.priorLabel || "unknown",
-      current_rows: allCurrentRows.length,
-      prior_rows: allPriorRows.length,
-      current_leads: sumField(allCurrentRows, getMetricFieldNames("leads")),
-      prior_leads: sumField(allPriorRows, getMetricFieldNames("leads")),
-      current_jobs_completed: sumField(
-        allCurrentRows,
-        getMetricFieldNames("jobs_completed")
-      ),
-      prior_jobs_completed: sumField(
-        allPriorRows,
-        getMetricFieldNames("jobs_completed")
-      ),
-    };
-
-    observations.push(
-      `${metric.metric_name} could not be computed from the scoped rows.`
-    );
-    observations.push(
-      `Debug — current rows: ${debugCounts.current_rows}, prior rows: ${debugCounts.prior_rows}.`
-    );
-    observations.push(
-      `Debug — current leads: ${debugCounts.current_leads}, prior leads: ${debugCounts.prior_leads}.`
-    );
-    observations.push(
-      `Debug — current jobs_completed: ${debugCounts.current_jobs_completed}, prior jobs_completed: ${debugCounts.prior_jobs_completed}.`
+      `${metric.metric_name} could not be fully computed from the scoped rows for ${comparisonSource?.currentLabel || "current period"} versus ${comparisonSource?.priorLabel || "prior period"}.`
     );
   }
 
-  const headwinds = rankedDrivers
+  const primaryHeadwind = rankedDrivers.find(
+    (d) => d.explanatoryDirection === "hurts"
+  );
+  const secondaryHeadwind = rankedDrivers
     .filter((d) => d.explanatoryDirection === "hurts")
-    .slice(0, 2);
-  const tailwinds = rankedDrivers
-    .filter((d) => d.explanatoryDirection === "supports")
-    .slice(0, 2);
-  const contextSignals = rankedDrivers
-    .filter((d) => d.explanatoryDirection === "context")
-    .slice(0, 2);
+    .slice(1, 2)[0];
+  const support = rankedDrivers.find(
+    (d) => d.explanatoryDirection === "supports"
+  );
+  const contextSignal = rankedDrivers.find(
+    (d) => d.explanatoryDirection === "context"
+  );
 
-  for (const obs of headwinds) {
-    observations.push(buildDriverObservationText(obs, "headwind"));
+  if (primaryHeadwind) {
+    observations.push(
+      `Primary driver: ${buildDriverObservationText(primaryHeadwind, "headwind")}`
+    );
   }
 
-  for (const obs of tailwinds) {
-    observations.push(buildDriverObservationText(obs, "tailwind"));
+  if (secondaryHeadwind) {
+    observations.push(
+      `Secondary driver: ${buildDriverObservationText(
+        secondaryHeadwind,
+        "headwind"
+      )}`
+    );
   }
 
-  for (const obs of contextSignals) {
-    observations.push(buildDriverObservationText(obs, "context"));
+  if (support) {
+    observations.push(
+      `Offsetting factor: ${buildDriverObservationText(support, "tailwind")}`
+    );
+  }
+
+  if (!primaryHeadwind && !support && contextSignal) {
+    observations.push(
+      `Context: ${buildDriverObservationText(contextSignal, "context")}`
+    );
+  }
+
+  if (scope.market) {
+    observations.push(`Scope: market = ${scope.market}.`);
+  }
+
+  if (scope.channel) {
+    observations.push(`Scope: channel = ${scope.channel}.`);
+  }
+
+  if (primaryDataset) {
+    observations.push(`Dataset used: ${primaryDataset}.`);
   }
 
   const uncomputableDrivers = rankedDrivers.filter(
     (obs) => obs.currentValue === null && obs.priorValue === null
   );
-
-  for (const obs of uncomputableDrivers.slice(0, 2)) {
-    observations.push(
-      `${obs.driverId} could not be computed from dataset ${obs.datasetUsed}. ${obs.missingReason || `Current rows: ${obs.currentRowsCount}, prior rows: ${obs.priorRowsCount}.`}`
-    );
-  }
-
-  if (scope.market) {
-    observations.push(`Scope includes market filter: ${scope.market}.`);
-  }
-
-  if (scope.channel) {
-    observations.push(`Scope includes channel filter: ${scope.channel}.`);
-  }
-
-  if (primaryDataset) {
-    observations.push(`Primary comparison dataset: ${primaryDataset}.`);
-  }
 
   const summary = buildAnalysisSummary({
     metric,
@@ -1856,6 +1836,15 @@ async function analyzeBusinessQuestion(
       candidate_drivers: candidateDrivers,
       summary,
       observations,
+      debug: {
+        uncomputable_drivers: uncomputableDrivers.slice(0, 5).map((obs) => ({
+          driver_id: obs.driverId,
+          dataset_used: obs.datasetUsed,
+          missing_reason: obs.missingReason,
+          current_rows_count: obs.currentRowsCount,
+          prior_rows_count: obs.priorRowsCount,
+        })),
+      },
     },
   };
 }
@@ -1957,10 +1946,14 @@ async function analyzeMarketPerformanceWithMetric(
   const results = markets
     .map((market) => {
       const currentRows = scoped.current.filter(
-        (r) => normalize(String(r["market"] || r["Market"] || "")) === normalize(market)
+        (r) =>
+          normalize(String(r["market"] || r["Market"] || "")) ===
+          normalize(market)
       );
       const priorRows = scoped.prior.filter(
-        (r) => normalize(String(r["market"] || r["Market"] || "")) === normalize(market)
+        (r) =>
+          normalize(String(r["market"] || r["Market"] || "")) ===
+          normalize(market)
       );
 
       const currentValue = computeMetricValue(metric.metric_id, currentRows);
@@ -1996,10 +1989,13 @@ async function analyzeMarketPerformanceWithMetric(
 
   for (const row of top) {
     observations.push(
-      `${row.market}: ${formatMetricValue(row.currentValue, formatType)} vs ${formatMetricValue(
-        row.priorValue,
+      `${row.market}: ${formatMetricValue(
+        row.currentValue,
         formatType
-      )} (${formatDeltaValue(row.deltaValue, formatType)}).`
+      )} vs ${formatMetricValue(row.priorValue, formatType)} (${formatDeltaValue(
+        row.deltaValue,
+        formatType
+      )}).`
     );
   }
 
@@ -2151,11 +2147,7 @@ async function analyzeMixChange(
   }
 
   const allValues = Array.from(
-    new Set(
-      [...scoped.current, ...scoped.prior]
-        .map(dimAccessor)
-        .filter(Boolean)
-    )
+    new Set([...scoped.current, ...scoped.prior].map(dimAccessor).filter(Boolean))
   );
 
   const changes = allValues
@@ -2199,7 +2191,9 @@ async function analyzeMixChange(
   }
 
   const summary = top.length
-    ? `${capitalize(baseMetric.replace(/_/g, " "))} ${mixDimension} changed in ${scoped.current_label} versus ${scoped.prior_label}. Biggest share shifts: ${top
+    ? `${capitalize(
+        baseMetric.replace(/_/g, " ")
+      )} ${mixDimension} changed in ${scoped.current_label} versus ${scoped.prior_label}. Biggest share shifts: ${top
         .slice(0, 3)
         .map((r) => `${r.dimension_value} (${r.share_delta})`)
         .join(", ")}.`
@@ -2420,9 +2414,13 @@ function parseBusinessQuestionScopeFromRows(
       "week",
       "Week",
     ]);
-    const year = candidateYears.length
+    const explicitYearMatch = q.match(/\b(20\d{2})\b/);
+    const explicitYear = explicitYearMatch
+      ? Number(explicitYearMatch[1])
+      : undefined;
+    const year = explicitYear ?? (candidateYears.length
       ? Math.max(...candidateYears)
-      : new Date().getUTCFullYear();
+      : new Date().getUTCFullYear());
     target_bucket = `${year}-${monthMap[matchedMonth]}-01`;
   }
 
@@ -3199,27 +3197,62 @@ function rankDriverObservations(drivers: DriverObservation[]): DriverObservation
   });
 }
 
+function prettifyMetricLabel(metricId: string): string {
+  const id = canonicalMetricId(metricId);
+
+  const map: Record<string, string> = {
+    leads: "Leads",
+    jobs_booked: "Booked Jobs",
+    jobs_completed: "Completed Jobs",
+    canceled_jobs: "Canceled Jobs",
+    revenue: "Revenue",
+    booking_rate: "Booking Rate",
+    conversion_rate: "Conversion Rate",
+    cancel_rate: "Cancel Rate",
+    cancel_outcome_rate: "Cancel Outcome Rate",
+    aov: "AOV",
+    ctr: "CTR",
+    cpc: "CPC",
+    cost_per_inquiry: "Cost Per Inquiry",
+    mac: "MAC",
+    technician_utilization: "Technician Utilization",
+    ft_tech_utilization: "FT Tech Utilization",
+    pt_tech_utilization: "PT Tech Utilization",
+    available_slots: "Available Slots",
+    utilized_slots: "Utilized Slots",
+    customer_cancel_rate: "Customer Cancel Rate",
+    hq_cancel_rate: "HQ Cancel Rate",
+    reschedule_rate: "Reschedule Rate",
+    customer_reschedule_rate: "Customer Reschedule Rate",
+    hq_reschedule_rate: "HQ Reschedule Rate",
+    marketing_spend: "Marketing Spend",
+  };
+
+  return map[id] || capitalize(id.replace(/_/g, " "));
+}
+
 function buildDriverObservationText(
   obs: DriverObservation,
   label: "headwind" | "tailwind" | "context"
 ): string {
   if (obs.currentValue === null && obs.priorValue === null) {
-    return `${obs.driverId} is not directly computable from dataset ${obs.datasetUsed}.`;
+    return `${prettifyMetricLabel(obs.driverId)} is not directly computable from ${obs.datasetUsed}.`;
   }
 
+  const metricLabel = prettifyMetricLabel(obs.driverId);
   const current = formatMetricValue(obs.currentValue, obs.formatType);
   const prior = formatMetricValue(obs.priorValue, obs.formatType);
   const delta = formatDeltaValue(obs.deltaValue, obs.formatType);
 
   if (label === "headwind") {
-    return `${obs.driverId} was ${current} vs ${prior} (${delta}) using ${obs.datasetUsed}, which looks like a headwind for the KPI.`;
+    return `${metricLabel} moved from ${prior} to ${current} (${delta}), which looks like a headwind.`;
   }
 
   if (label === "tailwind") {
-    return `${obs.driverId} was ${current} vs ${prior} (${delta}) using ${obs.datasetUsed}, which looks like a supporting movement.`;
+    return `${metricLabel} moved from ${prior} to ${current} (${delta}), which helped offset the decline.`;
   }
 
-  return `${obs.driverId} was ${current} vs ${prior} (${delta}) using ${obs.datasetUsed}, which looks more like context than a direct driver.`;
+  return `${metricLabel} moved from ${prior} to ${current} (${delta}), which looks more like context than a direct driver.`;
 }
 
 function buildAnalysisSummary(args: {
@@ -3244,55 +3277,29 @@ function buildAnalysisSummary(args: {
   const formatType = metric.format_type || inferFormatType(metric.metric_id);
 
   if (currentMetricValue === null || priorMetricValue === null) {
-    const availableDrivers = rankedDrivers
-      .filter((d) => d.currentValue !== null || d.priorValue !== null)
-      .slice(0, 3)
-      .map((d) => `${d.driverId} (${d.datasetUsed})`);
-
-    return availableDrivers.length
-      ? `${metric.metric_name} could not be fully computed for ${currentLabel} vs ${priorLabel}. Largest directional movements to review: ${availableDrivers.join(", ")}.`
-      : `${metric.metric_name} could not be fully computed for ${currentLabel} vs ${priorLabel}.`;
+    return `${metric.metric_name} could not be fully computed for ${currentLabel} versus ${priorLabel}.`;
   }
 
-  const headline = `${metric.metric_name} moved from ${formatMetricValue(
-    priorMetricValue,
-    formatType
-  )} in ${priorLabel} to ${formatMetricValue(
+  const headwind = rankedDrivers.find((d) => d.explanatoryDirection === "hurts");
+  const support = rankedDrivers.find((d) => d.explanatoryDirection === "supports");
+
+  let summary = `${metric.metric_name} was ${formatMetricValue(
     currentMetricValue,
     formatType
-  )} in ${currentLabel} (${formatDeltaValue(deltaMetricValue, formatType)}).`;
+  )} in ${currentLabel} versus ${formatMetricValue(
+    priorMetricValue,
+    formatType
+  )} in ${priorLabel} (${formatDeltaValue(deltaMetricValue, formatType)}).`;
 
-  const headwinds = rankedDrivers
-    .filter((d) => d.explanatoryDirection === "hurts")
-    .slice(0, 2)
-    .map((d) => `${d.driverId} (${d.datasetUsed})`);
-
-  const tailwinds = rankedDrivers
-    .filter((d) => d.explanatoryDirection === "supports")
-    .slice(0, 2)
-    .map((d) => `${d.driverId} (${d.datasetUsed})`);
-
-  const parts: string[] = [headline];
-
-  if (headwinds.length) {
-    parts.push(`Main headwinds: ${headwinds.join(", ")}.`);
+  if (headwind) {
+    summary += ` Primary driver: ${prettifyMetricLabel(headwind.driverId)}.`;
   }
 
-  if (tailwinds.length) {
-    parts.push(`Offsetting support: ${tailwinds.join(", ")}.`);
+  if (support) {
+    summary += ` Offsetting factor: ${prettifyMetricLabel(support.driverId)}.`;
   }
 
-  if (!headwinds.length && !tailwinds.length) {
-    const context = rankedDrivers
-      .filter((d) => d.explanatoryDirection === "context")
-      .slice(0, 2)
-      .map((d) => `${d.driverId} (${d.datasetUsed})`);
-    if (context.length) {
-      parts.push(`Key context signals: ${context.join(", ")}.`);
-    }
-  }
-
-  return parts.join(" ");
+  return summary;
 }
 
 function isUnderperformingMetric(
