@@ -285,126 +285,131 @@ export default {
       }
 
       const normalizedMessage = normalize(userMessage);
+const messageWords = new Set(normalizedMessage.split(/\s+/).filter(Boolean));
 
-      const looksLikeBusinessQuestion =
-        normalizedMessage.includes("why") ||
-        normalizedMessage.includes("driver") ||
-        normalizedMessage.includes("drivers") ||
-        normalizedMessage.includes("down") ||
-        normalizedMessage.includes("up") ||
-        normalizedMessage.includes("drop") ||
-        normalizedMessage.includes("dropped") ||
-        normalizedMessage.includes("increase") ||
-        normalizedMessage.includes("decrease") ||
-        normalizedMessage.includes("changed");
+const hasPhrase = (phrase: string) => normalizedMessage.includes(phrase);
+const hasWord = (word: string) => messageWords.has(word);
 
-      const looksLikeDashboardLinkQuestion =
-        normalizedMessage.includes("dashboard") ||
-        normalizedMessage.includes("report") ||
-        normalizedMessage.includes("where can i find") ||
-        normalizedMessage.includes("where is");
+const looksLikeBusinessQuestion =
+  hasWord("why") ||
+  hasWord("driver") ||
+  hasWord("drivers") ||
+  hasWord("down") ||
+  hasWord("up") ||
+  hasWord("drop") ||
+  hasWord("dropped") ||
+  hasWord("increase") ||
+  hasWord("decrease") ||
+  hasWord("changed");
 
-      const looksLikeDatasetLinkQuestion =
-        normalizedMessage.includes("dataset") ||
-        normalizedMessage.includes("json") ||
-        normalizedMessage.includes("sheet") ||
-        normalizedMessage.includes("raw data") ||
-        normalizedMessage.includes("which dataset") ||
-        normalizedMessage.includes("what dataset") ||
-        normalizedMessage.includes("should i use") ||
-        normalizedMessage.includes("use for") ||
-        normalizedMessage.includes("best dataset");
+const looksLikeDashboardLinkQuestion =
+  hasWord("dashboard") ||
+  hasWord("report") ||
+  hasPhrase("where can i find") ||
+  hasPhrase("where is");
+
+const looksLikeDatasetLinkQuestion =
+  hasWord("dataset") ||
+  hasWord("json") ||
+  hasWord("sheet") ||
+  hasPhrase("raw data") ||
+  hasPhrase("which dataset") ||
+  hasPhrase("what dataset") ||
+  hasPhrase("should i use") ||
+  hasPhrase("use for") ||
+  hasPhrase("best dataset");
 
       const directDatasetMatch = await tryDirectDatasetShortcut(userMessage);
-      if (directDatasetMatch && !looksLikeBusinessQuestion) {
-        return jsonResponse(
-          buildAppResponse({
-            answer: `You should use this dataset: ${directDatasetMatch.link}`,
-            dataset:
-              directDatasetMatch.dataset ||
-              directDatasetMatch.sheet_name ||
-              "dataset_list",
-            datasetLink: directDatasetMatch.link || null,
-            rows: [directDatasetMatch],
-            data: { found: true, dataset: directDatasetMatch },
-          })
-        );
-      }
 
-      if (looksLikeDashboardLinkQuestion && !looksLikeBusinessQuestion) {
-        const result = await findDashboardLink(userMessage);
+if (directDatasetMatch && looksLikeDatasetLinkQuestion) {
+  return jsonResponse(
+    buildAppResponse({
+      answer: `You should use this dataset: ${directDatasetMatch.link}`,
+      dataset:
+        directDatasetMatch.dataset ||
+        directDatasetMatch.sheet_name ||
+        "dataset_list",
+      datasetLink: directDatasetMatch.link || null,
+      rows: [directDatasetMatch],
+      data: { found: true, dataset: directDatasetMatch },
+    })
+  );
+}
 
-        return jsonResponse(
-          result.found
-            ? buildAppResponse({
-                answer: `You can find the dashboard here: ${result.dashboard.url}`,
-                dataset: "dashboard_links",
-                dashboardLink: result.dashboard.url || null,
-                rows: [result.dashboard],
-                data: result,
-              })
-            : buildAppResponse({
-                answer: result.message,
-                dataset: null,
-                rows: [],
-                data: result,
-              })
-        );
-      }
+if (looksLikeDatasetLinkQuestion) {
+  const result = await findDatasetLink(userMessage);
 
-      if (looksLikeDatasetLinkQuestion && !looksLikeBusinessQuestion) {
-        const result = await findDatasetLink(userMessage);
+  return jsonResponse(
+    result.found
+      ? buildAppResponse({
+          answer: `You should use this dataset: ${result.dataset.link}`,
+          dataset:
+            result.dataset.dataset ||
+            result.dataset.sheet_name ||
+            "dataset_list",
+          datasetLink: result.dataset.link || null,
+          rows: [result.dataset],
+          data: result,
+        })
+      : buildAppResponse({
+          answer: result.message,
+          dataset: null,
+          rows: [],
+          data: result,
+        })
+  );
+}
 
-        return jsonResponse(
-          result.found
-            ? buildAppResponse({
-                answer: `You should use this dataset: ${result.dataset.link}`,
-                dataset:
-                  result.dataset.dataset ||
-                  result.dataset.sheet_name ||
-                  "dataset_list",
-                datasetLink: result.dataset.link || null,
-                rows: [result.dataset],
-                data: result,
-              })
-            : buildAppResponse({
-                answer: result.message,
-                dataset: null,
-                rows: [],
-                data: result,
-              })
-        );
-      }
+if (looksLikeDashboardLinkQuestion) {
+  const result = await findDashboardLink(userMessage);
 
-      if (looksLikeBusinessQuestion) {
-        const directAnalysis = await analyzeBusinessQuestion(userMessage);
+  return jsonResponse(
+    result.found
+      ? buildAppResponse({
+          answer: `You can find the dashboard here: ${result.dashboard.url}`,
+          dataset: "dashboard_links",
+          dashboardLink: result.dashboard.url || null,
+          rows: [result.dashboard],
+          data: result,
+        })
+      : buildAppResponse({
+          answer: result.message,
+          dataset: null,
+          rows: [],
+          data: result,
+        })
+  );
+}
 
-        return jsonResponse(
-          directAnalysis.found
-            ? buildAppResponse({
-                answer: [
-                  directAnalysis.analysis.summary,
-                  ...directAnalysis.analysis.observations.slice(0, 6),
-                ].join("\n"),
-                dataset:
-                  directAnalysis.datasets_used[0]?.dataset ||
-                  directAnalysis.metric.metric_id,
-                datasetLink: directAnalysis.datasets_used[0]?.link || null,
-                rows: directAnalysis.datasets_used.map((d) => ({
-                  dataset: d.dataset,
-                  dataset_link: d.link || null,
-                  row_count: d.row_count,
-                })),
-                data: directAnalysis,
-              })
-            : buildAppResponse({
-                answer: directAnalysis.message,
-                dataset: null,
-                rows: [],
-                data: directAnalysis,
-              })
-        );
-      }
+if (looksLikeBusinessQuestion) {
+  const directAnalysis = await analyzeBusinessQuestion(userMessage);
+
+  return jsonResponse(
+    directAnalysis.found
+      ? buildAppResponse({
+          answer: [
+            directAnalysis.analysis.summary,
+            ...directAnalysis.analysis.observations.slice(0, 6),
+          ].join("\n"),
+          dataset:
+            directAnalysis.datasets_used[0]?.dataset ||
+            directAnalysis.metric.metric_id,
+          datasetLink: directAnalysis.datasets_used[0]?.link || null,
+          rows: directAnalysis.datasets_used.map((d) => ({
+            dataset: d.dataset,
+            dataset_link: d.link || null,
+            row_count: d.row_count,
+          })),
+          data: directAnalysis,
+        })
+      : buildAppResponse({
+          answer: directAnalysis.message,
+          dataset: null,
+          rows: [],
+          data: directAnalysis,
+        })
+  );
+}
 
       const firstResp = await callOpenAI(env.OPENAI_API_KEY, {
         model: "gpt-5.4-mini",
