@@ -98,22 +98,13 @@ type AnalyzeBusinessQuestionResult =
       message: string;
     };
 
-type OpenAIInputMessage = {
-  role?: "system" | "user" | "assistant";
-  type?: string;
-  content?:
-    | Array<{
-        type: string;
-        text?: string;
-      }>
-    | string;
-};
-
 type OpenAIOutputItem = {
   type: string;
   name?: string;
   arguments?: string;
   call_id?: string;
+  text?: string;
+  content?: Array<{ type?: string; text?: string }>;
 };
 
 type OpenAIResponse = {
@@ -211,54 +202,110 @@ const TOOLS = [
 
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
+    const url = new URL(request.url);
+
     if (request.method === "OPTIONS") {
       return new Response(null, { headers: corsHeaders });
     }
 
+    if (url.pathname !== "/api/ai") {
+      return new Response("Not found", {
+        status: 404,
+        headers: corsHeaders,
+      });
+    }
+
     if (request.method !== "POST") {
-      return jsonResponse(
-        { error: "Method not allowed. Use POST." },
-        405
-      );
+      return jsonResponse({ error: "Method not allowed. Use POST." }, 405);
     }
 
     try {
-      const body = (await request.json()) as { message?: string };
-      const userMessage = String(body?.message || "").trim();
+      const body = (await request.json()) as {
+        message?: string;
+        prompt?: string;
+        question?: string;
+        input?: string;
+      };
+
+      const userMessage = String(
+        body?.message ?? body?.prompt ?? body?.question ?? body?.input ?? ""
+      ).trim();
 
       if (!userMessage) {
-        return jsonResponse({ error: "Missing message" }, 400);
+        return jsonResponse(
+          {
+            error:
+              "Missing message. Expected one of: message, prompt, question, input",
+          },
+          400
+        );
       }
 
-      const firstResp = await callOpenAI(env.OPENAI_API_KEY, {
-  model: "gpt-4.1",
-  input: [
-    {
-      role: "system",
-      content: [
-        {
-          type: "input_text",
-          text:
-            "You are a NuBrakes business analyst assistant. " +
-            "Use tools when needed. " +
-            "Use find_metric_definition when the user asks what a KPI means. " +
-            "Use find_dataset_link when the user asks for a dataset link. " +
-            "Use business_question_drivers when the user asks why a KPI moved or what drove performance. " +
-            "Use analyze_business_question when the user asks for an actual driver analysis from linked data. " +
-            "For business questions about why a KPI changed, prefer analyze_business_question. " +
-            "Keep answers concise, quantitative when possible, and business-focused.",
-        },
-      ],
-    },
-    {
-      role: "user",
-      content: [{ type: "input_text", text: userMessage }],
-    },
-  ],
-  tools: TOOLS,
-});
+      console.log("Incoming request path:", url.pathname);
+      console.log("User message:", userMessage);
 
-console.log("FIRST RESPONSE RAW:", JSON.stringify(firstResp, null, 2));
+      const normalizedMessage = normalize(userMessage);
+      const looksLikeBusinessQuestion =
+        normalizedMessage.includes("why") ||
+        normalizedMessage.includes("driver") ||
+        normalizedMessage.includes("drivers") ||
+        normalizedMessage.includes("down") ||
+        normalizedMessage.includes("up") ||
+        normalizedMessage.includes("drop") ||
+        normalizedMessage.includes("dropped") ||
+        normalizedMessage.includes("increase") ||
+        normalizedMessage.includes("decrease") ||
+        normalizedMessage.includes("changed") ||
+        normalizedMessage.includes("march") ||
+        normalizedMessage.includes("month") ||
+        normalizedMessage.includes("week");
+
+      // Temporary fast-path for business questions to avoid empty tool-choice responses.
+      if (looksLikeBusinessQuestion) {
+        const directAnalysis = await analyzeBusinessQuestion(userMessage);
+        if (directAnalysis.found) {
+          const a = directAnalysis.analysis;
+          return jsonResponse({
+            answer: [
+              a.summary,
+              ...a.observations.slice(0, 6),
+            ].join("\n"),
+            data: directAnalysis,
+          });
+        }
+      }
+
+      console.log("Calling OpenAI...");
+
+      const firstResp = await callOpenAI(env.OPENAI_API_KEY, {
+        model: "gpt-4.1",
+        input: [
+          {
+            role: "system",
+            content: [
+              {
+                type: "input_text",
+                text:
+                  "You are a NuBrakes business analyst assistant. " +
+                  "Use tools when needed. " +
+                  "Use find_metric_definition when the user asks what a KPI means. " +
+                  "Use find_dataset_link when the user asks for a dataset link. " +
+                  "Use business_question_drivers when the user asks why a KPI moved or what drove performance. " +
+                  "Use analyze_business_question when the user asks for an actual driver analysis from linked data. " +
+                  "For business questions about why a KPI changed, prefer analyze_business_question. " +
+                  "Keep answers concise, quantitative when possible, and business-focused.",
+              },
+            ],
+          },
+          {
+            role: "user",
+            content: [{ type: "input_text", text: userMessage }],
+          },
+        ],
+        tools: TOOLS,
+      });
+
+      console.log("FIRST RESPONSE RAW:", JSON.stringify(firstResp, null, 2));
 
       const outputItems = firstResp.output || [];
       const toolOutputs: Array<{
@@ -268,11 +315,10 @@ console.log("FIRST RESPONSE RAW:", JSON.stringify(firstResp, null, 2));
       }> = [];
 
       for (const item of outputItems) {
+        console.log("OUTPUT ITEM:", JSON.stringify(item));
+
         if (item.type === "function_call" && item.name && item.arguments) {
-          const args = safeJsonParse<Record<string, unknown>>(
-            item.arguments,
-            {}
-          );
+          const args = safeJsonParse<Record<string, unknown>>(item.arguments, {});
           const result = await handleToolCall(item.name, args);
 
           toolOutputs.push({
@@ -285,7 +331,8 @@ console.log("FIRST RESPONSE RAW:", JSON.stringify(firstResp, null, 2));
 
       if (toolOutputs.length === 0) {
         return jsonResponse({
-          answer: firstResp.output_text || "No response generated.",
+          answer: extractResponseText(firstResp) || "No response generated.",
+          debug: firstResp,
         });
       }
 
@@ -295,13 +342,18 @@ console.log("FIRST RESPONSE RAW:", JSON.stringify(firstResp, null, 2));
         input: toolOutputs,
       });
 
+      console.log("SECOND RESPONSE RAW:", JSON.stringify(secondResp, null, 2));
+
       return jsonResponse({
-        answer: secondResp.output_text || "No response generated.",
+        answer: extractResponseText(secondResp) || "No response generated.",
+        debug: secondResp,
       });
     } catch (error) {
+      console.error("Worker error:", error);
       return jsonResponse(
         {
           error: error instanceof Error ? error.message : "Unknown error",
+          stack: error instanceof Error ? error.stack : null,
         },
         500
       );
@@ -334,31 +386,25 @@ async function handleToolCall(name: string, args: Record<string, unknown>) {
 
 async function loadDatasetDefinitions(): Promise<DatasetDefinition[]> {
   const res = await fetch(DATASET_LIST_URL);
-
   if (!res.ok) {
     throw new Error(`Failed to load dataset_list.json: ${res.status}`);
   }
-
   return (await res.json()) as DatasetDefinition[];
 }
 
 async function loadMetricDefinitions(): Promise<MetricDefinition[]> {
   const res = await fetch(METRIC_DEFINITIONS_URL);
-
   if (!res.ok) {
     throw new Error(`Failed to load metric_definitions.json: ${res.status}`);
   }
-
   return (await res.json()) as MetricDefinition[];
 }
 
 async function loadJsonFromUrl<T = unknown>(url: string): Promise<T> {
   const res = await fetch(url);
-
   if (!res.ok) {
     throw new Error(`Failed to load dataset from ${url}: ${res.status}`);
   }
-
   return (await res.json()) as T;
 }
 
@@ -781,7 +827,7 @@ async function analyzeBusinessQuestion(
   );
 
   for (const obs of rankedDrivers.slice(0, 6)) {
-    observations.push(buildDriverObservationText(obs, metric.good_direction));
+    observations.push(buildDriverObservationText(obs));
   }
 
   if (scope.market) {
@@ -833,12 +879,28 @@ function parseBusinessQuestionScopeFromRows(
 
   let time_grain: TimeGrain = "week";
 
-  if (q.includes("today") || q.includes("yesterday") || q.includes("daily")) {
+  if (
+    q.includes("today") ||
+    q.includes("yesterday") ||
+    q.includes("daily")
+  ) {
     time_grain = "day";
   } else if (
     q.includes("month") ||
     q.includes("monthly") ||
-    q.includes("mtd")
+    q.includes("mtd") ||
+    q.includes("march") ||
+    q.includes("april") ||
+    q.includes("may") ||
+    q.includes("june") ||
+    q.includes("july") ||
+    q.includes("august") ||
+    q.includes("september") ||
+    q.includes("october") ||
+    q.includes("november") ||
+    q.includes("december") ||
+    q.includes("january") ||
+    q.includes("february")
   ) {
     time_grain = "month";
   }
@@ -1118,16 +1180,13 @@ function driverImpactScore(
   return deltaValue;
 }
 
-function buildDriverObservationText(
-  obs: {
-    driverId: string;
-    currentValue: number | null;
-    priorValue: number | null;
-    deltaValue: number | null;
-    formatType: string;
-  },
-  _parentGoodDirection?: string
-): string {
+function buildDriverObservationText(obs: {
+  driverId: string;
+  currentValue: number | null;
+  priorValue: number | null;
+  deltaValue: number | null;
+  formatType: string;
+}): string {
   if (obs.currentValue === null && obs.priorValue === null) {
     return `${obs.driverId} is not directly computable from the scoped dataset coverage.`;
   }
@@ -1255,6 +1314,30 @@ function inferFormatType(metricId: string): string {
   }
 
   return "number";
+}
+
+function extractResponseText(resp: OpenAIResponse): string {
+  if (resp.output_text && String(resp.output_text).trim()) {
+    return String(resp.output_text).trim();
+  }
+
+  const items = Array.isArray(resp.output) ? resp.output : [];
+
+  for (const item of items) {
+    if (typeof item.text === "string" && item.text.trim()) {
+      return item.text.trim();
+    }
+
+    if (Array.isArray(item.content)) {
+      for (const part of item.content) {
+        if (typeof part?.text === "string" && part.text.trim()) {
+          return part.text.trim();
+        }
+      }
+    }
+  }
+
+  return "";
 }
 
 function normalize(value: string): string {
