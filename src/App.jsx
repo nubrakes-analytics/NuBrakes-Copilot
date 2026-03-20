@@ -12,7 +12,7 @@ const EXAMPLES = [
   "What does average order value mean?",
   "Where can I find the ops dashboard?",
   "Which dataset should I use for supply and demand by market?",
-  "Why is conversion rate down this March?"
+  "Why is conversion rate down this March?",
 ];
 
 const DATASET_LIST_URL =
@@ -47,13 +47,7 @@ function TablePreview({ rows }) {
     return Object.keys(rows[0]);
   }, [rows]);
 
-  if (!rows?.length) {
-    return (
-      <div className="rounded-2xl border border-dashed border-[#CDB7B7] bg-[#F7F2F0] p-4 text-sm text-[#817E7F]">
-        No supporting rows returned.
-      </div>
-    );
-  }
+  if (!rows?.length) return null;
 
   return (
     <div className="overflow-hidden rounded-2xl border border-[#CDB7B7] bg-white">
@@ -94,7 +88,19 @@ function TablePreview({ rows }) {
 function MessageBubble({ message }) {
   const isUser = message.role === "user";
   const firstRow = message.meta?.rows?.[0] || null;
-  const link = firstRow?.url || firstRow?.link || null;
+
+  const dashboardLink =
+    message.meta?.dashboard_link ||
+    firstRow?.dashboard_link ||
+    firstRow?.dashboard_url ||
+    firstRow?.url ||
+    null;
+
+  const datasetLink =
+    message.meta?.dataset_link ||
+    firstRow?.dataset_link ||
+    firstRow?.link ||
+    null;
 
   return (
     <div className={`flex ${isUser ? "justify-end" : "justify-start"}`}>
@@ -122,16 +128,32 @@ function MessageBubble({ message }) {
 
             <TablePreview rows={message.meta.rows || []} />
 
-            {link && (
-              <a
-                href={link}
-                target="_blank"
-                rel="noreferrer"
-                className="inline-flex items-center gap-2 rounded-2xl bg-[#E63F2B] px-4 py-2 text-sm text-white hover:bg-[#cf3826]"
-              >
-                <LinkIcon className="h-4 w-4" />
-                Open link
-              </a>
+            {(datasetLink || dashboardLink) && (
+              <div className="flex flex-wrap gap-2">
+                {datasetLink && (
+                  <a
+                    href={datasetLink}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex items-center gap-2 rounded-2xl bg-[#0E2468] px-4 py-2 text-sm text-white hover:bg-[#16358F]"
+                  >
+                    <LinkIcon className="h-4 w-4" />
+                    Open dataset
+                  </a>
+                )}
+
+                {dashboardLink && (
+                  <a
+                    href={dashboardLink}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex items-center gap-2 rounded-2xl bg-[#E63F2B] px-4 py-2 text-sm text-white hover:bg-[#cf3826]"
+                  >
+                    <LinkIcon className="h-4 w-4" />
+                    Open dashboard
+                  </a>
+                )}
+              </div>
             )}
           </div>
         )}
@@ -218,6 +240,8 @@ export default function NubrakesAICopilotFrontend() {
           meta: {
             dataset: data.dataset || data.dataset_used || "Approved dataset",
             rows: data.rows || data.supporting_rows || [],
+            dataset_link: data.dataset_link || data.link || null,
+            dashboard_link: data.dashboard_link || data.url || null,
           },
         },
       ]);
@@ -233,6 +257,8 @@ export default function NubrakesAICopilotFrontend() {
           meta: {
             dataset: "Connection error",
             rows: [],
+            dataset_link: null,
+            dashboard_link: null,
           },
         },
       ]);
@@ -298,9 +324,9 @@ export default function NubrakesAICopilotFrontend() {
                     rel="noreferrer"
                     className="flex items-center justify-between rounded-2xl bg-[#CDB7B7]/25 px-3 py-2 text-xs text-[#0E2468] ring-1 ring-[#CDB7B7] transition hover:bg-[#CDB7B7]/40"
                   >
-                   <span className="min-w-0 flex-1 pr-3 break-all">
-  {item.dataset || item.sheet_name || "Unnamed dataset"}
-</span>
+                    <span className="min-w-0 flex-1 break-all pr-3">
+                      {item.dataset || item.sheet_name || "Unnamed dataset"}
+                    </span>
                     <LinkIcon className="h-4 w-4 shrink-0" />
                   </a>
                 ))
