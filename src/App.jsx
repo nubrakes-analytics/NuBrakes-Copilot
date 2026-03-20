@@ -9,41 +9,6 @@ import {
   RotateCcw,
 } from "lucide-react";
 
-type DatasetItem = {
-  sheet_name?: string;
-  dataset?: string;
-  link?: string;
-  description?: string;
-};
-
-type MessageMeta = {
-  dataset?: string;
-  rows?: Record<string, unknown>[];
-  dataset_link?: string | null;
-  dashboard_link?: string | null;
-  error?: boolean;
-};
-
-type ChatMessage = {
-  id: string;
-  role: "user" | "assistant";
-  content: string;
-  meta: MessageMeta | null;
-  createdAt: string;
-};
-
-type AIResponse = {
-  answer?: string;
-  dataset?: string;
-  dataset_used?: string;
-  rows?: Record<string, unknown>[];
-  supporting_rows?: Record<string, unknown>[];
-  dataset_link?: string | null;
-  link?: string | null;
-  dashboard_link?: string | null;
-  url?: string | null;
-};
-
 const EXAMPLES = [
   "What does average order value mean?",
   "Where can I find the ops dashboard?",
@@ -63,14 +28,10 @@ const AI_ENDPOINT =
 
 const STORAGE_KEY = "nubrakes-ai-copilot-chat-v1";
 
-function createMessage(
-  role: "user" | "assistant",
-  content: string,
-  meta: MessageMeta | null = null
-): ChatMessage {
+function createMessage(role, content, meta = null) {
   return {
     id:
-      typeof crypto !== "undefined" && "randomUUID" in crypto
+      typeof crypto !== "undefined" && crypto.randomUUID
         ? crypto.randomUUID()
         : `${Date.now()}-${Math.random().toString(36).slice(2)}`,
     role,
@@ -80,7 +41,7 @@ function createMessage(
   };
 }
 
-function isValidHttpUrl(value: unknown): value is string {
+function isValidHttpUrl(value) {
   if (typeof value !== "string" || !value.trim()) return false;
   try {
     const url = new URL(value);
@@ -90,7 +51,7 @@ function isValidHttpUrl(value: unknown): value is string {
   }
 }
 
-function formatTime(iso: string) {
+function formatTime(iso) {
   try {
     return new Date(iso).toLocaleTimeString([], {
       hour: "numeric",
@@ -101,15 +62,7 @@ function formatTime(iso: string) {
   }
 }
 
-function StatCard({
-  icon: Icon,
-  label,
-  value,
-}: {
-  icon: React.ComponentType<{ className?: string }>;
-  label: string;
-  value: string;
-}) {
+function StatCard({ icon: Icon, label, value }) {
   return (
     <div className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-[#CDB7B7]">
       <div className="flex items-center gap-3">
@@ -127,7 +80,7 @@ function StatCard({
   );
 }
 
-function MetadataPill({ label, value }: { label: string; value: string }) {
+function MetadataPill({ label, value }) {
   return (
     <div className="rounded-full bg-[#F7F2F0] px-3 py-1 text-[11px] font-medium text-[#0E2468] ring-1 ring-[#CDB7B7]">
       <span className="opacity-70">{label}:</span> {value}
@@ -135,13 +88,7 @@ function MetadataPill({ label, value }: { label: string; value: string }) {
   );
 }
 
-function MessageBubble({
-  message,
-  onRetry,
-}: {
-  message: ChatMessage;
-  onRetry?: (question: string) => void;
-}) {
+function MessageBubble({ message, onRetry }) {
   const isUser = message.role === "user";
   const firstRow = message.meta?.rows?.[0] || null;
 
@@ -161,7 +108,7 @@ function MessageBubble({
   const datasetLink = isValidHttpUrl(datasetLinkRaw) ? datasetLinkRaw : null;
 
   const rowsCount = Array.isArray(message.meta?.rows)
-    ? message.meta?.rows?.length
+    ? message.meta.rows.length
     : 0;
 
   return (
@@ -226,7 +173,7 @@ function MessageBubble({
         {!isUser && message.meta?.error && onRetry && (
           <div className="mt-4">
             <button
-              onClick={() => onRetry(message.content)}
+              onClick={onRetry}
               className="inline-flex items-center gap-2 rounded-2xl bg-[#F7F2F0] px-4 py-2 text-sm text-[#0E2468] ring-1 ring-[#CDB7B7] transition hover:bg-[#efe7e3]"
             >
               <RotateCcw className="h-4 w-4" />
@@ -240,7 +187,7 @@ function MessageBubble({
 }
 
 export default function NubrakesAICopilotFrontend() {
-  const [messages, setMessages] = useState<ChatMessage[]>(() => {
+  const [messages, setMessages] = useState(() => {
     if (typeof window === "undefined") {
       return [
         createMessage(
@@ -281,13 +228,13 @@ export default function NubrakesAICopilotFrontend() {
 
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
-  const [datasets, setDatasets] = useState<DatasetItem[]>([]);
+  const [datasets, setDatasets] = useState([]);
   const [lastQuestion, setLastQuestion] = useState("");
-  const [datasetLoadError, setDatasetLoadError] = useState<string | null>(null);
+  const [datasetLoadError, setDatasetLoadError] = useState(null);
 
-  const messagesEndRef = useRef<HTMLDivElement | null>(null);
-  const inputRef = useRef<HTMLTextAreaElement | null>(null);
-  const askAbortRef = useRef<AbortController | null>(null);
+  const messagesEndRef = useRef(null);
+  const inputRef = useRef(null);
+  const askAbortRef = useRef(null);
 
   const datasetCount = useMemo(() => String(datasets.length), [datasets]);
 
@@ -321,7 +268,7 @@ export default function NubrakesAICopilotFrontend() {
 
         setDatasets(parsed);
       } catch (err) {
-        if ((err as Error).name === "AbortError") return;
+        if (err.name === "AbortError") return;
         console.error("dataset_list.json load failed", err);
         setDatasets([]);
         setDatasetLoadError("Could not load dataset list.");
@@ -347,7 +294,7 @@ export default function NubrakesAICopilotFrontend() {
     };
   }, []);
 
-  async function handleAsk(questionText?: string) {
+  async function handleAsk(questionText) {
     const question = (questionText ?? input).trim();
     if (!question || loading) return;
 
@@ -377,7 +324,7 @@ export default function NubrakesAICopilotFrontend() {
         throw new Error(text || `Request failed with ${res.status}`);
       }
 
-      const data: AIResponse = await res.json();
+      const data = await res.json();
 
       const assistantMessage = createMessage(
         "assistant",
@@ -392,7 +339,7 @@ export default function NubrakesAICopilotFrontend() {
 
       setMessages((prev) => [...prev, assistantMessage]);
     } catch (error) {
-      if ((error as Error).name === "AbortError") return;
+      if (error.name === "AbortError") return;
 
       console.error("AI request failed", error);
 
@@ -585,7 +532,7 @@ export default function NubrakesAICopilotFrontend() {
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={(e) => {
-                  if ((e.nativeEvent as KeyboardEvent).isComposing) return;
+                  if (e.nativeEvent.isComposing) return;
                   if (e.key === "Enter" && !e.shiftKey) {
                     e.preventDefault();
                     handleAsk(input);
