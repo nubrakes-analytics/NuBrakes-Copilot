@@ -360,7 +360,7 @@ export default function NubrakesAICopilotFrontend() {
                     handleAsk(input);
                   }
                 }}
-                placeholder="Ask about metrics, markets, technicians, stores, dashboards, or datasets..."
+                placeholder="Ask about metrics, markets, channel, dashboards, or datasets..."
                 rows={2}
                 className="flex-1 resize-none rounded-2xl border border-[#CDB7B7] px-4 py-3 text-sm outline-none placeholder:text-[#817E7F]/80 focus:border-[#6E9CC0]"
               />
