@@ -172,6 +172,33 @@ type AppApiResponse = {
   debug?: unknown;
 };
 
+type LoadedDataset = {
+  dataset: string;
+  link?: string;
+  rows: DatasetRow[];
+};
+
+type ScopedLoadedDataset = {
+  dataset: string;
+  link?: string;
+  filteredRows: DatasetRow[];
+  currentRows: DatasetRow[];
+  priorRows: DatasetRow[];
+  currentLabel: string;
+  priorLabel: string;
+};
+
+type DriverObservation = {
+  driverId: string;
+  currentValue: number | null;
+  priorValue: number | null;
+  deltaValue: number | null;
+  formatType: string;
+  datasetUsed: string;
+  currentRowsCount: number;
+  priorRowsCount: number;
+};
+
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
@@ -1191,7 +1218,6 @@ async function buildBusinessQuestionDriverPlan(
   const metric = metricResult.metric;
   const relevantDatasets = metric.relevant_datasets || [];
   const candidateDrivers = metric.candidate_drivers || [];
-  const datasets = await findDatasetsByIds(relevantDatasets);
   const allMetrics = await loadMetricDefinitions();
 
   const driverDefinitions = candidateDrivers
@@ -1201,6 +1227,16 @@ async function buildBusinessQuestionDriverPlan(
       )
     )
     .filter((m): m is MetricDefinition => Boolean(m));
+
+  const driverPrimaryDatasetIds = candidateDrivers
+    .map((driverId) => getPrimaryDatasetForMetric(driverId))
+    .filter((d): d is string => Boolean(d));
+
+  const mergedDatasetIds = Array.from(
+    new Set([...relevantDatasets, ...driverPrimaryDatasetIds])
+  );
+
+  const datasets = await findDatasetsByIds(mergedDatasetIds);
 
   return {
     found: true,
@@ -1212,15 +1248,15 @@ async function buildBusinessQuestionDriverPlan(
       good_direction: metric.good_direction,
       candidate_drivers: candidateDrivers,
       driver_definitions: driverDefinitions,
-      relevant_datasets: relevantDatasets,
+      relevant_datasets: mergedDatasetIds,
       business_question: businessQuestion,
       suggested_steps: [
         `Identify the KPI: ${metric.metric_name} (${metric.metric_id})`,
         metric.formula_logic
           ? `Validate formula: ${metric.formula_logic}`
           : `Review KPI logic and aggregation`,
-        relevantDatasets.length
-          ? `Inspect relevant datasets: ${relevantDatasets.join(", ")}`
+        mergedDatasetIds.length
+          ? `Inspect relevant datasets: ${mergedDatasetIds.join(", ")}`
           : `No linked datasets found in metric definition`,
         candidateDrivers.length
           ? `Analyze candidate drivers: ${candidateDrivers.join(", ")}`
@@ -1242,13 +1278,20 @@ function getPrimaryDatasetForMetric(metricId: string): string | null {
     conversion_rate: "fact_nubrakes_channel_market_kpi_daily",
     booking_rate: "fact_nubrakes_channel_market_kpi_daily",
     cancel_rate: "fact_nubrakes_channel_market_kpi_daily",
+    cancel_outcome_rate: "fact_nubrakes_channel_market_kpi_daily",
     aov: "fact_nubrakes_channel_market_kpi_daily",
     revenue: "fact_nubrakes_channel_market_kpi_daily",
     leads: "fact_nubrakes_channel_market_kpi_daily",
     jobs_booked: "fact_nubrakes_channel_market_kpi_daily",
     jobs_completed: "fact_nubrakes_channel_market_kpi_daily",
+    canceled_jobs: "fact_nubrakes_channel_market_kpi_daily",
+
     technician_utilization: "fact_nubrakes_supply_demand_daily",
     available_slots: "fact_nubrakes_supply_demand_daily",
+    utilized_slots: "fact_nubrakes_supply_demand_daily",
+    ft_tech_utilization: "fact_nubrakes_supply_demand_daily",
+    pt_tech_utilization: "fact_nubrakes_supply_demand_daily",
+
     ctr: "fact_nubrakes_marketing_performance_daily",
     clicks: "fact_nubrakes_marketing_performance_daily",
     impressions: "fact_nubrakes_marketing_performance_daily",
@@ -1256,6 +1299,16 @@ function getPrimaryDatasetForMetric(metricId: string): string | null {
     cpc: "fact_nubrakes_marketing_performance_daily",
     cost_per_inquiry: "fact_nubrakes_marketing_performance_daily",
     mac: "fact_nubrakes_marketing_performance_daily",
+
+    customer_cancels: "fact_nubrakes_supply_demand_daily",
+    hq_cancels: "fact_nubrakes_supply_demand_daily",
+    customer_reschedules: "fact_nubrakes_supply_demand_daily",
+    hq_reschedules: "fact_nubrakes_supply_demand_daily",
+    customer_cancel_rate: "fact_nubrakes_supply_demand_daily",
+    hq_cancel_rate: "fact_nubrakes_supply_demand_daily",
+    reschedule_rate: "fact_nubrakes_supply_demand_daily",
+    customer_reschedule_rate: "fact_nubrakes_supply_demand_daily",
+    hq_reschedule_rate: "fact_nubrakes_supply_demand_daily",
   };
 
   return map[id] || null;
@@ -1284,7 +1337,7 @@ async function analyzeBusinessQuestion(
     };
   }
 
-  const rawLoaded = await Promise.all(
+  const rawLoaded: LoadedDataset[] = await Promise.all(
     datasets.map(async (d) => {
       const rows = await loadJsonFromUrl<DatasetRow[]>(String(d.link));
       return {
@@ -1300,7 +1353,7 @@ async function analyzeBusinessQuestion(
     rawLoaded.flatMap((d) => d.rows)
   );
 
-  const scopedLoaded = rawLoaded.map((d) => {
+  const scopedLoaded: ScopedLoadedDataset[] = rawLoaded.map((d) => {
     const filteredRows = d.rows.filter((row) =>
       rowMatchesOptionalFilters(row, scope)
     );
@@ -1324,11 +1377,7 @@ async function analyzeBusinessQuestion(
   const primaryDataset = getPrimaryDatasetForMetric(metric.metric_id);
 
   const kpiLoaded = primaryDataset
-    ? scopedLoaded.filter(
-        (d) =>
-          normalize(d.dataset).replace(/\.json$/, "") ===
-          normalize(primaryDataset)
-      )
+    ? filterScopedLoadedByDataset(scopedLoaded, primaryDataset)
     : scopedLoaded;
 
   if (!kpiLoaded.length) {
@@ -1359,19 +1408,33 @@ async function analyzeBusinessQuestion(
   const priorMetricValue = computeMetricValue(metric.metric_id, allPriorRows);
   const deltaMetricValue = computeDelta(currentMetricValue, priorMetricValue);
 
-  const driverObservations = candidateDrivers.map((driverId) => {
-    const currentValue = computeMetricValue(driverId, allCurrentRows);
-    const priorValue = computeMetricValue(driverId, allPriorRows);
-    const deltaValue = computeDelta(currentValue, priorValue);
+  const driverObservations: DriverObservation[] = candidateDrivers.map(
+    (driverId) => {
+      const driverPrimaryDataset = getPrimaryDatasetForMetric(driverId);
 
-    return {
-      driverId,
-      currentValue,
-      priorValue,
-      deltaValue,
-      formatType: inferFormatType(driverId),
-    };
-  });
+      const driverLoaded = driverPrimaryDataset
+        ? filterScopedLoadedByDataset(scopedLoaded, driverPrimaryDataset)
+        : scopedLoaded;
+
+      const driverCurrentRows = driverLoaded.flatMap((d) => d.currentRows);
+      const driverPriorRows = driverLoaded.flatMap((d) => d.priorRows);
+
+      const currentValue = computeMetricValue(driverId, driverCurrentRows);
+      const priorValue = computeMetricValue(driverId, driverPriorRows);
+      const deltaValue = computeDelta(currentValue, priorValue);
+
+      return {
+        driverId,
+        currentValue,
+        priorValue,
+        deltaValue,
+        formatType: inferFormatType(driverId),
+        datasetUsed: driverPrimaryDataset || "mixed",
+        currentRowsCount: driverCurrentRows.length,
+        priorRowsCount: driverPriorRows.length,
+      };
+    }
+  );
 
   const observations: string[] = [];
   const metricFormat = metric.format_type || inferFormatType(metric.metric_id);
@@ -1433,6 +1496,16 @@ async function analyzeBusinessQuestion(
 
   for (const obs of usableDrivers.slice(0, 4)) {
     observations.push(buildDriverObservationText(obs));
+  }
+
+  const uncomputableDrivers = rankedDrivers.filter(
+    (obs) => obs.currentValue === null && obs.priorValue === null
+  );
+
+  for (const obs of uncomputableDrivers.slice(0, 2)) {
+    observations.push(
+      `${obs.driverId} could not be computed from dataset ${obs.datasetUsed}. Current rows: ${obs.currentRowsCount}, prior rows: ${obs.priorRowsCount}.`
+    );
   }
 
   if (scope.market) {
@@ -2139,6 +2212,11 @@ function getMetricFieldNames(metricId: string): string[] {
       "conversion rate",
     ],
     cancel_rate: ["cancel_rate", "Cancel Rate", "cancel rate"],
+    cancel_outcome_rate: [
+      "cancel_outcome_rate",
+      "Cancel Outcome Rate",
+      "cancel outcome rate",
+    ],
     aov: ["aov", "AOV", "average_order_value", "Average Order Value"],
     ctr: ["ctr", "CTR"],
     cpc: ["cpc", "CPC"],
@@ -2165,6 +2243,11 @@ function computeMetricValue(metricId: string, rows: DatasetRow[]): number | null
       "clicks",
       "marketing_spend",
       "available_slots",
+      "utilized_slots",
+      "customer_cancels",
+      "hq_cancels",
+      "customer_reschedules",
+      "hq_reschedules",
     ].includes(id)
   ) {
     return directMetric || 0;
@@ -2236,16 +2319,21 @@ function computeDelta(
   return currentValue - priorValue;
 }
 
+function filterScopedLoadedByDataset(
+  scopedLoaded: ScopedLoadedDataset[],
+  datasetName: string
+): ScopedLoadedDataset[] {
+  const wanted = normalize(datasetName).replace(/\.json$/, "");
+
+  return scopedLoaded.filter(
+    (d) => normalize(d.dataset).replace(/\.json$/, "") === wanted
+  );
+}
+
 function rankDriverObservations(
-  drivers: Array<{
-    driverId: string;
-    currentValue: number | null;
-    priorValue: number | null;
-    deltaValue: number | null;
-    formatType: string;
-  }>,
+  drivers: DriverObservation[],
   goodDirection?: string
-) {
+): DriverObservation[] {
   const direction = normalize(goodDirection || "neutral");
 
   return [...drivers].sort((a, b) => {
@@ -2265,22 +2353,16 @@ function driverImpactScore(
   return deltaValue;
 }
 
-function buildDriverObservationText(obs: {
-  driverId: string;
-  currentValue: number | null;
-  priorValue: number | null;
-  deltaValue: number | null;
-  formatType: string;
-}): string {
+function buildDriverObservationText(obs: DriverObservation): string {
   if (obs.currentValue === null && obs.priorValue === null) {
-    return `${obs.driverId} is not directly computable from the scoped dataset coverage.`;
+    return `${obs.driverId} is not directly computable from dataset ${obs.datasetUsed}.`;
   }
 
   const current = formatMetricValue(obs.currentValue, obs.formatType);
   const prior = formatMetricValue(obs.priorValue, obs.formatType);
   const delta = formatDeltaValue(obs.deltaValue, obs.formatType);
 
-  return `${obs.driverId} was ${current} vs ${prior} (${delta}).`;
+  return `${obs.driverId} was ${current} vs ${prior} (${delta}) using ${obs.datasetUsed}.`;
 }
 
 function buildAnalysisSummary(args: {
@@ -2288,13 +2370,7 @@ function buildAnalysisSummary(args: {
   currentMetricValue: number | null;
   priorMetricValue: number | null;
   deltaMetricValue: number | null;
-  rankedDrivers: Array<{
-    driverId: string;
-    currentValue: number | null;
-    priorValue: number | null;
-    deltaValue: number | null;
-    formatType: string;
-  }>;
+  rankedDrivers: DriverObservation[];
   currentLabel: string;
   priorLabel: string;
 }): string {
@@ -2314,7 +2390,7 @@ function buildAnalysisSummary(args: {
     const availableDrivers = rankedDrivers
       .filter((d) => d.currentValue !== null || d.priorValue !== null)
       .slice(0, 3)
-      .map((d) => d.driverId);
+      .map((d) => `${d.driverId} (${d.datasetUsed})`);
 
     return availableDrivers.length
       ? `${metric.metric_name} could not be fully computed for ${currentLabel} vs ${priorLabel}. Available drivers to review: ${availableDrivers.join(", ")}.`
@@ -2332,7 +2408,7 @@ function buildAnalysisSummary(args: {
   const topDrivers = rankedDrivers
     .filter((d) => d.deltaValue !== null)
     .slice(0, 3)
-    .map((d) => d.driverId);
+    .map((d) => `${d.driverId} (${d.datasetUsed})`);
 
   return topDrivers.length
     ? `${headline} Primary drivers to review: ${topDrivers.join(", ")}.`
