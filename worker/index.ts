@@ -285,131 +285,131 @@ export default {
       }
 
       const normalizedMessage = normalize(userMessage);
-const messageWords = new Set(normalizedMessage.split(/\s+/).filter(Boolean));
+      const messageWords = new Set(normalizedMessage.split(/\s+/).filter(Boolean));
 
-const hasPhrase = (phrase: string) => normalizedMessage.includes(phrase);
-const hasWord = (word: string) => messageWords.has(word);
+      const hasPhrase = (phrase: string) => normalizedMessage.includes(phrase);
+      const hasWord = (word: string) => messageWords.has(word);
 
-const looksLikeBusinessQuestion =
-  hasWord("why") ||
-  hasWord("driver") ||
-  hasWord("drivers") ||
-  hasWord("down") ||
-  hasWord("up") ||
-  hasWord("drop") ||
-  hasWord("dropped") ||
-  hasWord("increase") ||
-  hasWord("decrease") ||
-  hasWord("changed");
+      const looksLikeBusinessQuestion =
+        hasWord("why") ||
+        hasWord("driver") ||
+        hasWord("drivers") ||
+        hasWord("down") ||
+        hasWord("up") ||
+        hasWord("drop") ||
+        hasWord("dropped") ||
+        hasWord("increase") ||
+        hasWord("decrease") ||
+        hasWord("changed");
 
-const looksLikeDashboardLinkQuestion =
-  hasWord("dashboard") ||
-  hasWord("report") ||
-  hasPhrase("where can i find") ||
-  hasPhrase("where is");
+      const looksLikeDashboardLinkQuestion =
+        hasWord("dashboard") ||
+        hasWord("report") ||
+        hasPhrase("where can i find") ||
+        hasPhrase("where is");
 
-const looksLikeDatasetLinkQuestion =
-  hasWord("dataset") ||
-  hasWord("json") ||
-  hasWord("sheet") ||
-  hasPhrase("raw data") ||
-  hasPhrase("which dataset") ||
-  hasPhrase("what dataset") ||
-  hasPhrase("should i use") ||
-  hasPhrase("use for") ||
-  hasPhrase("best dataset");
+      const looksLikeDatasetLinkQuestion =
+        hasWord("dataset") ||
+        hasWord("json") ||
+        hasWord("sheet") ||
+        hasPhrase("raw data") ||
+        hasPhrase("which dataset") ||
+        hasPhrase("what dataset") ||
+        hasPhrase("should i use") ||
+        hasPhrase("use for") ||
+        hasPhrase("best dataset");
 
       const directDatasetMatch = await tryDirectDatasetShortcut(userMessage);
 
-if (directDatasetMatch && looksLikeDatasetLinkQuestion) {
-  return jsonResponse(
-    buildAppResponse({
-      answer: `You should use this dataset: ${directDatasetMatch.link}`,
-      dataset:
-        directDatasetMatch.dataset ||
-        directDatasetMatch.sheet_name ||
-        "dataset_list",
-      datasetLink: directDatasetMatch.link || null,
-      rows: [directDatasetMatch],
-      data: { found: true, dataset: directDatasetMatch },
-    })
-  );
-}
+      if (directDatasetMatch && looksLikeDatasetLinkQuestion) {
+        return jsonResponse(
+          buildAppResponse({
+            answer: `You should use this dataset: ${directDatasetMatch.link}`,
+            dataset:
+              directDatasetMatch.dataset ||
+              directDatasetMatch.sheet_name ||
+              "dataset_list",
+            datasetLink: directDatasetMatch.link || null,
+            rows: [directDatasetMatch],
+            data: { found: true, dataset: directDatasetMatch },
+          })
+        );
+      }
 
-if (looksLikeDatasetLinkQuestion) {
-  const result = await findDatasetLink(userMessage);
+      if (looksLikeDatasetLinkQuestion) {
+        const result = await findDatasetLink(userMessage);
 
-  return jsonResponse(
-    result.found
-      ? buildAppResponse({
-          answer: `You should use this dataset: ${result.dataset.link}`,
-          dataset:
-            result.dataset.dataset ||
-            result.dataset.sheet_name ||
-            "dataset_list",
-          datasetLink: result.dataset.link || null,
-          rows: [result.dataset],
-          data: result,
-        })
-      : buildAppResponse({
-          answer: result.message,
-          dataset: null,
-          rows: [],
-          data: result,
-        })
-  );
-}
+        return jsonResponse(
+          result.found
+            ? buildAppResponse({
+                answer: `You should use this dataset: ${result.dataset.link}`,
+                dataset:
+                  result.dataset.dataset ||
+                  result.dataset.sheet_name ||
+                  "dataset_list",
+                datasetLink: result.dataset.link || null,
+                rows: [result.dataset],
+                data: result,
+              })
+            : buildAppResponse({
+                answer: result.message,
+                dataset: null,
+                rows: [],
+                data: result,
+              })
+        );
+      }
 
-if (looksLikeDashboardLinkQuestion) {
-  const result = await findDashboardLink(userMessage);
+      if (looksLikeDashboardLinkQuestion) {
+        const result = await findDashboardLink(userMessage);
 
-  return jsonResponse(
-    result.found
-      ? buildAppResponse({
-          answer: `You can find the dashboard here: ${result.dashboard.url}`,
-          dataset: "dashboard_links",
-          dashboardLink: result.dashboard.url || null,
-          rows: [result.dashboard],
-          data: result,
-        })
-      : buildAppResponse({
-          answer: result.message,
-          dataset: null,
-          rows: [],
-          data: result,
-        })
-  );
-}
+        return jsonResponse(
+          result.found
+            ? buildAppResponse({
+                answer: `You can find the dashboard here: ${result.dashboard.url}`,
+                dataset: "dashboard_links",
+                dashboardLink: result.dashboard.url || null,
+                rows: [result.dashboard],
+                data: result,
+              })
+            : buildAppResponse({
+                answer: result.message,
+                dataset: null,
+                rows: [],
+                data: result,
+              })
+        );
+      }
 
-if (looksLikeBusinessQuestion) {
-  const directAnalysis = await analyzeBusinessQuestion(userMessage);
+      if (looksLikeBusinessQuestion) {
+        const directAnalysis = await analyzeBusinessQuestion(userMessage);
 
-  return jsonResponse(
-    directAnalysis.found
-      ? buildAppResponse({
-          answer: [
-            directAnalysis.analysis.summary,
-            ...directAnalysis.analysis.observations.slice(0, 6),
-          ].join("\n"),
-          dataset:
-            directAnalysis.datasets_used[0]?.dataset ||
-            directAnalysis.metric.metric_id,
-          datasetLink: directAnalysis.datasets_used[0]?.link || null,
-          rows: directAnalysis.datasets_used.map((d) => ({
-            dataset: d.dataset,
-            dataset_link: d.link || null,
-            row_count: d.row_count,
-          })),
-          data: directAnalysis,
-        })
-      : buildAppResponse({
-          answer: directAnalysis.message,
-          dataset: null,
-          rows: [],
-          data: directAnalysis,
-        })
-  );
-}
+        return jsonResponse(
+          directAnalysis.found
+            ? buildAppResponse({
+                answer: [
+                  directAnalysis.analysis.summary,
+                  ...directAnalysis.analysis.observations.slice(0, 6),
+                ].join("\n"),
+                dataset:
+                  directAnalysis.datasets_used[0]?.dataset ||
+                  directAnalysis.metric.metric_id,
+                datasetLink: directAnalysis.datasets_used[0]?.link || null,
+                rows: directAnalysis.datasets_used.map((d) => ({
+                  dataset: d.dataset,
+                  dataset_link: d.link || null,
+                  row_count: d.row_count,
+                })),
+                data: directAnalysis,
+              })
+            : buildAppResponse({
+                answer: directAnalysis.message,
+                dataset: null,
+                rows: [],
+                data: directAnalysis,
+              })
+        );
+      }
 
       const firstResp = await callOpenAI(env.OPENAI_API_KEY, {
         model: "gpt-5.4-mini",
@@ -1186,7 +1186,6 @@ async function analyzeBusinessQuestion(
     return {
       dataset: d.dataset,
       link: d.link,
-      allRows: d.rows,
       filteredRows,
       currentRows: scoped.current,
       priorRows: scoped.prior,
@@ -1229,24 +1228,37 @@ async function analyzeBusinessQuestion(
     };
   }
 
-const debugCurrent = {
-  rowCount: allCurrentRows.length,
-  leads: sumField(allCurrentRows, getMetricFieldNames("leads")),
-  jobsBooked: sumField(allCurrentRows, getMetricFieldNames("jobs_booked")),
-  jobsCompleted: sumField(allCurrentRows, getMetricFieldNames("jobs_completed")),
-};
+  console.log("metric_id", metric.metric_id);
+  console.log("scope", scope);
+  console.log(
+    "datasets used",
+    kpiLoaded.map((d) => ({
+      dataset: d.dataset,
+      currentLabel: d.currentLabel,
+      priorLabel: d.priorLabel,
+      currentRows: d.currentRows.length,
+      priorRows: d.priorRows.length,
+    }))
+  );
+  console.log("current sample row", allCurrentRows[0]);
+  console.log("prior sample row", allPriorRows[0]);
+  console.log(
+    "current leads",
+    sumField(allCurrentRows, getMetricFieldNames("leads"))
+  );
+  console.log(
+    "prior leads",
+    sumField(allPriorRows, getMetricFieldNames("leads"))
+  );
+  console.log(
+    "current jobs_completed",
+    sumField(allCurrentRows, getMetricFieldNames("jobs_completed"))
+  );
+  console.log(
+    "prior jobs_completed",
+    sumField(allPriorRows, getMetricFieldNames("jobs_completed"))
+  );
 
-const debugPrior = {
-  rowCount: allPriorRows.length,
-  leads: sumField(allPriorRows, getMetricFieldNames("leads")),
-  jobsBooked: sumField(allPriorRows, getMetricFieldNames("jobs_booked")),
-  jobsCompleted: sumField(allPriorRows, getMetricFieldNames("jobs_completed")),
-};
-
-console.log("conversion debug current", debugCurrent);
-console.log("conversion debug prior", debugPrior);
-
-  
   const currentMetricValue = computeMetricValue(metric.metric_id, allCurrentRows);
   const priorMetricValue = computeMetricValue(metric.metric_id, allPriorRows);
   const deltaMetricValue = computeDelta(currentMetricValue, priorMetricValue);
@@ -1270,20 +1282,25 @@ console.log("conversion debug prior", debugPrior);
   const comparisonSource = kpiLoaded[0];
 
   if (currentMetricValue !== null && priorMetricValue !== null) {
-  observations.push(
-    `${metric.metric_name} was ${formatMetricValue(currentMetricValue, metricFormat)} in ${
-      comparisonSource?.currentLabel || "current period"
-    } vs ${formatMetricValue(priorMetricValue, metricFormat)} in ${
-      comparisonSource?.priorLabel || "prior period"
-    } (${formatDeltaValue(deltaMetricValue, metricFormat)}).`
-  );
-} else {
-  observations.push(
-    `${metric.metric_name} could not be computed from the scoped rows. Check leads and jobs_completed coverage for ${
-      comparisonSource?.currentLabel || "current period"
-    } and ${comparisonSource?.priorLabel || "prior period"}.`
-  );
-}
+    observations.push(
+      `${metric.metric_name} was ${formatMetricValue(
+        currentMetricValue,
+        metricFormat
+      )} in ${comparisonSource?.currentLabel || "current period"} vs ${formatMetricValue(
+        priorMetricValue,
+        metricFormat
+      )} in ${comparisonSource?.priorLabel || "prior period"} (${formatDeltaValue(
+        deltaMetricValue,
+        metricFormat
+      )}).`
+    );
+  } else {
+    observations.push(
+      `${metric.metric_name} could not be computed from the scoped rows. Check leads and jobs_completed coverage for ${
+        comparisonSource?.currentLabel || "current period"
+      } and ${comparisonSource?.priorLabel || "prior period"}.`
+    );
+  }
 
   const rankedDrivers = rankDriverObservations(
     driverObservations,
@@ -1518,8 +1535,8 @@ function splitRowsCurrentVsPrior(
     grain === "day"
       ? ["day", "Day"]
       : grain === "month"
-      ? ["month", "Month"]
-      : ["week", "Week"];
+        ? ["month", "Month"]
+        : ["week", "Week"];
 
   const bucketMap = new Map<string, DatasetRow[]>();
 
@@ -1589,9 +1606,13 @@ function toNumber(value: unknown): number {
 }
 
 function sumField(rows: DatasetRow[], fieldNames: string[]): number {
+  const normalizedTargets = new Set(fieldNames.map((f) => normalize(f)));
+
   return rows.reduce((sum, row) => {
-    for (const field of fieldNames) {
-      if (field in row) return sum + toNumber(row[field]);
+    for (const [key, value] of Object.entries(row)) {
+      if (normalizedTargets.has(normalize(key))) {
+        return sum + toNumber(value);
+      }
     }
     return sum;
   }, 0);
@@ -1601,26 +1622,30 @@ function getMetricFieldNames(metricId: string): string[] {
   const m = normalize(metricId);
 
   const map: Record<string, string[]> = {
-    leads: ["leads", "Leads"],
-    jobs_booked: ["jobs_booked", "Jobs Booked", "booked_jobs", "JobsBooked"],
+    leads: ["leads", "Leads", "lead_count", "Lead Count"],
+    jobs_booked: [
+      "jobs_booked",
+      "Jobs Booked",
+      "booked_jobs",
+      "jobs booked",
+    ],
     jobs_completed: [
       "jobs_completed",
       "Jobs Completed",
       "completed_jobs",
-      "JobsCompleted",
+      "jobs completed",
     ],
     canceled_jobs: [
       "canceled_jobs",
       "Canceled Jobs",
       "cancelled_jobs",
-      "canceled",
-      "cancelled",
+      "canceled jobs",
     ],
     revenue: ["revenue", "Revenue"],
     impressions: ["impressions", "Impressions"],
     clicks: ["clicks", "Clicks"],
     marketing_spend: ["marketing_spend", "Marketing Spend"],
-    available_slots: ["available_slots", "Available Slots", "slots", "Slots"],
+    available_slots: ["available_slots", "Available Slots", "slots"],
     utilized_slots: ["utilized_slots", "Utilized Slots"],
     technician_utilization: [
       "technician_utilization",
@@ -1640,14 +1665,19 @@ function getMetricFieldNames(metricId: string): string[] {
       "Customer Reschedule Rate",
     ],
     hq_reschedule_rate: ["hq_reschedule_rate", "HQ Reschedule Rate"],
-    booking_rate: ["booking_rate", "Booking Rate"],
-    conversion_rate: ["conversion_rate", "Conversion Rate"],
-    cancel_rate: ["cancel_rate", "Cancel Rate"],
+    booking_rate: ["booking_rate", "Booking Rate", "booking rate"],
+    conversion_rate: [
+      "conversion_rate",
+      "Conversion Rate",
+      "conversion rate",
+    ],
+    cancel_rate: ["cancel_rate", "Cancel Rate", "cancel rate"],
     aov: ["aov", "AOV", "average_order_value", "Average Order Value"],
   };
 
   return map[m] || [metricId];
 }
+
 function computeMetricValue(metricId: string, rows: DatasetRow[]): number | null {
   const id = normalize(metricId);
 
@@ -1681,71 +1711,61 @@ function computeMetricValue(metricId: string, rows: DatasetRow[]): number | null
   const utilizedSlots = sumField(rows, getMetricFieldNames("utilized_slots"));
   const customerCancels = sumField(rows, getMetricFieldNames("customer_cancels"));
   const hqCancels = sumField(rows, getMetricFieldNames("hq_cancels"));
-  const customerReschedules = sumField(rows, getMetricFieldNames("customer_reschedules"));
+  const customerReschedules = sumField(
+    rows,
+    getMetricFieldNames("customer_reschedules")
+  );
   const hqReschedules = sumField(rows, getMetricFieldNames("hq_reschedules"));
 
   switch (id) {
-    case "booking_rate": {
-      if (leads > 0) return jobsBooked / leads;
-      const directRate = sumField(rows, getMetricFieldNames("booking_rate"));
-      return directRate || null;
-    }
+    case "booking_rate":
+      return leads > 0 ? jobsBooked / leads : null;
 
-    case "conversion_rate": {
-      if (leads > 0) return jobsCompleted / leads;
-      const directRate = sumField(rows, getMetricFieldNames("conversion_rate"));
-      return directRate || null;
-    }
+    case "conversion_rate":
+      return leads > 0 ? jobsCompleted / leads : null;
 
-    case "cancel_rate": {
-      if (jobsBooked > 0) return canceledJobs / jobsBooked;
-      const directRate = sumField(rows, getMetricFieldNames("cancel_rate"));
-      return directRate || null;
-    }
+    case "cancel_rate":
+      return jobsBooked > 0 ? canceledJobs / jobsBooked : null;
 
     case "cancel_outcome_rate":
-      return jobsCompleted + canceledJobs
+      return jobsCompleted + canceledJobs > 0
         ? canceledJobs / (jobsCompleted + canceledJobs)
         : null;
 
     case "aov":
-      return jobsCompleted ? revenue / jobsCompleted : null;
+      return jobsCompleted > 0 ? revenue / jobsCompleted : null;
 
     case "ctr":
-      return impressions ? clicks / impressions : null;
+      return impressions > 0 ? clicks / impressions : null;
 
     case "cpc":
-      return clicks ? marketingSpend / clicks : null;
+      return clicks > 0 ? marketingSpend / clicks : null;
 
     case "cost_per_inquiry":
-      return leads ? marketingSpend / leads : null;
+      return leads > 0 ? marketingSpend / leads : null;
 
     case "mac":
-      return jobsCompleted ? marketingSpend / jobsCompleted : null;
+      return jobsCompleted > 0 ? marketingSpend / jobsCompleted : null;
 
     case "technician_utilization":
-      if (availableSlots > 0) return utilizedSlots / availableSlots;
-      return directMetric || null;
+      return availableSlots > 0 ? utilizedSlots / availableSlots : null;
 
     case "customer_cancel_rate":
-      if (jobsBooked > 0) return customerCancels / jobsBooked;
-      return directMetric || null;
+      return jobsBooked > 0 ? customerCancels / jobsBooked : null;
 
     case "hq_cancel_rate":
-      if (jobsBooked > 0) return hqCancels / jobsBooked;
-      return directMetric || null;
+      return jobsBooked > 0 ? hqCancels / jobsBooked : null;
 
     case "reschedule_rate":
-      if (jobsBooked > 0) return (customerReschedules + hqReschedules) / jobsBooked;
-      return directMetric || null;
+      return jobsBooked > 0
+        ? (customerReschedules + hqReschedules) / jobsBooked
+        : null;
 
     case "customer_reschedule_rate":
-      if (jobsBooked > 0) return customerReschedules / jobsBooked;
-      return directMetric || null;
+      return jobsBooked > 0 ? customerReschedules / jobsBooked : null;
 
     case "hq_reschedule_rate":
-      if (jobsBooked > 0) return hqReschedules / jobsBooked;
-      return directMetric || null;
+      return jobsBooked > 0 ? hqReschedules / jobsBooked : null;
 
     default:
       return directMetric || null;
