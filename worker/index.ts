@@ -231,31 +231,34 @@ export default {
       }
 
       const firstResp = await callOpenAI(env.OPENAI_API_KEY, {
-        model: "gpt-4.1",
-        input: [
-          {
-            role: "system",
-            content: [
-              {
-                type: "input_text",
-                text:
-                  "You are a NuBrakes business analyst assistant. " +
-                  "Use tools when needed. " +
-                  "Use find_metric_definition when the user asks what a KPI means. " +
-                  "Use find_dataset_link when the user asks for a dataset link. " +
-                  "Use business_question_drivers when the user asks why a KPI moved or what drove performance. " +
-                  "Use analyze_business_question when the user asks for an actual driver analysis from linked data. " +
-                  "Keep answers concise, quantitative when possible, and business-focused.",
-              },
-            ],
-          },
-          {
-            role: "user",
-            content: [{ type: "input_text", text: userMessage }],
-          },
-        ],
-        tools: TOOLS,
-      });
+  model: "gpt-4.1",
+  input: [
+    {
+      role: "system",
+      content: [
+        {
+          type: "input_text",
+          text:
+            "You are a NuBrakes business analyst assistant. " +
+            "Use tools when needed. " +
+            "Use find_metric_definition when the user asks what a KPI means. " +
+            "Use find_dataset_link when the user asks for a dataset link. " +
+            "Use business_question_drivers when the user asks why a KPI moved or what drove performance. " +
+            "Use analyze_business_question when the user asks for an actual driver analysis from linked data. " +
+            "For business questions about why a KPI changed, prefer analyze_business_question. " +
+            "Keep answers concise, quantitative when possible, and business-focused.",
+        },
+      ],
+    },
+    {
+      role: "user",
+      content: [{ type: "input_text", text: userMessage }],
+    },
+  ],
+  tools: TOOLS,
+});
+
+console.log("FIRST RESPONSE RAW:", JSON.stringify(firstResp, null, 2));
 
       const outputItems = firstResp.output || [];
       const toolOutputs: Array<{
