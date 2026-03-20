@@ -18,17 +18,22 @@ type MetricDefinition = {
   relevant_datasets?: string[];
 };
 
-type RegistryEntry = {
+type DashboardDefinition = {
+  dashboard_name?: string;
+  category?: string;
+  description?: string;
+  url?: string;
+  owner?: string;
+  refresh_frequency?: string;
+};
+
+type DatasetDefinition = {
   sheet_name?: string;
   dataset?: string;
   link?: string;
   description?: string;
-  type?: "dashboard" | "dataset" | string;
-  tags?: string[];
 };
 
-type DatasetDefinition = RegistryEntry;
-type DashboardDefinition = RegistryEntry;
 type DatasetRow = Record<string, unknown>;
 type TimeGrain = "day" | "week" | "month";
 
@@ -127,7 +132,10 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "Content-Type",
 };
 
-const REGISTRY_URL =
+const DASHBOARD_LINKS_URL =
+  "https://cdn.jsdelivr.net/gh/nubrakes-analytics/NuBrakes-Copilot@main/data/dashboard_links.json";
+
+const DATASET_LIST_URL =
   "https://cdn.jsdelivr.net/gh/nubrakes-analytics/NuBrakes-Copilot@main/data/dataset_list.json";
 
 const METRIC_DEFINITIONS_URL =
@@ -295,7 +303,7 @@ export default {
         const result = await findDashboardLink(userMessage);
         return jsonResponse({
           answer: result.found
-            ? `You can find the dashboard here: ${result.dashboard.link}`
+            ? `You can find the dashboard here: ${result.dashboard.url}`
             : result.message,
           data: result,
         });
@@ -391,9 +399,21 @@ export default {
         debug: secondResp,
       });
     } catch (error) {
+      const msg = error instanceof Error ? error.message : "Unknown error";
+
+      if (msg.includes("unsupported_country_region_territory")) {
+        return jsonResponse(
+          {
+            error:
+              "OpenAI API is rejecting requests from the current server region. Dashboard and dataset link tools will still work, but LLM-powered analysis requires a backend hosted in a supported region.",
+          },
+          500
+        );
+      }
+
       return jsonResponse(
         {
-          error: error instanceof Error ? error.message : "Unknown error",
+          error: msg,
           stack: error instanceof Error ? error.stack : null,
         },
         500
@@ -428,12 +448,20 @@ async function handleToolCall(name: string, args: Record<string, unknown>) {
   }
 }
 
-async function loadRegistryEntries(): Promise<RegistryEntry[]> {
-  const res = await fetch(REGISTRY_URL);
+async function loadDashboardDefinitions(): Promise<DashboardDefinition[]> {
+  const res = await fetch(DASHBOARD_LINKS_URL);
+  if (!res.ok) {
+    throw new Error(`Failed to load dashboard_links.json: ${res.status}`);
+  }
+  return (await res.json()) as DashboardDefinition[];
+}
+
+async function loadDatasetDefinitions(): Promise<DatasetDefinition[]> {
+  const res = await fetch(DATASET_LIST_URL);
   if (!res.ok) {
     throw new Error(`Failed to load dataset_list.json: ${res.status}`);
   }
-  return (await res.json()) as RegistryEntry[];
+  return (await res.json()) as DatasetDefinition[];
 }
 
 async function loadMetricDefinitions(): Promise<MetricDefinition[]> {
@@ -452,7 +480,91 @@ async function loadJsonFromUrl<T = unknown>(url: string): Promise<T> {
   return (await res.json()) as T;
 }
 
-function scoreRegistryEntry(query: string, entry: RegistryEntry): number {
+function extractDescriptionAliases(description: string): string[] {
+  const raw = String(description || "").trim();
+  if (!raw) return [];
+
+  const match = raw.match(/other terms:\s*(.+)$/i);
+  if (!match) return [];
+
+  return match[1]
+    .split(",")
+    .map((s) => s.trim())
+    .filter(Boolean);
+}
+
+function scoreDashboardEntry(query: string, entry: DashboardDefinition): number {
+  const q = normalize(query);
+
+  if (!q) return -1;
+
+  const STOPWORDS = new Set([
+    "a",
+    "an",
+    "the",
+    "for",
+    "of",
+    "to",
+    "in",
+    "on",
+    "by",
+    "and",
+    "or",
+    "with",
+    "from",
+    "link",
+    "need",
+    "show",
+    "give",
+    "me",
+    "where",
+    "can",
+    "i",
+    "find",
+  ]);
+
+  const queryWords = q
+    .split(/\s+/)
+    .map((w) => w.trim())
+    .filter((w) => w && !STOPWORDS.has(w));
+
+  const dashboardName = normalize(String(entry.dashboard_name || ""));
+  const category = normalize(String(entry.category || ""));
+  const description = normalize(String(entry.description || ""));
+  const aliases = extractDescriptionAliases(String(entry.description || "")).map(
+    normalize
+  );
+
+  let score = 0;
+
+  if (dashboardName === q) score += 120;
+  if (aliases.includes(q)) score += 115;
+  if (category === q) score += 60;
+
+  if (q.length >= 3) {
+    if (dashboardName.includes(q)) score += 85;
+    if (description.includes(q)) score += 30;
+    if (category.includes(q)) score += 20;
+
+    for (const alias of aliases) {
+      if (alias.includes(q)) score += 75;
+    }
+  }
+
+  for (const word of queryWords) {
+    if (dashboardName.includes(word)) score += 25;
+    if (category.includes(word)) score += 8;
+    if (description.includes(word)) score += 8;
+
+    for (const alias of aliases) {
+      if (alias.includes(word)) score += 22;
+    }
+  }
+
+  return score;
+}
+
+function scoreDatasetEntry(query: string, entry: DatasetDefinition): number {
   const q = normalize(query);
 
   if (!q) return -1;
@@ -480,8 +592,10 @@ function scoreRegistryEntry(query: string, entry: RegistryEntry): number {
     "show",
     "give",
     "me",
-    "dashboard",
-    "report",
+    "where",
+    "can",
+    "i",
+    "find",
   ]);
 
   const queryWords = q
@@ -492,33 +606,23 @@ function scoreRegistryEntry(query: string, entry: RegistryEntry): number {
   const sheetName = normalize(String(entry.sheet_name || ""));
   const datasetName = normalize(String(entry.dataset || ""));
   const description = normalize(String(entry.description || ""));
-  const tags = Array.isArray(entry.tags)
-    ? entry.tags.map((t) => normalize(String(t)))
-    : [];
 
   let score = 0;
 
   if (sheetName === q) score += 100;
-  if (datasetName === q) score += 100;
-  if (description && description === q) score += 70;
-  if (tags.includes(q)) score += 90;
+  if (datasetName === q) score += 110;
+  if (description === q) score += 60;
 
   if (q.length >= 3) {
     if (sheetName.includes(q)) score += 70;
-    if (datasetName.includes(q)) score += 70;
+    if (datasetName.includes(q)) score += 80;
     if (description.includes(q)) score += 35;
-    for (const tag of tags) {
-      if (tag.includes(q)) score += 60;
-    }
   }
 
   for (const word of queryWords) {
     if (sheetName.includes(word)) score += 20;
-    if (datasetName.includes(word)) score += 20;
+    if (datasetName.includes(word)) score += 22;
     if (description.includes(word)) score += 8;
-    for (const tag of tags) {
-      if (tag.includes(word)) score += 18;
-    }
   }
 
   return score;
@@ -527,27 +631,20 @@ function scoreRegistryEntry(query: string, entry: RegistryEntry): number {
 async function findDashboardLink(
   dashboardQuery: string
 ): Promise<DashboardLookupResult> {
-  const entries = await loadRegistryEntries();
-  const filtered = entries.filter(
-    (e) =>
-      normalize(String(e.type || "")) === "dashboard" &&
-      String(e.link || "").trim()
-  );
+  const dashboards = await loadDashboardDefinitions();
 
   let bestMatch: DashboardDefinition | null = null;
   let bestScore = -1;
 
-  for (const entry of filtered) {
-    const score = scoreRegistryEntry(dashboardQuery, entry);
+  for (const dashboard of dashboards) {
+    const url = String(dashboard.url || "").trim();
+    if (!url) continue;
 
-    if (
-      score > bestScore ||
-      (score === bestScore &&
-        String(entry.description || "").trim() &&
-        !String(bestMatch?.description || "").trim())
-    ) {
+    const score = scoreDashboardEntry(dashboardQuery, dashboard);
+
+    if (score > bestScore) {
       bestScore = score;
-      bestMatch = entry;
+      bestMatch = dashboard;
     }
   }
 
@@ -567,27 +664,20 @@ async function findDashboardLink(
 async function findDatasetLink(
   datasetQuery: string
 ): Promise<DatasetLookupResult> {
-  const entries = await loadRegistryEntries();
-  const filtered = entries.filter(
-    (e) =>
-      normalize(String(e.type || "")) === "dataset" &&
-      String(e.link || "").trim()
-  );
+  const datasets = await loadDatasetDefinitions();
 
   let bestMatch: DatasetDefinition | null = null;
   let bestScore = -1;
 
-  for (const entry of filtered) {
-    const score = scoreRegistryEntry(datasetQuery, entry);
+  for (const dataset of datasets) {
+    const link = String(dataset.link || "").trim();
+    if (!link) continue;
 
-    if (
-      score > bestScore ||
-      (score === bestScore &&
-        String(entry.description || "").trim() &&
-        !String(bestMatch?.description || "").trim())
-    ) {
+    const score = scoreDatasetEntry(datasetQuery, dataset);
+
+    if (score > bestScore) {
       bestScore = score;
-      bestMatch = entry;
+      bestMatch = dataset;
     }
   }
 
@@ -736,23 +826,20 @@ async function findDatasetsByIds(
 ): Promise<DatasetDefinition[]> {
   if (!datasetIds?.length) return [];
 
-  const entries = await loadRegistryEntries();
+  const datasets = await loadDatasetDefinitions();
   const wanted = new Set(
     datasetIds.map((d) => normalize(String(d)).replace(/\.json$/, ""))
   );
 
-  return entries.filter((entry) => {
-    if (normalize(String(entry.type || "")) !== "dataset") return false;
-
-    const datasetName = normalize(String(entry.dataset || "")).replace(
+  return datasets.filter((dataset) => {
+    const datasetName = normalize(String(dataset.dataset || "")).replace(
       /\.json$/,
       ""
     );
-    const sheetName = normalize(String(entry.sheet_name || "")).replace(
+    const sheetName = normalize(String(dataset.sheet_name || "")).replace(
       /\.json$/,
       ""
     );
-
     return wanted.has(datasetName) || wanted.has(sheetName);
   });
 }
@@ -961,11 +1048,7 @@ function parseBusinessQuestionScopeFromRows(
 
   let time_grain: TimeGrain = "week";
 
-  if (
-    q.includes("today") ||
-    q.includes("yesterday") ||
-    q.includes("daily")
-  ) {
+  if (q.includes("today") || q.includes("yesterday") || q.includes("daily")) {
     time_grain = "day";
   } else if (
     q.includes("month") ||
