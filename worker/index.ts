@@ -246,264 +246,10 @@ const TOOLS = [
 
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
-    const url = new URL(request.url);
-
-    if (request.method === "OPTIONS") {
-      return new Response(null, { headers: corsHeaders });
-    }
-
-    if (url.pathname !== "/api/ai") {
-      return new Response("Not found", {
-        status: 404,
-        headers: corsHeaders,
-      });
-    }
-
-    if (request.method !== "POST") {
-      return jsonResponse({ error: "Method not allowed. Use POST." }, 405);
-    }
-
     try {
-      const body = (await request.json()) as {
-        message?: string;
-        prompt?: string;
-        question?: string;
-        input?: string;
-      };
-
-      const userMessage = String(
-        body?.message ?? body?.prompt ?? body?.question ?? body?.input ?? ""
-      ).trim();
-
-      if (!userMessage) {
-        return jsonResponse(
-          {
-            error:
-              "Missing message. Expected one of: message, prompt, question, input",
-          },
-          400
-        );
-      }
-
-      const normalizedMessage = normalize(userMessage);
-      const messageWords = new Set(normalizedMessage.split(/\s+/).filter(Boolean));
-
-      const hasPhrase = (phrase: string) => normalizedMessage.includes(phrase);
-      const hasWord = (word: string) => messageWords.has(word);
-
-      const looksLikeBusinessQuestion =
-        hasWord("why") ||
-        hasWord("driver") ||
-        hasWord("drivers") ||
-        hasWord("down") ||
-        hasWord("up") ||
-        hasWord("drop") ||
-        hasWord("dropped") ||
-        hasWord("increase") ||
-        hasWord("decrease") ||
-        hasWord("changed");
-
-      const looksLikeDashboardLinkQuestion =
-        hasWord("dashboard") ||
-        hasWord("report") ||
-        hasPhrase("where can i find") ||
-        hasPhrase("where is");
-
-      const looksLikeDatasetLinkQuestion =
-        hasWord("dataset") ||
-        hasWord("json") ||
-        hasWord("sheet") ||
-        hasPhrase("raw data") ||
-        hasPhrase("which dataset") ||
-        hasPhrase("what dataset") ||
-        hasPhrase("should i use") ||
-        hasPhrase("use for") ||
-        hasPhrase("best dataset");
-
-      const directDatasetMatch = await tryDirectDatasetShortcut(userMessage);
-
-      if (directDatasetMatch && looksLikeDatasetLinkQuestion) {
-        return jsonResponse(
-          buildAppResponse({
-            answer: `You should use this dataset: ${directDatasetMatch.link}`,
-            dataset:
-              directDatasetMatch.dataset ||
-              directDatasetMatch.sheet_name ||
-              "dataset_list",
-            datasetLink: directDatasetMatch.link || null,
-            rows: [directDatasetMatch],
-            data: { found: true, dataset: directDatasetMatch },
-          })
-        );
-      }
-
-      if (looksLikeDatasetLinkQuestion) {
-        const result = await findDatasetLink(userMessage);
-
-        return jsonResponse(
-          result.found
-            ? buildAppResponse({
-                answer: `You should use this dataset: ${result.dataset.link}`,
-                dataset:
-                  result.dataset.dataset ||
-                  result.dataset.sheet_name ||
-                  "dataset_list",
-                datasetLink: result.dataset.link || null,
-                rows: [result.dataset],
-                data: result,
-              })
-            : buildAppResponse({
-                answer: result.message,
-                dataset: null,
-                rows: [],
-                data: result,
-              })
-        );
-      }
-
-      if (looksLikeDashboardLinkQuestion) {
-        const result = await findDashboardLink(userMessage);
-
-        return jsonResponse(
-          result.found
-            ? buildAppResponse({
-                answer: `You can find the dashboard here: ${result.dashboard.url}`,
-                dataset: "dashboard_links",
-                dashboardLink: result.dashboard.url || null,
-                rows: [result.dashboard],
-                data: result,
-              })
-            : buildAppResponse({
-                answer: result.message,
-                dataset: null,
-                rows: [],
-                data: result,
-              })
-        );
-      }
-
-      if (looksLikeBusinessQuestion) {
-        const directAnalysis = await analyzeBusinessQuestion(userMessage);
-
-        return jsonResponse(
-          directAnalysis.found
-            ? buildAppResponse({
-                answer: [
-                  directAnalysis.analysis.summary,
-                  ...directAnalysis.analysis.observations.slice(0, 6),
-                ].join("\n"),
-                dataset:
-                  directAnalysis.datasets_used[0]?.dataset ||
-                  directAnalysis.metric.metric_id,
-                datasetLink: directAnalysis.datasets_used[0]?.link || null,
-                rows: directAnalysis.datasets_used.map((d) => ({
-                  dataset: d.dataset,
-                  dataset_link: d.link || null,
-                  row_count: d.row_count,
-                })),
-                data: directAnalysis,
-              })
-            : buildAppResponse({
-                answer: directAnalysis.message,
-                dataset: null,
-                rows: [],
-                data: directAnalysis,
-              })
-        );
-      }
-
-      const firstResp = await callOpenAI(env.OPENAI_API_KEY, {
-        model: "gpt-5.4-mini",
-        input: [
-          {
-            role: "system",
-            content: [
-              {
-                type: "input_text",
-                text:
-                  "You are a NuBrakes business analyst assistant. " +
-                  "Use tools when needed. " +
-                  "Use find_metric_definition when the user asks what a KPI means. " +
-                  "Use find_dashboard_link when the user asks for a dashboard or report link. " +
-                  "Use find_dataset_link when the user asks for a dataset or raw data link. " +
-                  "Use business_question_drivers when the user asks why a KPI moved or what drove performance. " +
-                  "Use analyze_business_question when the user asks for an actual driver analysis from linked data. " +
-                  "For business questions about why a KPI changed, prefer analyze_business_question. " +
-                  "For dashboard link questions, prefer find_dashboard_link. " +
-                  "For dataset/raw data link questions, prefer find_dataset_link. " +
-                  "Keep answers concise, quantitative when possible, and business-focused.",
-              },
-            ],
-          },
-          {
-            role: "user",
-            content: [{ type: "input_text", text: userMessage }],
-          },
-        ],
-        tools: TOOLS,
-      });
-
-      const outputItems = firstResp.output || [];
-      const toolOutputs: Array<{
-        type: "function_call_output";
-        call_id?: string;
-        output: string;
-      }> = [];
-
-      let lastStructuredResult: unknown = null;
-
-      for (const item of outputItems) {
-        if (item.type === "function_call" && item.name && item.arguments) {
-          const args = safeJsonParse<Record<string, unknown>>(item.arguments, {});
-          const result = await handleToolCall(item.name, args);
-
-          lastStructuredResult = result;
-
-          toolOutputs.push({
-            type: "function_call_output",
-            call_id: item.call_id,
-            output: JSON.stringify(result),
-          });
-        }
-      }
-
-      if (toolOutputs.length === 0) {
-        return jsonResponse(
-          buildAppResponse({
-            answer: extractResponseText(firstResp) || "No response generated.",
-            dataset: null,
-            rows: [],
-            debug: firstResp,
-          })
-        );
-      }
-
-      const secondResp = await callOpenAI(env.OPENAI_API_KEY, {
-        model: "gpt-5.4-mini",
-        previous_response_id: firstResp.id,
-        input: toolOutputs,
-      });
-
-      return jsonResponse(
-        mergeStructuredToolResultIntoResponse(
-          extractResponseText(secondResp) || "No response generated.",
-          lastStructuredResult,
-          secondResp
-        )
-      );
+      return await handleRequest(request, env);
     } catch (error) {
       const msg = error instanceof Error ? error.message : "Unknown error";
-
-      if (msg.includes("unsupported_country_region_territory")) {
-        return jsonResponse(
-          {
-            error:
-              "OpenAI API is rejecting requests from the current server region. Dashboard and dataset link tools will still work, but LLM-powered analysis requires a backend hosted in a supported region.",
-          },
-          500
-        );
-      }
-
       return jsonResponse(
         {
           error: msg,
@@ -514,6 +260,263 @@ export default {
     }
   },
 };
+
+async function handleRequest(request: Request, env: Env): Promise<Response> {
+  const url = new URL(request.url);
+
+  if (request.method === "OPTIONS") {
+    return new Response(null, { headers: corsHeaders });
+  }
+
+  if (url.pathname !== "/api/ai") {
+    return new Response("Not found", {
+      status: 404,
+      headers: corsHeaders,
+    });
+  }
+
+  if (request.method !== "POST") {
+    return jsonResponse({ error: "Method not allowed. Use POST." }, 405);
+  }
+
+  const body = (await request.json()) as {
+    message?: string;
+    prompt?: string;
+    question?: string;
+    input?: string;
+  };
+
+  const userMessage = String(
+    body?.message ?? body?.prompt ?? body?.question ?? body?.input ?? ""
+  ).trim();
+
+  if (!userMessage) {
+    return jsonResponse(
+      {
+        error:
+          "Missing message. Expected one of: message, prompt, question, input",
+      },
+      400
+    );
+  }
+
+  if (normalize(userMessage) === "ping") {
+    return jsonResponse({
+      answer: "pong",
+      dataset: null,
+      rows: [],
+      dataset_link: null,
+      dashboard_link: null,
+    });
+  }
+
+  const normalizedMessage = normalize(userMessage);
+  const messageWords = new Set(normalizedMessage.split(/\s+/).filter(Boolean));
+
+  const hasPhrase = (phrase: string) => normalizedMessage.includes(phrase);
+  const hasWord = (word: string) => messageWords.has(word);
+
+  const looksLikeBusinessQuestion =
+    hasWord("why") ||
+    hasWord("driver") ||
+    hasWord("drivers") ||
+    hasWord("down") ||
+    hasWord("up") ||
+    hasWord("drop") ||
+    hasWord("dropped") ||
+    hasWord("increase") ||
+    hasWord("decrease") ||
+    hasWord("changed");
+
+  const looksLikeDashboardLinkQuestion =
+    hasWord("dashboard") ||
+    hasWord("report") ||
+    hasPhrase("where can i find") ||
+    hasPhrase("where is");
+
+  const looksLikeDatasetLinkQuestion =
+    hasWord("dataset") ||
+    hasWord("json") ||
+    hasWord("sheet") ||
+    hasPhrase("raw data") ||
+    hasPhrase("which dataset") ||
+    hasPhrase("what dataset") ||
+    hasPhrase("should i use") ||
+    hasPhrase("use for") ||
+    hasPhrase("best dataset");
+
+  const directDatasetMatch = await tryDirectDatasetShortcut(userMessage);
+
+  if (directDatasetMatch && looksLikeDatasetLinkQuestion) {
+    return jsonResponse(
+      buildAppResponse({
+        answer: `You should use this dataset: ${directDatasetMatch.link}`,
+        dataset:
+          directDatasetMatch.dataset ||
+          directDatasetMatch.sheet_name ||
+          "dataset_list",
+        datasetLink: directDatasetMatch.link || null,
+        rows: [directDatasetMatch],
+        data: { found: true, dataset: directDatasetMatch },
+      })
+    );
+  }
+
+  if (looksLikeDatasetLinkQuestion) {
+    const result = await findDatasetLink(userMessage);
+
+    return jsonResponse(
+      result.found
+        ? buildAppResponse({
+            answer: `You should use this dataset: ${result.dataset.link}`,
+            dataset:
+              result.dataset.dataset ||
+              result.dataset.sheet_name ||
+              "dataset_list",
+            datasetLink: result.dataset.link || null,
+            rows: [result.dataset],
+            data: result,
+          })
+        : buildAppResponse({
+            answer: result.message,
+            dataset: null,
+            rows: [],
+            data: result,
+          })
+    );
+  }
+
+  if (looksLikeDashboardLinkQuestion) {
+    const result = await findDashboardLink(userMessage);
+
+    return jsonResponse(
+      result.found
+        ? buildAppResponse({
+            answer: `You can find the dashboard here: ${result.dashboard.url}`,
+            dataset: "dashboard_links",
+            dashboardLink: result.dashboard.url || null,
+            rows: [result.dashboard],
+            data: result,
+          })
+        : buildAppResponse({
+            answer: result.message,
+            dataset: null,
+            rows: [],
+            data: result,
+          })
+    );
+  }
+
+  if (looksLikeBusinessQuestion) {
+    const directAnalysis = await analyzeBusinessQuestion(userMessage);
+
+    return jsonResponse(
+      directAnalysis.found
+        ? buildAppResponse({
+            answer: [
+              directAnalysis.analysis.summary,
+              ...directAnalysis.analysis.observations.slice(0, 6),
+            ].join("\n"),
+            dataset:
+              directAnalysis.datasets_used[0]?.dataset ||
+              directAnalysis.metric.metric_id,
+            datasetLink: directAnalysis.datasets_used[0]?.link || null,
+            rows: directAnalysis.datasets_used.map((d) => ({
+              dataset: d.dataset,
+              dataset_link: d.link || null,
+              row_count: d.row_count,
+            })),
+            data: directAnalysis,
+          })
+        : buildAppResponse({
+            answer: directAnalysis.message,
+            dataset: null,
+            rows: [],
+            data: directAnalysis,
+          })
+    );
+  }
+
+  const firstResp = await callOpenAI(env.OPENAI_API_KEY, {
+    model: "gpt-5.4-mini",
+    input: [
+      {
+        role: "system",
+        content: [
+          {
+            type: "input_text",
+            text:
+              "You are a NuBrakes business analyst assistant. " +
+              "Use tools when needed. " +
+              "Use find_metric_definition when the user asks what a KPI means. " +
+              "Use find_dashboard_link when the user asks for a dashboard or report link. " +
+              "Use find_dataset_link when the user asks for a dataset or raw data link. " +
+              "Use business_question_drivers when the user asks why a KPI moved or what drove performance. " +
+              "Use analyze_business_question when the user asks for an actual driver analysis from linked data. " +
+              "For business questions about why a KPI changed, prefer analyze_business_question. " +
+              "For dashboard link questions, prefer find_dashboard_link. " +
+              "For dataset/raw data link questions, prefer find_dataset_link. " +
+              "Keep answers concise, quantitative when possible, and business-focused.",
+          },
+        ],
+      },
+      {
+        role: "user",
+        content: [{ type: "input_text", text: userMessage }],
+      },
+    ],
+    tools: TOOLS,
+  });
+
+  const outputItems = firstResp.output || [];
+  const toolOutputs: Array<{
+    type: "function_call_output";
+    call_id?: string;
+    output: string;
+  }> = [];
+
+  let lastStructuredResult: unknown = null;
+
+  for (const item of outputItems) {
+    if (item.type === "function_call" && item.name && item.arguments) {
+      const args = safeJsonParse<Record<string, unknown>>(item.arguments, {});
+      const result = await handleToolCall(item.name, args);
+
+      lastStructuredResult = result;
+
+      toolOutputs.push({
+        type: "function_call_output",
+        call_id: item.call_id,
+        output: JSON.stringify(result),
+      });
+    }
+  }
+
+  if (toolOutputs.length === 0) {
+    return jsonResponse(
+      buildAppResponse({
+        answer: extractResponseText(firstResp) || "No response generated.",
+        dataset: null,
+        rows: [],
+        debug: firstResp,
+      })
+    );
+  }
+
+  const secondResp = await callOpenAI(env.OPENAI_API_KEY, {
+    model: "gpt-5.4-mini",
+    previous_response_id: firstResp.id,
+    input: toolOutputs,
+  });
+
+  return jsonResponse(
+    mergeStructuredToolResultIntoResponse(
+      extractResponseText(secondResp) || "No response generated.",
+      lastStructuredResult,
+      secondResp
+    )
+  );
+}
 
 function buildAppResponse(args: {
   answer: string;
@@ -1229,37 +1232,6 @@ async function analyzeBusinessQuestion(
     };
   }
 
-  console.log("metric_id", metric.metric_id);
-  console.log("scope", scope);
-  console.log(
-    "datasets used",
-    kpiLoaded.map((d) => ({
-      dataset: d.dataset,
-      currentLabel: d.currentLabel,
-      priorLabel: d.priorLabel,
-      currentRows: d.currentRows.length,
-      priorRows: d.priorRows.length,
-    }))
-  );
-  console.log("current sample row", allCurrentRows[0]);
-  console.log("prior sample row", allPriorRows[0]);
-  console.log(
-    "current leads",
-    sumField(allCurrentRows, getMetricFieldNames("leads"))
-  );
-  console.log(
-    "prior leads",
-    sumField(allPriorRows, getMetricFieldNames("leads"))
-  );
-  console.log(
-    "current jobs_completed",
-    sumField(allCurrentRows, getMetricFieldNames("jobs_completed"))
-  );
-  console.log(
-    "prior jobs_completed",
-    sumField(allPriorRows, getMetricFieldNames("jobs_completed"))
-  );
-
   const currentMetricValue = computeMetricValue(metric.metric_id, allCurrentRows);
   const priorMetricValue = computeMetricValue(metric.metric_id, allPriorRows);
   const deltaMetricValue = computeDelta(currentMetricValue, priorMetricValue);
@@ -1536,8 +1508,8 @@ function splitRowsCurrentVsPrior(
     grain === "day"
       ? ["day", "Day"]
       : grain === "month"
-        ? ["month", "Month"]
-        : ["week", "Week"];
+      ? ["month", "Month"]
+      : ["week", "Week"];
 
   const bucketMap = new Map<string, DatasetRow[]>();
 
