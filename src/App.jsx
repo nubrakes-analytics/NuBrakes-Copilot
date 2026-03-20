@@ -12,6 +12,7 @@ const EXAMPLES = [
   "What does average order value mean?",
   "Where can I find the ops dashboard?",
   "Which dataset should I use for supply and demand by market?",
+  "Why is conversion rate down this March?"
 ];
 
 const DATASET_LIST_URL =
