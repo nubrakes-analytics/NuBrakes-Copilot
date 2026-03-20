@@ -1202,6 +1202,18 @@ async function analyzeBusinessQuestion(
 
   const primaryDataset = getPrimaryDatasetForMetric(metric.metric_id);
 
+if (primaryDataset) {
+  const forced = scopedLoaded.filter(
+    (d) => normalize(d.dataset).replace(/\.json$/, "") === normalize(primaryDataset)
+  );
+  if (!forced.length) {
+    return {
+      found: false,
+      message: `Expected primary dataset ${primaryDataset} but it was not found in linked datasets: ${scopedLoaded.map((d) => d.dataset).join(", ")}`,
+    };
+  }
+}
+  
   const kpiLoaded = primaryDataset
     ? scopedLoaded.filter(
         (d) =>
@@ -1238,6 +1250,24 @@ async function analyzeBusinessQuestion(
   const priorMetricValue = computeMetricValue(metric.metric_id, allPriorRows);
   const deltaMetricValue = computeDelta(currentMetricValue, priorMetricValue);
 
+const debugCounts = {
+  current_label: comparisonLabel(kpiLoaded[0]?.currentLabel),
+  prior_label: comparisonLabel(kpiLoaded[0]?.priorLabel),
+  current_rows: allCurrentRows.length,
+  prior_rows: allPriorRows.length,
+  current_leads: sumField(allCurrentRows, getMetricFieldNames("leads")),
+  prior_leads: sumField(allPriorRows, getMetricFieldNames("leads")),
+  current_jobs_completed: sumField(
+    allCurrentRows,
+    getMetricFieldNames("jobs_completed")
+  ),
+  prior_jobs_completed: sumField(
+    allPriorRows,
+    getMetricFieldNames("jobs_completed")
+  ),
+};
+
+  
   const driverObservations = candidateDrivers.map((driverId) => {
     const currentValue = computeMetricValue(driverId, allCurrentRows);
     const priorValue = computeMetricValue(driverId, allPriorRows);
@@ -1257,25 +1287,32 @@ async function analyzeBusinessQuestion(
   const comparisonSource = kpiLoaded[0];
 
   if (currentMetricValue !== null && priorMetricValue !== null) {
-    observations.push(
-      `${metric.metric_name} was ${formatMetricValue(
-        currentMetricValue,
-        metricFormat
-      )} in ${comparisonSource?.currentLabel || "current period"} vs ${formatMetricValue(
-        priorMetricValue,
-        metricFormat
-      )} in ${comparisonSource?.priorLabel || "prior period"} (${formatDeltaValue(
-        deltaMetricValue,
-        metricFormat
-      )}).`
-    );
-  } else {
-    observations.push(
-      `${metric.metric_name} could not be computed from the scoped rows. Check leads and jobs_completed coverage for ${
-        comparisonSource?.currentLabel || "current period"
-      } and ${comparisonSource?.priorLabel || "prior period"}.`
-    );
-  }
+  observations.push(
+    `${metric.metric_name} was ${formatMetricValue(
+      currentMetricValue,
+      metricFormat
+    )} in ${comparisonSource?.currentLabel || "current period"} vs ${formatMetricValue(
+      priorMetricValue,
+      metricFormat
+    )} in ${comparisonSource?.priorLabel || "prior period"} (${formatDeltaValue(
+      deltaMetricValue,
+      metricFormat
+    )}).`
+  );
+} else {
+  observations.push(
+    `${metric.metric_name} could not be computed from the scoped rows.`
+  );
+  observations.push(
+    `Debug — current rows: ${debugCounts.current_rows}, prior rows: ${debugCounts.prior_rows}.`
+  );
+  observations.push(
+    `Debug — current leads: ${debugCounts.current_leads}, prior leads: ${debugCounts.prior_leads}.`
+  );
+  observations.push(
+    `Debug — current jobs_completed: ${debugCounts.current_jobs_completed}, prior jobs_completed: ${debugCounts.prior_jobs_completed}.`
+  );
+}
 
   const rankedDrivers = rankDriverObservations(
     driverObservations,
