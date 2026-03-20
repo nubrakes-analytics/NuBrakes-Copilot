@@ -42,6 +42,7 @@ type ParsedBusinessScope = {
   compare_mode: "current_vs_prior";
   market?: string;
   channel?: string;
+  target_bucket?: string;
 };
 
 type ScopedRows = {
@@ -543,15 +544,10 @@ function mergeStructuredToolResultIntoResponse(
     debug,
   });
 
-  if (!toolResult || typeof toolResult !== "object") {
-    return base;
-  }
+  if (!toolResult || typeof toolResult !== "object") return base;
 
   const r = toolResult as Record<string, unknown>;
-
-  if (r.found !== true) {
-    return base;
-  }
+  if (r.found !== true) return base;
 
   if ("dataset" in r) {
     const dataset = r.dataset as DatasetDefinition;
@@ -589,7 +585,8 @@ function mergeStructuredToolResultIntoResponse(
 
     return buildAppResponse({
       answer,
-      dataset: datasetsUsed[0]?.dataset || analysisResult.metric?.metric_id || null,
+      dataset:
+        datasetsUsed[0]?.dataset || analysisResult.metric?.metric_id || null,
       rows: datasetsUsed.map((d) => ({
         dataset: d.dataset,
         dataset_link: d.link || null,
@@ -609,23 +606,18 @@ async function handleToolCall(name: string, args: Record<string, unknown>) {
   switch (name) {
     case "find_metric_definition":
       return await findMetricDefinition(String(args.metric_query || ""));
-
     case "find_dashboard_link":
       return await findDashboardLink(String(args.dashboard_query || ""));
-
     case "find_dataset_link":
       return await findDatasetLink(String(args.dataset_query || ""));
-
     case "business_question_drivers":
       return await buildBusinessQuestionDriverPlan(
         String(args.business_question || "")
       );
-
     case "analyze_business_question":
       return await analyzeBusinessQuestion(
         String(args.business_question || "")
       );
-
     default:
       return { error: `Unknown tool: ${name}` };
   }
@@ -874,7 +866,6 @@ async function findDashboardLink(
     if (!url) continue;
 
     const score = scoreDashboardEntry(dashboardQuery, dashboard);
-
     if (score > bestScore) {
       bestScore = score;
       bestMatch = dashboard;
@@ -888,10 +879,7 @@ async function findDashboardLink(
     };
   }
 
-  return {
-    found: true,
-    dashboard: bestMatch,
-  };
+  return { found: true, dashboard: bestMatch };
 }
 
 async function findDatasetLink(
@@ -907,7 +895,6 @@ async function findDatasetLink(
     if (!link) continue;
 
     const score = scoreDatasetEntry(datasetQuery, dataset);
-
     if (score > bestScore) {
       bestScore = score;
       bestMatch = dataset;
@@ -921,10 +908,7 @@ async function findDatasetLink(
     };
   }
 
-  return {
-    found: true,
-    dataset: bestMatch,
-  };
+  return { found: true, dataset: bestMatch };
 }
 
 async function findMetricDefinition(
@@ -934,10 +918,7 @@ async function findMetricDefinition(
   const q = normalize(metricQuery);
 
   if (!q) {
-    return {
-      found: false,
-      message: "Metric query is empty",
-    };
+    return { found: false, message: "Metric query is empty" };
   }
 
   const STOPWORDS = new Set([
@@ -1047,11 +1028,7 @@ async function findMetricDefinition(
     };
   }
 
-  return {
-    found: true,
-    metric: bestMatch,
-    score: bestScore,
-  };
+  return { found: true, metric: bestMatch, score: bestScore };
 }
 
 async function findDatasetsByIds(
@@ -1083,10 +1060,7 @@ async function buildBusinessQuestionDriverPlan(
   const metricResult = await findMetricDefinition(businessQuestion);
 
   if (!metricResult.found) {
-    return {
-      found: false,
-      message: metricResult.message,
-    };
+    return { found: false, message: metricResult.message };
   }
 
   const metric = metricResult.metric;
@@ -1161,10 +1135,7 @@ async function analyzeBusinessQuestion(
   const plan = await buildBusinessQuestionDriverPlan(businessQuestion);
 
   if (!plan.found) {
-    return {
-      found: false,
-      message: plan.message,
-    };
+    return { found: false, message: plan.message };
   }
 
   const metric = plan.metric;
@@ -1201,7 +1172,11 @@ async function analyzeBusinessQuestion(
     const filteredRows = d.rows.filter((row) =>
       rowMatchesOptionalFilters(row, scope)
     );
-    const scoped = splitRowsCurrentVsPrior(filteredRows, scope.time_grain);
+    const scoped = splitRowsCurrentVsPrior(
+      filteredRows,
+      scope.time_grain,
+      scope.target_bucket
+    );
 
     return {
       dataset: d.dataset,
@@ -1273,7 +1248,11 @@ async function analyzeBusinessQuestion(
 
   observations.push(
     currentMetricValue !== null
-      ? `${metric.metric_name} was ${formatMetricValue(currentMetricValue, metricFormat)} in ${comparisonSource?.currentLabel || "current period"} vs ${formatMetricValue(priorMetricValue, metricFormat)} in ${comparisonSource?.priorLabel || "prior period"} (${formatDeltaValue(deltaMetricValue, metricFormat)}).`
+      ? `${metric.metric_name} was ${formatMetricValue(currentMetricValue, metricFormat)} in ${
+          comparisonSource?.currentLabel || "current period"
+        } vs ${formatMetricValue(priorMetricValue, metricFormat)} in ${
+          comparisonSource?.priorLabel || "prior period"
+        } (${formatDeltaValue(deltaMetricValue, metricFormat)}).`
       : `${metric.metric_name} could not be computed for the scoped periods.`
   );
 
@@ -1282,7 +1261,11 @@ async function analyzeBusinessQuestion(
     metric.good_direction
   );
 
-  for (const obs of rankedDrivers.slice(0, 6)) {
+  const usableDrivers = rankedDrivers.filter(
+    (obs) => !(obs.currentValue === null && obs.priorValue === null)
+  );
+
+  for (const obs of usableDrivers.slice(0, 4)) {
     observations.push(buildDriverObservationText(obs));
   }
 
@@ -1303,7 +1286,7 @@ async function analyzeBusinessQuestion(
     currentMetricValue,
     priorMetricValue,
     deltaMetricValue,
-    rankedDrivers,
+    rankedDrivers: usableDrivers,
     currentLabel: comparisonSource?.currentLabel || "current period",
     priorLabel: comparisonSource?.priorLabel || "prior period",
   });
@@ -1338,6 +1321,7 @@ function parseBusinessQuestionScopeFromRows(
   const q = normalize(businessQuestion);
 
   let time_grain: TimeGrain = "week";
+  let target_bucket: string | undefined;
 
   if (q.includes("today") || q.includes("yesterday") || q.includes("daily")) {
     time_grain = "day";
@@ -1361,6 +1345,37 @@ function parseBusinessQuestionScopeFromRows(
     time_grain = "month";
   }
 
+  const monthMap: Record<string, string> = {
+    january: "01",
+    february: "02",
+    march: "03",
+    april: "04",
+    may: "05",
+    june: "06",
+    july: "07",
+    august: "08",
+    september: "09",
+    october: "10",
+    november: "11",
+    december: "12",
+  };
+
+  const matchedMonth = Object.keys(monthMap).find((m) => q.includes(m));
+  if (matchedMonth) {
+    const candidateYears = extractAvailableYears(rows, [
+      "month",
+      "Month",
+      "day",
+      "Day",
+      "week",
+      "Week",
+    ]);
+    const year = candidateYears.length
+      ? Math.max(...candidateYears)
+      : new Date().getUTCFullYear();
+    target_bucket = `${year}-${monthMap[matchedMonth]}-01`;
+  }
+
   const markets = uniqueDimensionValues(rows, ["market", "Market"]);
   const channels = uniqueDimensionValues(rows, [
     "channel_category",
@@ -1377,7 +1392,25 @@ function parseBusinessQuestionScopeFromRows(
     compare_mode: "current_vs_prior",
     market,
     channel,
+    target_bucket,
   };
+}
+
+function extractAvailableYears(rows: DatasetRow[], fields: string[]): number[] {
+  const years = new Set<number>();
+
+  for (const row of rows) {
+    for (const field of fields) {
+      const raw = row[field];
+      if (!raw) continue;
+      const parsed = Date.parse(String(raw));
+      if (Number.isFinite(parsed)) {
+        years.add(new Date(parsed).getUTCFullYear());
+      }
+    }
+  }
+
+  return Array.from(years);
 }
 
 function uniqueDimensionValues(rows: DatasetRow[], fields: string[]): string[] {
@@ -1405,7 +1438,6 @@ function findBestMentionedDimensionValue(
     if (!v) continue;
 
     let score = 0;
-
     if (normalizedQuestion.includes(v)) score += 100;
 
     const words = v.split(" ").filter(Boolean);
@@ -1450,14 +1482,15 @@ function rowMatchesOptionalFilters(
 
 function splitRowsCurrentVsPrior(
   rows: DatasetRow[],
-  grain: TimeGrain
+  grain: TimeGrain,
+  targetBucket?: string
 ): ScopedRows {
   const fieldCandidates =
     grain === "day"
       ? ["day", "Day"]
       : grain === "month"
-        ? ["month", "Month"]
-        : ["week", "Week"];
+      ? ["month", "Month"]
+      : ["week", "Week"];
 
   const bucketMap = new Map<string, DatasetRow[]>();
 
@@ -1473,7 +1506,7 @@ function splitRowsCurrentVsPrior(
     (a, b) => Date.parse(a) - Date.parse(b)
   );
 
-  if (sortedKeys.length === 0) {
+  if (!sortedKeys.length) {
     return {
       current: [],
       prior: [],
@@ -1482,9 +1515,13 @@ function splitRowsCurrentVsPrior(
     };
   }
 
-  const currentKey = sortedKeys[sortedKeys.length - 1];
-  const priorKey =
-    sortedKeys.length >= 2 ? sortedKeys[sortedKeys.length - 2] : "";
+  let currentKey = sortedKeys[sortedKeys.length - 1];
+  if (targetBucket && bucketMap.has(targetBucket)) {
+    currentKey = targetBucket;
+  }
+
+  const currentIndex = sortedKeys.indexOf(currentKey);
+  const priorKey = currentIndex > 0 ? sortedKeys[currentIndex - 1] : "";
 
   return {
     current: bucketMap.get(currentKey) || [],
@@ -1538,26 +1575,35 @@ function getMetricFieldNames(metricId: string): string[] {
     leads: ["leads", "Leads"],
     jobs_booked: ["jobs_booked", "Jobs Booked", "booked_jobs"],
     jobs_completed: ["jobs_completed", "Jobs Completed", "completed_jobs"],
-    canceled_jobs: ["canceled_jobs", "Canceled Jobs"],
+    canceled_jobs: ["canceled_jobs", "Canceled Jobs", "cancelled_jobs"],
     revenue: ["revenue", "Revenue"],
     impressions: ["impressions", "Impressions"],
     clicks: ["clicks", "Clicks"],
     marketing_spend: ["marketing_spend", "Marketing Spend"],
     available_slots: ["available_slots", "Available Slots", "slots"],
+    utilized_slots: ["utilized_slots", "Utilized Slots"],
     technician_utilization: [
       "technician_utilization",
       "Technician Utilization",
-      "utilized_slots",
     ],
     ft_tech_utilization: ["ft_tech_utilization", "FT Tech Utilization"],
     pt_tech_utilization: ["pt_tech_utilization", "PT Tech Utilization"],
     customer_cancels: ["customer_cancels", "Customer Cancels"],
     hq_cancels: ["hq_cancels", "HQ Cancels"],
-    customer_reschedules: [
-      "customer_reschedules",
-      "Customer Reschedules",
-    ],
+    customer_reschedules: ["customer_reschedules", "Customer Reschedules"],
     hq_reschedules: ["hq_reschedules", "HQ Reschedules"],
+    customer_cancel_rate: ["customer_cancel_rate", "Customer Cancel Rate"],
+    hq_cancel_rate: ["hq_cancel_rate", "HQ Cancel Rate"],
+    reschedule_rate: ["reschedule_rate", "Reschedule Rate"],
+    customer_reschedule_rate: [
+      "customer_reschedule_rate",
+      "Customer Reschedule Rate",
+    ],
+    hq_reschedule_rate: ["hq_reschedule_rate", "HQ Reschedule Rate"],
+    booking_rate: ["booking_rate", "Booking Rate"],
+    conversion_rate: ["conversion_rate", "Conversion Rate"],
+    cancel_rate: ["cancel_rate", "Cancel Rate"],
+    aov: ["aov", "AOV", "average_order_value", "Average Order Value"],
   };
 
   return map[m] || [metricId];
@@ -1565,6 +1611,23 @@ function getMetricFieldNames(metricId: string): string[] {
 
 function computeMetricValue(metricId: string, rows: DatasetRow[]): number | null {
   const id = normalize(metricId);
+
+  const directMetric = sumField(rows, getMetricFieldNames(metricId));
+  if (
+    [
+      "leads",
+      "jobs_booked",
+      "jobs_completed",
+      "canceled_jobs",
+      "revenue",
+      "impressions",
+      "clicks",
+      "marketing_spend",
+      "available_slots",
+    ].includes(id)
+  ) {
+    return directMetric || 0;
+  }
 
   const leads = sumField(rows, getMetricFieldNames("leads"));
   const jobsBooked = sumField(rows, getMetricFieldNames("jobs_booked"));
@@ -1574,44 +1637,74 @@ function computeMetricValue(metricId: string, rows: DatasetRow[]): number | null
   const clicks = sumField(rows, getMetricFieldNames("clicks"));
   const impressions = sumField(rows, getMetricFieldNames("impressions"));
   const marketingSpend = sumField(rows, getMetricFieldNames("marketing_spend"));
+  const availableSlots = sumField(rows, getMetricFieldNames("available_slots"));
+  const utilizedSlots = sumField(rows, getMetricFieldNames("utilized_slots"));
+  const customerCancels = sumField(rows, getMetricFieldNames("customer_cancels"));
+  const hqCancels = sumField(rows, getMetricFieldNames("hq_cancels"));
+  const customerReschedules = sumField(
+    rows,
+    getMetricFieldNames("customer_reschedules")
+  );
+  const hqReschedules = sumField(rows, getMetricFieldNames("hq_reschedules"));
 
   switch (id) {
-    case "leads":
-      return leads;
-    case "jobs_booked":
-      return jobsBooked;
-    case "jobs_completed":
-      return jobsCompleted;
-    case "canceled_jobs":
-      return canceledJobs;
-    case "revenue":
-      return revenue;
     case "booking_rate":
       return leads ? jobsBooked / leads : null;
+
     case "conversion_rate":
       return leads ? jobsCompleted / leads : null;
+
     case "cancel_rate":
       return jobsBooked ? canceledJobs / jobsBooked : null;
+
     case "cancel_outcome_rate":
       return jobsCompleted + canceledJobs
         ? canceledJobs / (jobsCompleted + canceledJobs)
         : null;
+
     case "aov":
       return jobsCompleted ? revenue / jobsCompleted : null;
+
     case "ctr":
       return impressions ? clicks / impressions : null;
+
     case "cpc":
       return clicks ? marketingSpend / clicks : null;
+
     case "cost_per_inquiry":
       return leads ? marketingSpend / leads : null;
+
     case "mac":
       return jobsCompleted ? marketingSpend / jobsCompleted : null;
-    case "marketing_spend":
-      return marketingSpend;
-    default: {
-      const direct = sumField(rows, getMetricFieldNames(metricId));
-      return direct || null;
-    }
+
+    case "technician_utilization":
+      if (availableSlots > 0) return utilizedSlots / availableSlots;
+      return directMetric || null;
+
+    case "customer_cancel_rate":
+      if (jobsBooked > 0) return customerCancels / jobsBooked;
+      return directMetric || null;
+
+    case "hq_cancel_rate":
+      if (jobsBooked > 0) return hqCancels / jobsBooked;
+      return directMetric || null;
+
+    case "reschedule_rate":
+      if (jobsBooked > 0) {
+        return (customerReschedules + hqReschedules) / jobsBooked;
+      }
+      return directMetric || null;
+
+    case "customer_reschedule_rate":
+      if (jobsBooked > 0) return customerReschedules / jobsBooked;
+      return directMetric || null;
+
+    case "hq_reschedule_rate":
+      if (jobsBooked > 0) return hqReschedules / jobsBooked;
+      return directMetric || null;
+
+    default:
+      return directMetric || null;
   }
 }
 
@@ -1697,19 +1790,33 @@ function buildAnalysisSummary(args: {
 
   const formatType = metric.format_type || inferFormatType(metric.metric_id);
 
-  const headline =
-    currentMetricValue !== null
-      ? `${metric.metric_name} moved from ${formatMetricValue(priorMetricValue, formatType)} in ${priorLabel} to ${formatMetricValue(currentMetricValue, formatType)} in ${currentLabel} (${formatDeltaValue(deltaMetricValue, formatType)}).`
-      : `${metric.metric_name} could not be fully computed for the comparison periods.`;
+  if (currentMetricValue === null || priorMetricValue === null) {
+    const availableDrivers = rankedDrivers
+      .filter((d) => d.currentValue !== null || d.priorValue !== null)
+      .slice(0, 3)
+      .map((d) => d.driverId);
+
+    return availableDrivers.length
+      ? `${metric.metric_name} could not be fully computed for ${currentLabel} vs ${priorLabel}. Available drivers to review: ${availableDrivers.join(", ")}.`
+      : `${metric.metric_name} could not be fully computed for ${currentLabel} vs ${priorLabel}.`;
+  }
+
+  const headline = `${metric.metric_name} moved from ${formatMetricValue(
+    priorMetricValue,
+    formatType
+  )} in ${priorLabel} to ${formatMetricValue(
+    currentMetricValue,
+    formatType
+  )} in ${currentLabel} (${formatDeltaValue(deltaMetricValue, formatType)}).`;
 
   const topDrivers = rankedDrivers
     .filter((d) => d.deltaValue !== null)
     .slice(0, 3)
     .map((d) => d.driverId);
 
-  if (!topDrivers.length) return headline;
-
-  return `${headline} Primary drivers to review: ${topDrivers.join(", ")}.`;
+  return topDrivers.length
+    ? `${headline} Primary drivers to review: ${topDrivers.join(", ")}.`
+    : headline;
 }
 
 function formatMetricValue(value: number | null, formatType?: string): string {
