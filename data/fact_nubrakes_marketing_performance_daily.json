@@ -8,16 +8,16 @@
     "clicks": 3,
     "ctr": 0.1111111111111111,
     "marketing_spend": 37.28,
-    "marketing_spend_pct_revenue": "#DIV/0!",
+    "marketing_spend_pct_revenue": 0.004834557750789442,
     "cpc": 12.426666666666668,
     "leads": 29,
     "cost_per_inquiry": 1.2855172413793103,
-    "jobs_booked": 0,
-    "booking_rate": 0,
-    "jobs_completed": 0,
-    "conversion_rate": 0,
-    "revenue": 0,
-    "mac": 0
+    "jobs_booked": 10,
+    "booking_rate": 0.3448275862068966,
+    "jobs_completed": 12,
+    "conversion_rate": 0.41379310344827586,
+    "revenue": 7711.15,
+    "mac": 265.901724137931
   },
   {
     "day": "2026-03-18 00:00:00",
@@ -68,7 +68,7 @@
     "clicks": 126,
     "ctr": 0.04670126019273536,
     "marketing_spend": 1172.31,
-    "marketing_spend_pct_revenue": 0.10610753490123385,
+    "marketing_spend_pct_revenue": 0.10535420927950306,
     "cpc": 9.30404761904762,
     "leads": 74,
     "cost_per_inquiry": 15.842027027027026,
@@ -76,8 +76,8 @@
     "booking_rate": 0.3783783783783784,
     "jobs_completed": 23,
     "conversion_rate": 0.3108108108108108,
-    "revenue": 11048.32,
-    "mac": 149.30162162162162
+    "revenue": 11127.32,
+    "mac": 150.36918918918917
   },
   {
     "day": "2026-03-18 00:00:00",
@@ -88,7 +88,7 @@
     "clicks": 74,
     "ctr": 0.074,
     "marketing_spend": 612.01,
-    "marketing_spend_pct_revenue": 0.12801922767178248,
+    "marketing_spend_pct_revenue": 0.1233247155215321,
     "cpc": 8.270405405405405,
     "leads": 42,
     "cost_per_inquiry": 14.571666666666667,
@@ -96,8 +96,8 @@
     "booking_rate": 0.2857142857142857,
     "jobs_completed": 12,
     "conversion_rate": 0.2857142857142857,
-    "revenue": 4780.61,
-    "mac": 113.8240476190476
+    "revenue": 4962.59,
+    "mac": 118.15690476190477
   },
   {
     "day": "2026-03-18 00:00:00",
@@ -132,8 +132,8 @@
     "cpc": 11.38891304347826,
     "leads": 24,
     "cost_per_inquiry": 21.82875,
-    "jobs_booked": 10,
-    "booking_rate": 0.4166666666666667,
+    "jobs_booked": 9,
+    "booking_rate": 0.375,
     "jobs_completed": 8,
     "conversion_rate": 0.3333333333333333,
     "revenue": 4600.5,
@@ -448,7 +448,7 @@
     "clicks": 78,
     "ctr": 0.060700389105058365,
     "marketing_spend": 647.51,
-    "marketing_spend_pct_revenue": 0.1528949232585596,
+    "marketing_spend_pct_revenue": 0.14442484113512827,
     "cpc": 8.301410256410255,
     "leads": 57,
     "cost_per_inquiry": 11.359824561403508,
@@ -456,8 +456,8 @@
     "booking_rate": 0.40350877192982454,
     "jobs_completed": 9,
     "conversion_rate": 0.15789473684210525,
-    "revenue": 4235,
-    "mac": 74.29824561403508
+    "revenue": 4483.37,
+    "mac": 78.65561403508772
   },
   {
     "day": "2026-03-16 00:00:00",
