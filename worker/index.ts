@@ -102,6 +102,8 @@ type AnalyzeBusinessQuestionResult =
         dataset: string;
         link?: string;
         row_count: number;
+        current_row_count?: number;
+        prior_row_count?: number;
       }>;
       analysis: {
         business_question: string;
@@ -186,7 +188,11 @@ type ScopedLoadedDataset = {
   priorRows: DatasetRow[];
   currentLabel: string;
   priorLabel: string;
+  supportsMarket: boolean;
+  supportsChannel: boolean;
 };
+
+type DriverRelationship = "positive" | "negative" | "contextual";
 
 type DriverObservation = {
   driverId: string;
@@ -197,6 +203,10 @@ type DriverObservation = {
   datasetUsed: string;
   currentRowsCount: number;
   priorRowsCount: number;
+  relationship: DriverRelationship;
+  explanatoryDirection: "supports" | "hurts" | "mixed" | "context" | "unknown";
+  explanatoryScore: number;
+  missingReason?: string;
 };
 
 const corsHeaders = {
@@ -555,6 +565,8 @@ async function handleRequest(request: Request, env: Env): Promise<Response> {
               dataset: d.dataset,
               dataset_link: d.link || null,
               row_count: d.row_count,
+              current_row_count: d.current_row_count ?? null,
+              prior_row_count: d.prior_row_count ?? null,
             })),
             data: directAnalysis,
           })
@@ -724,7 +736,13 @@ function mergeStructuredToolResultIntoResponse(
 
   if ("datasets_used" in r) {
     const structured = r as {
-      datasets_used?: Array<{ dataset: string; link?: string; row_count: number }>;
+      datasets_used?: Array<{
+        dataset: string;
+        link?: string;
+        row_count: number;
+        current_row_count?: number;
+        prior_row_count?: number;
+      }>;
       metric?: MetricDefinition;
     };
 
@@ -738,6 +756,8 @@ function mergeStructuredToolResultIntoResponse(
         dataset: d.dataset,
         dataset_link: d.link || null,
         row_count: d.row_count,
+        current_row_count: d.current_row_count ?? null,
+        prior_row_count: d.prior_row_count ?? null,
       })),
       datasetLink: datasetsUsed[0]?.link || null,
       dashboardLink: null,
@@ -1119,9 +1139,7 @@ async function findMetricDefinition(
     "week",
     "month",
     "day",
-    "in",
     "during",
-    "for",
   ]);
 
   const queryWords = q
@@ -1263,9 +1281,7 @@ async function buildBusinessQuestionDriverPlan(
           : `No candidate drivers defined for this metric`,
         `Slice trend by time period`,
         `Slice performance by market and channel where available`,
-        metric.good_direction
-          ? `Interpret KPI movement with good direction = ${metric.good_direction}`
-          : `Interpret KPI movement using business context`,
+        `Classify driver movements into tailwinds, headwinds, and context signals`,
       ],
     },
   };
@@ -1354,9 +1370,18 @@ async function analyzeBusinessQuestion(
   );
 
   const scopedLoaded: ScopedLoadedDataset[] = rawLoaded.map((d) => {
+    const supportsMarket = datasetSupportsAnyField(d.rows, ["market", "Market"]);
+    const supportsChannel = datasetSupportsAnyField(d.rows, [
+      "channel_category",
+      "Channel Category",
+      "channel",
+      "Channel",
+    ]);
+
     const filteredRows = d.rows.filter((row) =>
-      rowMatchesOptionalFilters(row, scope)
+      rowMatchesOptionalFilters(row, scope, supportsMarket, supportsChannel)
     );
+
     const scoped = splitRowsCurrentVsPrior(
       filteredRows,
       scope.time_grain,
@@ -1371,6 +1396,8 @@ async function analyzeBusinessQuestion(
       priorRows: scoped.prior,
       currentLabel: scoped.current_label,
       priorLabel: scoped.prior_label,
+      supportsMarket,
+      supportsChannel,
     };
   });
 
@@ -1407,14 +1434,72 @@ async function analyzeBusinessQuestion(
   const currentMetricValue = computeMetricValue(metric.metric_id, allCurrentRows);
   const priorMetricValue = computeMetricValue(metric.metric_id, allPriorRows);
   const deltaMetricValue = computeDelta(currentMetricValue, priorMetricValue);
+  const metricChangeDirection = deriveMetricChangeDirection(
+    currentMetricValue,
+    priorMetricValue
+  );
 
   const driverObservations: DriverObservation[] = candidateDrivers.map(
     (driverId) => {
       const driverPrimaryDataset = getPrimaryDatasetForMetric(driverId);
+      const relationship = getDriverRelationship(metric.metric_id, driverId);
 
       const driverLoaded = driverPrimaryDataset
         ? filterScopedLoadedByDataset(scopedLoaded, driverPrimaryDataset)
         : scopedLoaded;
+
+      const driverDatasetMeta = driverLoaded[0];
+
+      if (!driverLoaded.length) {
+        return {
+          driverId,
+          currentValue: null,
+          priorValue: null,
+          deltaValue: null,
+          formatType: inferFormatType(driverId),
+          datasetUsed: driverPrimaryDataset || "mixed",
+          currentRowsCount: 0,
+          priorRowsCount: 0,
+          relationship,
+          explanatoryDirection: "unknown",
+          explanatoryScore: 0,
+          missingReason: "driver dataset was not loaded",
+        };
+      }
+
+      if (scope.channel && !driverDatasetMeta?.supportsChannel) {
+        return {
+          driverId,
+          currentValue: null,
+          priorValue: null,
+          deltaValue: null,
+          formatType: inferFormatType(driverId),
+          datasetUsed: driverPrimaryDataset || "mixed",
+          currentRowsCount: 0,
+          priorRowsCount: 0,
+          relationship,
+          explanatoryDirection: "unknown",
+          explanatoryScore: 0,
+          missingReason: `dataset ${driverPrimaryDataset || "mixed"} does not support channel slicing`,
+        };
+      }
+
+      if (scope.market && !driverDatasetMeta?.supportsMarket) {
+        return {
+          driverId,
+          currentValue: null,
+          priorValue: null,
+          deltaValue: null,
+          formatType: inferFormatType(driverId),
+          datasetUsed: driverPrimaryDataset || "mixed",
+          currentRowsCount: 0,
+          priorRowsCount: 0,
+          relationship,
+          explanatoryDirection: "unknown",
+          explanatoryScore: 0,
+          missingReason: `dataset ${driverPrimaryDataset || "mixed"} does not support market slicing`,
+        };
+      }
 
       const driverCurrentRows = driverLoaded.flatMap((d) => d.currentRows);
       const driverPriorRows = driverLoaded.flatMap((d) => d.priorRows);
@@ -1422,6 +1507,12 @@ async function analyzeBusinessQuestion(
       const currentValue = computeMetricValue(driverId, driverCurrentRows);
       const priorValue = computeMetricValue(driverId, driverPriorRows);
       const deltaValue = computeDelta(currentValue, priorValue);
+
+      const explanatory = classifyDriverEffect({
+        relationship,
+        deltaValue,
+        metricChangeDirection,
+      });
 
       return {
         driverId,
@@ -1432,9 +1523,14 @@ async function analyzeBusinessQuestion(
         datasetUsed: driverPrimaryDataset || "mixed",
         currentRowsCount: driverCurrentRows.length,
         priorRowsCount: driverPriorRows.length,
+        relationship,
+        explanatoryDirection: explanatory.direction,
+        explanatoryScore: explanatory.score,
       };
     }
   );
+
+  const rankedDrivers = rankDriverObservations(driverObservations);
 
   const observations: string[] = [];
   const metricFormat = metric.format_type || inferFormatType(metric.metric_id);
@@ -1485,17 +1581,26 @@ async function analyzeBusinessQuestion(
     );
   }
 
-  const rankedDrivers = rankDriverObservations(
-    driverObservations,
-    metric.good_direction
-  );
+  const headwinds = rankedDrivers
+    .filter((d) => d.explanatoryDirection === "hurts")
+    .slice(0, 2);
+  const tailwinds = rankedDrivers
+    .filter((d) => d.explanatoryDirection === "supports")
+    .slice(0, 2);
+  const contextSignals = rankedDrivers
+    .filter((d) => d.explanatoryDirection === "context")
+    .slice(0, 2);
 
-  const usableDrivers = rankedDrivers.filter(
-    (obs) => !(obs.currentValue === null && obs.priorValue === null)
-  );
+  for (const obs of headwinds) {
+    observations.push(buildDriverObservationText(obs, "headwind"));
+  }
 
-  for (const obs of usableDrivers.slice(0, 4)) {
-    observations.push(buildDriverObservationText(obs));
+  for (const obs of tailwinds) {
+    observations.push(buildDriverObservationText(obs, "tailwind"));
+  }
+
+  for (const obs of contextSignals) {
+    observations.push(buildDriverObservationText(obs, "context"));
   }
 
   const uncomputableDrivers = rankedDrivers.filter(
@@ -1504,7 +1609,7 @@ async function analyzeBusinessQuestion(
 
   for (const obs of uncomputableDrivers.slice(0, 2)) {
     observations.push(
-      `${obs.driverId} could not be computed from dataset ${obs.datasetUsed}. Current rows: ${obs.currentRowsCount}, prior rows: ${obs.priorRowsCount}.`
+      `${obs.driverId} could not be computed from dataset ${obs.datasetUsed}. ${obs.missingReason || `Current rows: ${obs.currentRowsCount}, prior rows: ${obs.priorRowsCount}.`}`
     );
   }
 
@@ -1525,7 +1630,7 @@ async function analyzeBusinessQuestion(
     currentMetricValue,
     priorMetricValue,
     deltaMetricValue,
-    rankedDrivers: usableDrivers,
+    rankedDrivers,
     currentLabel: comparisonSource?.currentLabel || "current period",
     priorLabel: comparisonSource?.priorLabel || "prior period",
   });
@@ -1538,6 +1643,8 @@ async function analyzeBusinessQuestion(
       dataset: d.dataset,
       link: d.link,
       row_count: d.filteredRows.length,
+      current_row_count: d.currentRows.length,
+      prior_row_count: d.priorRows.length,
     })),
     analysis: {
       business_question: businessQuestion,
@@ -1606,8 +1713,16 @@ async function queryMetricValue(
   );
 
   const scopedLoaded = loaded.map((d) => {
+    const supportsMarket = datasetSupportsAnyField(d.rows, ["market", "Market"]);
+    const supportsChannel = datasetSupportsAnyField(d.rows, [
+      "channel_category",
+      "Channel Category",
+      "channel",
+      "Channel",
+    ]);
+
     const filteredByDimensions = d.rows.filter((row) =>
-      rowMatchesPointInTimeFilters(row, scope)
+      rowMatchesPointInTimeFilters(row, scope, supportsMarket, supportsChannel)
     );
 
     const bucketRows = filterRowsToTargetBucket(
@@ -1953,16 +2068,33 @@ function findBestMentionedDimensionValue(
   return bestScore >= 20 ? best : undefined;
 }
 
+function datasetSupportsAnyField(rows: DatasetRow[], fields: string[]): boolean {
+  for (const row of rows) {
+    for (const field of fields) {
+      if (
+        row[field] !== undefined &&
+        row[field] !== null &&
+        String(row[field]).trim() !== ""
+      ) {
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
 function rowMatchesOptionalFilters(
   row: DatasetRow,
-  scope: ParsedBusinessScope
+  scope: ParsedBusinessScope,
+  supportsMarket = true,
+  supportsChannel = true
 ): boolean {
-  if (scope.market) {
+  if (scope.market && supportsMarket) {
     const marketValue = String(row["market"] || row["Market"] || "").trim();
     if (normalize(marketValue) !== normalize(scope.market)) return false;
   }
 
-  if (scope.channel) {
+  if (scope.channel && supportsChannel) {
     const channelValue = String(
       row["channel_category"] ||
         row["Channel Category"] ||
@@ -1979,14 +2111,16 @@ function rowMatchesOptionalFilters(
 
 function rowMatchesPointInTimeFilters(
   row: DatasetRow,
-  scope: ParsedPointInTimeScope
+  scope: ParsedPointInTimeScope,
+  supportsMarket = true,
+  supportsChannel = true
 ): boolean {
-  if (scope.market) {
+  if (scope.market && supportsMarket) {
     const marketValue = String(row["market"] || row["Market"] || "").trim();
     if (normalize(marketValue) !== normalize(scope.market)) return false;
   }
 
-  if (scope.channel) {
+  if (scope.channel && supportsChannel) {
     const channelValue = String(
       row["channel_category"] ||
         row["Channel Category"] ||
@@ -2145,6 +2279,27 @@ function toNumber(value: unknown): number {
   return Number.isFinite(n) ? n : 0;
 }
 
+function avgField(rows: DatasetRow[], fieldNames: string[]): number | null {
+  const normalizedTargets = new Set(fieldNames.map((f) => normalize(f)));
+  let total = 0;
+  let count = 0;
+
+  for (const row of rows) {
+    for (const [key, value] of Object.entries(row)) {
+      if (normalizedTargets.has(normalize(key))) {
+        const n = Number(value);
+        if (Number.isFinite(n)) {
+          total += n;
+          count += 1;
+          break;
+        }
+      }
+    }
+  }
+
+  return count > 0 ? total / count : null;
+}
+
 function sumField(rows: DatasetRow[], fieldNames: string[]): number {
   const normalizedTargets = new Set(fieldNames.map((f) => normalize(f)));
 
@@ -2230,7 +2385,28 @@ function getMetricFieldNames(metricId: string): string[] {
 function computeMetricValue(metricId: string, rows: DatasetRow[]): number | null {
   const id = canonicalMetricId(metricId);
 
-  const directMetric = sumField(rows, getMetricFieldNames(metricId));
+  const rateMetrics = new Set([
+    "booking_rate",
+    "conversion_rate",
+    "cancel_rate",
+    "cancel_outcome_rate",
+    "ctr",
+    "cpc",
+    "cost_per_inquiry",
+    "mac",
+    "technician_utilization",
+    "ft_tech_utilization",
+    "pt_tech_utilization",
+    "customer_cancel_rate",
+    "hq_cancel_rate",
+    "reschedule_rate",
+    "customer_reschedule_rate",
+    "hq_reschedule_rate",
+    "aov",
+  ]);
+
+  const directMetricSum = sumField(rows, getMetricFieldNames(metricId));
+  const directMetricAvg = avgField(rows, getMetricFieldNames(metricId));
 
   if (
     [
@@ -2250,7 +2426,7 @@ function computeMetricValue(metricId: string, rows: DatasetRow[]): number | null
       "hq_reschedules",
     ].includes(id)
   ) {
-    return directMetric || 0;
+    return directMetricSum || 0;
   }
 
   const leads = sumField(rows, getMetricFieldNames("leads"));
@@ -2273,41 +2449,41 @@ function computeMetricValue(metricId: string, rows: DatasetRow[]): number | null
 
   switch (id) {
     case "booking_rate":
-      return leads > 0 ? jobsBooked / leads : null;
+      return leads > 0 ? jobsBooked / leads : directMetricAvg;
     case "conversion_rate":
-      return leads > 0 ? jobsCompleted / leads : null;
+      return leads > 0 ? jobsCompleted / leads : directMetricAvg;
     case "cancel_rate":
-      return jobsBooked > 0 ? canceledJobs / jobsBooked : null;
+      return jobsBooked > 0 ? canceledJobs / jobsBooked : directMetricAvg;
     case "cancel_outcome_rate":
       return jobsCompleted + canceledJobs > 0
         ? canceledJobs / (jobsCompleted + canceledJobs)
-        : null;
+        : directMetricAvg;
     case "aov":
-      return jobsCompleted > 0 ? revenue / jobsCompleted : null;
+      return jobsCompleted > 0 ? revenue / jobsCompleted : directMetricAvg;
     case "ctr":
-      return impressions > 0 ? clicks / impressions : null;
+      return impressions > 0 ? clicks / impressions : directMetricAvg;
     case "cpc":
-      return clicks > 0 ? marketingSpend / clicks : null;
+      return clicks > 0 ? marketingSpend / clicks : directMetricAvg;
     case "cost_per_inquiry":
-      return leads > 0 ? marketingSpend / leads : null;
+      return leads > 0 ? marketingSpend / leads : directMetricAvg;
     case "mac":
-      return jobsCompleted > 0 ? marketingSpend / jobsCompleted : null;
+      return jobsCompleted > 0 ? marketingSpend / jobsCompleted : directMetricAvg;
     case "technician_utilization":
-      return availableSlots > 0 ? utilizedSlots / availableSlots : null;
+      return availableSlots > 0 ? utilizedSlots / availableSlots : directMetricAvg;
     case "customer_cancel_rate":
-      return jobsBooked > 0 ? customerCancels / jobsBooked : null;
+      return jobsBooked > 0 ? customerCancels / jobsBooked : directMetricAvg;
     case "hq_cancel_rate":
-      return jobsBooked > 0 ? hqCancels / jobsBooked : null;
+      return jobsBooked > 0 ? hqCancels / jobsBooked : directMetricAvg;
     case "reschedule_rate":
       return jobsBooked > 0
         ? (customerReschedules + hqReschedules) / jobsBooked
-        : null;
+        : directMetricAvg;
     case "customer_reschedule_rate":
-      return jobsBooked > 0 ? customerReschedules / jobsBooked : null;
+      return jobsBooked > 0 ? customerReschedules / jobsBooked : directMetricAvg;
     case "hq_reschedule_rate":
-      return jobsBooked > 0 ? hqReschedules / jobsBooked : null;
+      return jobsBooked > 0 ? hqReschedules / jobsBooked : directMetricAvg;
     default:
-      return directMetric || null;
+      return rateMetrics.has(id) ? directMetricAvg : directMetricSum || null;
   }
 }
 
@@ -2330,30 +2506,135 @@ function filterScopedLoadedByDataset(
   );
 }
 
-function rankDriverObservations(
-  drivers: DriverObservation[],
-  goodDirection?: string
-): DriverObservation[] {
-  const direction = normalize(goodDirection || "neutral");
+function deriveMetricChangeDirection(
+  currentValue: number | null,
+  priorValue: number | null
+): "up" | "down" | "flat" | "unknown" {
+  if (currentValue === null || priorValue === null) return "unknown";
+  const delta = currentValue - priorValue;
+  if (Math.abs(delta) < 1e-9) return "flat";
+  return delta > 0 ? "up" : "down";
+}
+
+function getDriverRelationship(
+  metricId: string,
+  driverId: string
+): DriverRelationship {
+  const m = canonicalMetricId(metricId);
+  const d = canonicalMetricId(driverId);
+
+  const negativePairs = new Set([
+    "jobs_completed|cancel_rate",
+    "jobs_completed|customer_cancel_rate",
+    "jobs_completed|hq_cancel_rate",
+    "jobs_completed|reschedule_rate",
+    "jobs_completed|customer_reschedule_rate",
+    "jobs_completed|hq_reschedule_rate",
+    "conversion_rate|cancel_rate",
+    "conversion_rate|customer_cancel_rate",
+    "conversion_rate|hq_cancel_rate",
+    "conversion_rate|reschedule_rate",
+    "booking_rate|cancel_rate",
+    "booking_rate|customer_cancel_rate",
+    "booking_rate|hq_cancel_rate",
+    "revenue|cancel_rate",
+    "revenue|customer_cancel_rate",
+    "revenue|hq_cancel_rate",
+  ]);
+
+  const contextualDrivers = new Set([
+    "technician_utilization",
+    "ft_tech_utilization",
+    "pt_tech_utilization",
+    "available_slots",
+    "utilized_slots",
+    "marketing_spend",
+    "cpc",
+    "cost_per_inquiry",
+    "mac",
+  ]);
+
+  if (negativePairs.has(`${m}|${d}`)) return "negative";
+  if (contextualDrivers.has(d)) return "contextual";
+  return "positive";
+}
+
+function classifyDriverEffect(args: {
+  relationship: DriverRelationship;
+  deltaValue: number | null;
+  metricChangeDirection: "up" | "down" | "flat" | "unknown";
+}): {
+  direction: "supports" | "hurts" | "mixed" | "context" | "unknown";
+  score: number;
+} {
+  const { relationship, deltaValue, metricChangeDirection } = args;
+
+  if (deltaValue === null || metricChangeDirection === "unknown") {
+    return { direction: "unknown", score: 0 };
+  }
+
+  if (relationship === "contextual") {
+    return { direction: "context", score: Math.abs(deltaValue) };
+  }
+
+  if (metricChangeDirection === "flat") {
+    return { direction: "mixed", score: Math.abs(deltaValue) * 0.25 };
+  }
+
+  const driverMovedUp = deltaValue > 0;
+  const driverMovedDown = deltaValue < 0;
+
+  const helpsMetric =
+    relationship === "positive"
+      ? driverMovedUp
+      : relationship === "negative"
+        ? driverMovedDown
+        : false;
+
+  const hurtsMetric =
+    relationship === "positive"
+      ? driverMovedDown
+      : relationship === "negative"
+        ? driverMovedUp
+        : false;
+
+  if (metricChangeDirection === "up") {
+    if (helpsMetric) return { direction: "supports", score: Math.abs(deltaValue) };
+    if (hurtsMetric) return { direction: "hurts", score: Math.abs(deltaValue) };
+  }
+
+  if (metricChangeDirection === "down") {
+    if (hurtsMetric) return { direction: "hurts", score: Math.abs(deltaValue) };
+    if (helpsMetric) return { direction: "supports", score: Math.abs(deltaValue) };
+  }
+
+  return { direction: "mixed", score: Math.abs(deltaValue) * 0.5 };
+}
+
+function rankDriverObservations(drivers: DriverObservation[]): DriverObservation[] {
+  const bucketRank: Record<
+    DriverObservation["explanatoryDirection"],
+    number
+  > = {
+    hurts: 4,
+    supports: 3,
+    context: 2,
+    mixed: 1,
+    unknown: 0,
+  };
 
   return [...drivers].sort((a, b) => {
-    const av = driverImpactScore(a.deltaValue, direction);
-    const bv = driverImpactScore(b.deltaValue, direction);
-    return Math.abs(bv) - Math.abs(av);
+    const bucketDiff =
+      bucketRank[b.explanatoryDirection] - bucketRank[a.explanatoryDirection];
+    if (bucketDiff !== 0) return bucketDiff;
+    return Math.abs(b.explanatoryScore) - Math.abs(a.explanatoryScore);
   });
 }
 
-function driverImpactScore(
-  deltaValue: number | null,
-  goodDirection: string
-): number {
-  if (deltaValue === null) return 0;
-  if (goodDirection === "up") return deltaValue;
-  if (goodDirection === "down") return -deltaValue;
-  return deltaValue;
-}
-
-function buildDriverObservationText(obs: DriverObservation): string {
+function buildDriverObservationText(
+  obs: DriverObservation,
+  label: "headwind" | "tailwind" | "context"
+): string {
   if (obs.currentValue === null && obs.priorValue === null) {
     return `${obs.driverId} is not directly computable from dataset ${obs.datasetUsed}.`;
   }
@@ -2362,7 +2643,15 @@ function buildDriverObservationText(obs: DriverObservation): string {
   const prior = formatMetricValue(obs.priorValue, obs.formatType);
   const delta = formatDeltaValue(obs.deltaValue, obs.formatType);
 
-  return `${obs.driverId} was ${current} vs ${prior} (${delta}) using ${obs.datasetUsed}.`;
+  if (label === "headwind") {
+    return `${obs.driverId} was ${current} vs ${prior} (${delta}) using ${obs.datasetUsed}, which looks like a headwind for the KPI.`;
+  }
+
+  if (label === "tailwind") {
+    return `${obs.driverId} was ${current} vs ${prior} (${delta}) using ${obs.datasetUsed}, which looks like a supporting movement.`;
+  }
+
+  return `${obs.driverId} was ${current} vs ${prior} (${delta}) using ${obs.datasetUsed}, which looks more like context than a direct driver.`;
 }
 
 function buildAnalysisSummary(args: {
@@ -2393,7 +2682,7 @@ function buildAnalysisSummary(args: {
       .map((d) => `${d.driverId} (${d.datasetUsed})`);
 
     return availableDrivers.length
-      ? `${metric.metric_name} could not be fully computed for ${currentLabel} vs ${priorLabel}. Available drivers to review: ${availableDrivers.join(", ")}.`
+      ? `${metric.metric_name} could not be fully computed for ${currentLabel} vs ${priorLabel}. Largest directional movements to review: ${availableDrivers.join(", ")}.`
       : `${metric.metric_name} could not be fully computed for ${currentLabel} vs ${priorLabel}.`;
   }
 
@@ -2405,14 +2694,37 @@ function buildAnalysisSummary(args: {
     formatType
   )} in ${currentLabel} (${formatDeltaValue(deltaMetricValue, formatType)}).`;
 
-  const topDrivers = rankedDrivers
-    .filter((d) => d.deltaValue !== null)
-    .slice(0, 3)
+  const headwinds = rankedDrivers
+    .filter((d) => d.explanatoryDirection === "hurts")
+    .slice(0, 2)
     .map((d) => `${d.driverId} (${d.datasetUsed})`);
 
-  return topDrivers.length
-    ? `${headline} Primary drivers to review: ${topDrivers.join(", ")}.`
-    : headline;
+  const tailwinds = rankedDrivers
+    .filter((d) => d.explanatoryDirection === "supports")
+    .slice(0, 2)
+    .map((d) => `${d.driverId} (${d.datasetUsed})`);
+
+  const parts: string[] = [headline];
+
+  if (headwinds.length) {
+    parts.push(`Main headwinds: ${headwinds.join(", ")}.`);
+  }
+
+  if (tailwinds.length) {
+    parts.push(`Offsetting support: ${tailwinds.join(", ")}.`);
+  }
+
+  if (!headwinds.length && !tailwinds.length) {
+    const context = rankedDrivers
+      .filter((d) => d.explanatoryDirection === "context")
+      .slice(0, 2)
+      .map((d) => `${d.driverId} (${d.datasetUsed})`);
+    if (context.length) {
+      parts.push(`Key context signals: ${context.join(", ")}.`);
+    }
+  }
+
+  return parts.join(" ");
 }
 
 function formatMetricValue(value: number | null, formatType?: string): string {
