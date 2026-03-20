@@ -406,7 +406,7 @@ export default {
       }
 
       const firstResp = await callOpenAI(env.OPENAI_API_KEY, {
-        model: "gpt-5.4",
+        model: "gpt-5.4-mini",
         input: [
           {
             role: "system",
@@ -472,7 +472,7 @@ export default {
       }
 
       const secondResp = await callOpenAI(env.OPENAI_API_KEY, {
-        model: "gpt-5.4",
+        model: "gpt-5.4-mini",
         previous_response_id: firstResp.id,
         input: toolOutputs,
       });
