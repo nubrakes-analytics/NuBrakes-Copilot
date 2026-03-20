@@ -1251,8 +1251,8 @@ if (primaryDataset) {
   const deltaMetricValue = computeDelta(currentMetricValue, priorMetricValue);
 
 const debugCounts = {
-  current_label: comparisonLabel(kpiLoaded[0]?.currentLabel),
-  prior_label: comparisonLabel(kpiLoaded[0]?.priorLabel),
+  current_label: kpiLoaded[0]?.currentLabel || "unknown",
+  prior_label: kpiLoaded[0]?.priorLabel || "unknown",
   current_rows: allCurrentRows.length,
   prior_rows: allPriorRows.length,
   current_leads: sumField(allCurrentRows, getMetricFieldNames("leads")),
@@ -1266,7 +1266,6 @@ const debugCounts = {
     getMetricFieldNames("jobs_completed")
   ),
 };
-
   
   const driverObservations = candidateDrivers.map((driverId) => {
     const currentValue = computeMetricValue(driverId, allCurrentRows);
