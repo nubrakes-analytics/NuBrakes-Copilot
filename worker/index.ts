@@ -436,7 +436,7 @@ async function handleRequest(request: Request, env: Env): Promise<Response> {
           })
     );
   }
-
+  console.log("before firstResp");
   const firstResp = await callOpenAI(env.OPENAI_API_KEY, {
     model: "gpt-5.4-mini",
     input: [
@@ -468,6 +468,8 @@ async function handleRequest(request: Request, env: Env): Promise<Response> {
     tools: TOOLS,
   });
 
+  console.log("after firstResp", !!firstResp?.id);
+
   const outputItems = firstResp.output || [];
   const toolOutputs: Array<{
     type: "function_call_output";
@@ -491,7 +493,7 @@ async function handleRequest(request: Request, env: Env): Promise<Response> {
       });
     }
   }
-
+console.log("toolOutputs length", toolOutputs.length);
   if (toolOutputs.length === 0) {
     return jsonResponse(
       buildAppResponse({
@@ -502,13 +504,13 @@ async function handleRequest(request: Request, env: Env): Promise<Response> {
       })
     );
   }
-
+console.log("before secondResp");
   const secondResp = await callOpenAI(env.OPENAI_API_KEY, {
     model: "gpt-5.4-mini",
     previous_response_id: firstResp.id,
     input: toolOutputs,
   });
-
+console.log("after secondResp");
   return jsonResponse(
     mergeStructuredToolResultIntoResponse(
       extractResponseText(secondResp) || "No response generated.",
