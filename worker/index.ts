@@ -297,7 +297,20 @@ export default {
         normalizedMessage.includes("dataset") ||
         normalizedMessage.includes("json") ||
         normalizedMessage.includes("sheet") ||
-        normalizedMessage.includes("raw data");
+        normalizedMessage.includes("raw data") ||
+        normalizedMessage.includes("which dataset") ||
+        normalizedMessage.includes("what dataset") ||
+        normalizedMessage.includes("should i use") ||
+        normalizedMessage.includes("use for") ||
+        normalizedMessage.includes("best dataset");
+
+      const directDatasetMatch = await tryDirectDatasetShortcut(userMessage);
+      if (directDatasetMatch && !looksLikeBusinessQuestion) {
+        return jsonResponse({
+          answer: `You should use this dataset: ${directDatasetMatch.link}`,
+          data: { found: true, dataset: directDatasetMatch },
+        });
+      }
 
       if (looksLikeDashboardLinkQuestion && !looksLikeBusinessQuestion) {
         const result = await findDashboardLink(userMessage);
@@ -313,7 +326,7 @@ export default {
         const result = await findDatasetLink(userMessage);
         return jsonResponse({
           answer: result.found
-            ? `You can find the dataset here: ${result.dataset.link}`
+            ? `You should use this dataset: ${result.dataset.link}`
             : result.message,
           data: result,
         });
@@ -321,13 +334,16 @@ export default {
 
       if (looksLikeBusinessQuestion) {
         const directAnalysis = await analyzeBusinessQuestion(userMessage);
-        if (directAnalysis.found) {
-          const a = directAnalysis.analysis;
-          return jsonResponse({
-            answer: [a.summary, ...a.observations.slice(0, 6)].join("\n"),
-            data: directAnalysis,
-          });
-        }
+
+        return jsonResponse({
+          answer: directAnalysis.found
+            ? [
+                directAnalysis.analysis.summary,
+                ...directAnalysis.analysis.observations.slice(0, 6),
+              ].join("\n")
+            : directAnalysis.message,
+          data: directAnalysis,
+        });
       }
 
       const firstResp = await callOpenAI(env.OPENAI_API_KEY, {
@@ -480,6 +496,55 @@ async function loadJsonFromUrl<T = unknown>(url: string): Promise<T> {
   return (await res.json()) as T;
 }
 
+async function tryDirectDatasetShortcut(
+  userMessage: string
+): Promise<DatasetDefinition | null> {
+  const q = normalize(userMessage);
+  const datasets = await loadDatasetDefinitions();
+
+  const shortcutMatchers: Array<{
+    patterns: string[];
+    sheetName: string;
+  }> = [
+    {
+      patterns: [
+        "supply and demand by market",
+        "supply demand by market",
+        "supply and demand",
+        "supply demand",
+        "market level supply demand",
+      ],
+      sheetName: "fact nubrakes supply demand daily",
+    },
+    {
+      patterns: [
+        "channel market kpi",
+        "leads booked completed revenue by market and channel",
+        "conversion by market and channel",
+      ],
+      sheetName: "fact nubrakes channel market kpi daily",
+    },
+    {
+      patterns: [
+        "marketing performance",
+        "impressions clicks ctr marketing spend",
+      ],
+      sheetName: "fact nubrakes marketing performance daily",
+    },
+  ];
+
+  for (const shortcut of shortcutMatchers) {
+    if (shortcut.patterns.some((p) => q.includes(normalize(p)))) {
+      const match = datasets.find(
+        (d) => normalize(String(d.sheet_name || "")) === shortcut.sheetName
+      );
+      if (match?.link) return match;
+    }
+  }
+
+  return null;
+}
+
 function extractDescriptionAliases(description: string): string[] {
   const raw = String(description || "").trim();
   if (!raw) return [];
@@ -495,7 +560,6 @@ function extractDescriptionAliases(description: string): string[] {
 
 function scoreDashboardEntry(query: string, entry: DashboardDefinition): number {
   const q = normalize(query);
-
   if (!q) return -1;
 
   const STOPWORDS = new Set([
@@ -566,7 +630,6 @@ function scoreDashboardEntry(query: string, entry: DashboardDefinition): number 
 
 function scoreDatasetEntry(query: string, entry: DatasetDefinition): number {
   const q = normalize(query);
-
   if (!q) return -1;
 
   const STOPWORDS = new Set([
@@ -596,6 +659,9 @@ function scoreDatasetEntry(query: string, entry: DatasetDefinition): number {
     "can",
     "i",
     "find",
+    "should",
+    "use",
+    "best",
   ]);
 
   const queryWords = q
@@ -903,6 +969,25 @@ async function buildBusinessQuestionDriverPlan(
   };
 }
 
+function getPrimaryDatasetForMetric(metricId: string): string | null {
+  const id = normalize(metricId);
+
+  const map: Record<string, string> = {
+    conversion_rate: "fact_nubrakes_channel_market_kpi_daily",
+    booking_rate: "fact_nubrakes_channel_market_kpi_daily",
+    cancel_rate: "fact_nubrakes_channel_market_kpi_daily",
+    aov: "fact_nubrakes_channel_market_kpi_daily",
+    revenue: "fact_nubrakes_channel_market_kpi_daily",
+    leads: "fact_nubrakes_channel_market_kpi_daily",
+    jobs_booked: "fact_nubrakes_channel_market_kpi_daily",
+    jobs_completed: "fact_nubrakes_channel_market_kpi_daily",
+    technician_utilization: "fact_nubrakes_supply_demand_daily",
+    available_slots: "fact_nubrakes_supply_demand_daily",
+  };
+
+  return map[id] || null;
+}
+
 async function analyzeBusinessQuestion(
   businessQuestion: string
 ): Promise<AnalyzeBusinessQuestionResult> {
@@ -916,7 +1001,10 @@ async function analyzeBusinessQuestion(
   }
 
   const metric = plan.metric;
-  const candidateDrivers = plan.analysis_plan.candidate_drivers || [];
+  const candidateDrivers = (plan.analysis_plan.candidate_drivers || []).filter(
+    (d) => !["channel_mix", "market_mix"].includes(normalize(d))
+  );
+
   const datasets = plan.datasets.filter((d) => d.link);
 
   if (!datasets.length) {
@@ -942,7 +1030,7 @@ async function analyzeBusinessQuestion(
     rawLoaded.flatMap((d) => d.rows)
   );
 
-  const loaded = rawLoaded.map((d) => {
+  const scopedLoaded = rawLoaded.map((d) => {
     const filteredRows = d.rows.filter((row) =>
       rowMatchesOptionalFilters(row, scope)
     );
@@ -960,8 +1048,39 @@ async function analyzeBusinessQuestion(
     };
   });
 
-  const allCurrentRows = loaded.flatMap((d) => d.currentRows);
-  const allPriorRows = loaded.flatMap((d) => d.priorRows);
+  const primaryDataset = getPrimaryDatasetForMetric(metric.metric_id);
+
+  const kpiLoaded = primaryDataset
+    ? scopedLoaded.filter(
+        (d) =>
+          normalize(d.dataset).replace(/\.json$/, "") ===
+          normalize(primaryDataset)
+      )
+    : scopedLoaded;
+
+  if (!kpiLoaded.length) {
+    return {
+      found: false,
+      message: `Primary dataset not found for metric: ${metric.metric_id}`,
+    };
+  }
+
+  const allCurrentRows = kpiLoaded.flatMap((d) => d.currentRows);
+  const allPriorRows = kpiLoaded.flatMap((d) => d.priorRows);
+
+  if (!allCurrentRows.length) {
+    return {
+      found: false,
+      message: `No rows found for current ${scope.time_grain} period for metric: ${metric.metric_id}`,
+    };
+  }
+
+  if (!allPriorRows.length) {
+    return {
+      found: false,
+      message: `No rows found for prior ${scope.time_grain} comparison period for metric: ${metric.metric_id}`,
+    };
+  }
 
   const currentMetricValue = computeMetricValue(metric.metric_id, allCurrentRows);
   const priorMetricValue = computeMetricValue(metric.metric_id, allPriorRows);
@@ -983,10 +1102,11 @@ async function analyzeBusinessQuestion(
 
   const observations: string[] = [];
   const metricFormat = metric.format_type || inferFormatType(metric.metric_id);
+  const comparisonSource = kpiLoaded[0];
 
   observations.push(
     currentMetricValue !== null
-      ? `${metric.metric_name} was ${formatMetricValue(currentMetricValue, metricFormat)} in ${loaded[0]?.currentLabel || "current period"} vs ${formatMetricValue(priorMetricValue, metricFormat)} in ${loaded[0]?.priorLabel || "prior period"} (${formatDeltaValue(deltaMetricValue, metricFormat)}).`
+      ? `${metric.metric_name} was ${formatMetricValue(currentMetricValue, metricFormat)} in ${comparisonSource?.currentLabel || "current period"} vs ${formatMetricValue(priorMetricValue, metricFormat)} in ${comparisonSource?.priorLabel || "prior period"} (${formatDeltaValue(deltaMetricValue, metricFormat)}).`
       : `${metric.metric_name} could not be computed for the scoped periods.`
   );
 
@@ -1007,21 +1127,25 @@ async function analyzeBusinessQuestion(
     observations.push(`Scope includes channel filter: ${scope.channel}.`);
   }
 
+  if (primaryDataset) {
+    observations.push(`Primary comparison dataset: ${primaryDataset}.`);
+  }
+
   const summary = buildAnalysisSummary({
     metric,
     currentMetricValue,
     priorMetricValue,
     deltaMetricValue,
     rankedDrivers,
-    currentLabel: loaded[0]?.currentLabel || "current period",
-    priorLabel: loaded[0]?.priorLabel || "prior period",
+    currentLabel: comparisonSource?.currentLabel || "current period",
+    priorLabel: comparisonSource?.priorLabel || "prior period",
   });
 
   return {
     found: true,
     metric,
     scope,
-    datasets_used: loaded.map((d) => ({
+    datasets_used: scopedLoaded.map((d) => ({
       dataset: d.dataset,
       link: d.link,
       row_count: d.filteredRows.length,
@@ -1205,8 +1329,23 @@ function splitRowsCurrentVsPrior(
 
 function getBucketKey(row: DatasetRow, fieldCandidates: string[]): string {
   for (const field of fieldCandidates) {
-    const value = String(row[field] || "").trim();
-    if (value && Number.isFinite(Date.parse(value))) return value;
+    const raw = row[field];
+    if (raw === null || raw === undefined || raw === "") continue;
+
+    const value = String(raw).trim();
+    if (!value) continue;
+
+    const parsed = Date.parse(value);
+    if (Number.isFinite(parsed)) {
+      return new Date(parsed).toISOString().slice(0, 10);
+    }
+
+    const ym = value.match(/^(\d{4})[-/](\d{1,2})$/);
+    if (ym) {
+      const y = ym[1];
+      const m = ym[2].padStart(2, "0");
+      return `${y}-${m}-01`;
+    }
   }
   return "";
 }
@@ -1230,17 +1369,18 @@ function getMetricFieldNames(metricId: string): string[] {
 
   const map: Record<string, string[]> = {
     leads: ["leads", "Leads"],
-    jobs_booked: ["jobs_booked", "Jobs Booked"],
-    jobs_completed: ["jobs_completed", "Jobs Completed"],
+    jobs_booked: ["jobs_booked", "Jobs Booked", "booked_jobs"],
+    jobs_completed: ["jobs_completed", "Jobs Completed", "completed_jobs"],
     canceled_jobs: ["canceled_jobs", "Canceled Jobs"],
     revenue: ["revenue", "Revenue"],
     impressions: ["impressions", "Impressions"],
     clicks: ["clicks", "Clicks"],
     marketing_spend: ["marketing_spend", "Marketing Spend"],
-    available_slots: ["available_slots", "Available Slots"],
+    available_slots: ["available_slots", "Available Slots", "slots"],
     technician_utilization: [
       "technician_utilization",
       "Technician Utilization",
+      "utilized_slots",
     ],
     ft_tech_utilization: ["ft_tech_utilization", "FT Tech Utilization"],
     pt_tech_utilization: ["pt_tech_utilization", "PT Tech Utilization"],
