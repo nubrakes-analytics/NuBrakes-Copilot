@@ -18,13 +18,17 @@ type MetricDefinition = {
   relevant_datasets?: string[];
 };
 
-type DatasetDefinition = {
+type RegistryEntry = {
   sheet_name?: string;
   dataset?: string;
   link?: string;
   description?: string;
+  type?: "dashboard" | "dataset" | string;
+  tags?: string[];
 };
 
+type DatasetDefinition = RegistryEntry;
+type DashboardDefinition = RegistryEntry;
 type DatasetRow = Record<string, unknown>;
 type TimeGrain = "day" | "week" | "month";
 
@@ -48,6 +52,10 @@ type MetricLookupResult =
 
 type DatasetLookupResult =
   | { found: true; dataset: DatasetDefinition }
+  | { found: false; message: string };
+
+type DashboardLookupResult =
+  | { found: true; dashboard: DashboardDefinition }
   | { found: false; message: string };
 
 type BusinessQuestionDriverResult =
@@ -119,7 +127,7 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "Content-Type",
 };
 
-const DATASET_LIST_URL =
+const REGISTRY_URL =
   "https://cdn.jsdelivr.net/gh/nubrakes-analytics/NuBrakes-Copilot@main/data/dataset_list.json";
 
 const METRIC_DEFINITIONS_URL =
@@ -146,16 +154,32 @@ const TOOLS = [
   },
   {
     type: "function",
+    name: "find_dashboard_link",
+    description: "Find the best matching dashboard or report link.",
+    parameters: {
+      type: "object",
+      properties: {
+        dashboard_query: {
+          type: "string",
+          description:
+            "Dashboard name such as ops dashboard, marketing dashboard, supply demand dashboard.",
+        },
+      },
+      required: ["dashboard_query"],
+      additionalProperties: false,
+    },
+  },
+  {
+    type: "function",
     name: "find_dataset_link",
-    description:
-      "Find the best matching dataset link from the dataset catalog.",
+    description: "Find the best matching raw dataset link.",
     parameters: {
       type: "object",
       properties: {
         dataset_query: {
           type: "string",
           description:
-            "The dataset to look up, such as channel market KPI daily or supply demand daily.",
+            "Dataset name such as supply demand daily, channel market KPI daily, metric definitions.",
         },
       },
       required: ["dataset_query"],
@@ -241,10 +265,8 @@ export default {
         );
       }
 
-      console.log("Incoming request path:", url.pathname);
-      console.log("User message:", userMessage);
-
       const normalizedMessage = normalize(userMessage);
+
       const looksLikeBusinessQuestion =
         normalizedMessage.includes("why") ||
         normalizedMessage.includes("driver") ||
@@ -255,27 +277,50 @@ export default {
         normalizedMessage.includes("dropped") ||
         normalizedMessage.includes("increase") ||
         normalizedMessage.includes("decrease") ||
-        normalizedMessage.includes("changed") ||
-        normalizedMessage.includes("march") ||
-        normalizedMessage.includes("month") ||
-        normalizedMessage.includes("week");
+        normalizedMessage.includes("changed");
 
-      // Temporary fast-path for business questions to avoid empty tool-choice responses.
+      const looksLikeDashboardLinkQuestion =
+        normalizedMessage.includes("dashboard") ||
+        normalizedMessage.includes("report") ||
+        normalizedMessage.includes("where can i find") ||
+        normalizedMessage.includes("where is");
+
+      const looksLikeDatasetLinkQuestion =
+        normalizedMessage.includes("dataset") ||
+        normalizedMessage.includes("json") ||
+        normalizedMessage.includes("sheet") ||
+        normalizedMessage.includes("raw data");
+
+      if (looksLikeDashboardLinkQuestion && !looksLikeBusinessQuestion) {
+        const result = await findDashboardLink(userMessage);
+        return jsonResponse({
+          answer: result.found
+            ? `You can find the dashboard here: ${result.dashboard.link}`
+            : result.message,
+          data: result,
+        });
+      }
+
+      if (looksLikeDatasetLinkQuestion && !looksLikeBusinessQuestion) {
+        const result = await findDatasetLink(userMessage);
+        return jsonResponse({
+          answer: result.found
+            ? `You can find the dataset here: ${result.dataset.link}`
+            : result.message,
+          data: result,
+        });
+      }
+
       if (looksLikeBusinessQuestion) {
         const directAnalysis = await analyzeBusinessQuestion(userMessage);
         if (directAnalysis.found) {
           const a = directAnalysis.analysis;
           return jsonResponse({
-            answer: [
-              a.summary,
-              ...a.observations.slice(0, 6),
-            ].join("\n"),
+            answer: [a.summary, ...a.observations.slice(0, 6)].join("\n"),
             data: directAnalysis,
           });
         }
       }
-
-      console.log("Calling OpenAI...");
 
       const firstResp = await callOpenAI(env.OPENAI_API_KEY, {
         model: "gpt-4.1",
@@ -289,10 +334,13 @@ export default {
                   "You are a NuBrakes business analyst assistant. " +
                   "Use tools when needed. " +
                   "Use find_metric_definition when the user asks what a KPI means. " +
-                  "Use find_dataset_link when the user asks for a dataset link. " +
+                  "Use find_dashboard_link when the user asks for a dashboard or report link. " +
+                  "Use find_dataset_link when the user asks for a dataset or raw data link. " +
                   "Use business_question_drivers when the user asks why a KPI moved or what drove performance. " +
                   "Use analyze_business_question when the user asks for an actual driver analysis from linked data. " +
                   "For business questions about why a KPI changed, prefer analyze_business_question. " +
+                  "For dashboard link questions, prefer find_dashboard_link. " +
+                  "For dataset/raw data link questions, prefer find_dataset_link. " +
                   "Keep answers concise, quantitative when possible, and business-focused.",
               },
             ],
@@ -305,8 +353,6 @@ export default {
         tools: TOOLS,
       });
 
-      console.log("FIRST RESPONSE RAW:", JSON.stringify(firstResp, null, 2));
-
       const outputItems = firstResp.output || [];
       const toolOutputs: Array<{
         type: "function_call_output";
@@ -315,8 +361,6 @@ export default {
       }> = [];
 
       for (const item of outputItems) {
-        console.log("OUTPUT ITEM:", JSON.stringify(item));
-
         if (item.type === "function_call" && item.name && item.arguments) {
           const args = safeJsonParse<Record<string, unknown>>(item.arguments, {});
           const result = await handleToolCall(item.name, args);
@@ -342,14 +386,11 @@ export default {
         input: toolOutputs,
       });
 
-      console.log("SECOND RESPONSE RAW:", JSON.stringify(secondResp, null, 2));
-
       return jsonResponse({
         answer: extractResponseText(secondResp) || "No response generated.",
         debug: secondResp,
       });
     } catch (error) {
-      console.error("Worker error:", error);
       return jsonResponse(
         {
           error: error instanceof Error ? error.message : "Unknown error",
@@ -365,6 +406,9 @@ async function handleToolCall(name: string, args: Record<string, unknown>) {
   switch (name) {
     case "find_metric_definition":
       return await findMetricDefinition(String(args.metric_query || ""));
+
+    case "find_dashboard_link":
+      return await findDashboardLink(String(args.dashboard_query || ""));
 
     case "find_dataset_link":
       return await findDatasetLink(String(args.dataset_query || ""));
@@ -384,12 +428,12 @@ async function handleToolCall(name: string, args: Record<string, unknown>) {
   }
 }
 
-async function loadDatasetDefinitions(): Promise<DatasetDefinition[]> {
-  const res = await fetch(DATASET_LIST_URL);
+async function loadRegistryEntries(): Promise<RegistryEntry[]> {
+  const res = await fetch(REGISTRY_URL);
   if (!res.ok) {
     throw new Error(`Failed to load dataset_list.json: ${res.status}`);
   }
-  return (await res.json()) as DatasetDefinition[];
+  return (await res.json()) as RegistryEntry[];
 }
 
 async function loadMetricDefinitions(): Promise<MetricDefinition[]> {
@@ -408,18 +452,10 @@ async function loadJsonFromUrl<T = unknown>(url: string): Promise<T> {
   return (await res.json()) as T;
 }
 
-async function findDatasetLink(
-  datasetQuery: string
-): Promise<DatasetLookupResult> {
-  const datasets = await loadDatasetDefinitions();
-  const q = normalize(datasetQuery);
+function scoreRegistryEntry(query: string, entry: RegistryEntry): number {
+  const q = normalize(query);
 
-  if (!q) {
-    return {
-      found: false,
-      message: "Dataset query is empty",
-    };
-  }
+  if (!q) return -1;
 
   const STOPWORDS = new Set([
     "a",
@@ -444,6 +480,8 @@ async function findDatasetLink(
     "show",
     "give",
     "me",
+    "dashboard",
+    "report",
   ]);
 
   const queryWords = q
@@ -451,63 +489,105 @@ async function findDatasetLink(
     .map((w) => w.trim())
     .filter((w) => w && !STOPWORDS.has(w));
 
-  let bestMatch: DatasetDefinition | null = null;
+  const sheetName = normalize(String(entry.sheet_name || ""));
+  const datasetName = normalize(String(entry.dataset || ""));
+  const description = normalize(String(entry.description || ""));
+  const tags = Array.isArray(entry.tags)
+    ? entry.tags.map((t) => normalize(String(t)))
+    : [];
+
+  let score = 0;
+
+  if (sheetName === q) score += 100;
+  if (datasetName === q) score += 100;
+  if (description && description === q) score += 70;
+  if (tags.includes(q)) score += 90;
+
+  if (q.length >= 3) {
+    if (sheetName.includes(q)) score += 70;
+    if (datasetName.includes(q)) score += 70;
+    if (description.includes(q)) score += 35;
+    for (const tag of tags) {
+      if (tag.includes(q)) score += 60;
+    }
+  }
+
+  for (const word of queryWords) {
+    if (sheetName.includes(word)) score += 20;
+    if (datasetName.includes(word)) score += 20;
+    if (description.includes(word)) score += 8;
+    for (const tag of tags) {
+      if (tag.includes(word)) score += 18;
+    }
+  }
+
+  return score;
+}
+
+async function findDashboardLink(
+  dashboardQuery: string
+): Promise<DashboardLookupResult> {
+  const entries = await loadRegistryEntries();
+  const filtered = entries.filter(
+    (e) =>
+      normalize(String(e.type || "")) === "dashboard" &&
+      String(e.link || "").trim()
+  );
+
+  let bestMatch: DashboardDefinition | null = null;
   let bestScore = -1;
 
-  for (const dataset of datasets) {
-    const sheetName = normalize(String(dataset.sheet_name || ""));
-    const datasetName = normalize(String(dataset.dataset || ""));
-    const description = normalize(String(dataset.description || ""));
-    const link = String(dataset.link || "").trim();
-
-    if (!link) continue;
-
-    let score = 0;
-
-    if (datasetName === q) score += 100;
-    if (sheetName === q) score += 100;
-    if (description && description === q) score += 70;
-
-    if (q.length >= 3) {
-      if (datasetName.includes(q)) score += 70;
-      if (sheetName.includes(q)) score += 70;
-      if (description.includes(q)) score += 35;
-    }
-
-    for (const word of queryWords) {
-      if (datasetName.includes(word)) score += 20;
-      if (sheetName.includes(word)) score += 20;
-      if (description.includes(word)) score += 8;
-    }
-
-    const importantWords = [
-      "channel",
-      "market",
-      "kpi",
-      "supply",
-      "demand",
-      "revenue",
-      "completed",
-      "booked",
-      "canceled",
-      "leads",
-      "utilization",
-      "technician",
-    ];
-
-    for (const word of importantWords) {
-      if (queryWords.includes(word) && datasetName.includes(word)) score += 10;
-      if (queryWords.includes(word) && sheetName.includes(word)) score += 10;
-    }
+  for (const entry of filtered) {
+    const score = scoreRegistryEntry(dashboardQuery, entry);
 
     if (
       score > bestScore ||
       (score === bestScore &&
-        String(dataset.description || "").trim() &&
+        String(entry.description || "").trim() &&
         !String(bestMatch?.description || "").trim())
     ) {
       bestScore = score;
-      bestMatch = dataset;
+      bestMatch = entry;
+    }
+  }
+
+  if (!bestMatch || bestScore < 20) {
+    return {
+      found: false,
+      message: `No confident dashboard link found for query: ${dashboardQuery}`,
+    };
+  }
+
+  return {
+    found: true,
+    dashboard: bestMatch,
+  };
+}
+
+async function findDatasetLink(
+  datasetQuery: string
+): Promise<DatasetLookupResult> {
+  const entries = await loadRegistryEntries();
+  const filtered = entries.filter(
+    (e) =>
+      normalize(String(e.type || "")) === "dataset" &&
+      String(e.link || "").trim()
+  );
+
+  let bestMatch: DatasetDefinition | null = null;
+  let bestScore = -1;
+
+  for (const entry of filtered) {
+    const score = scoreRegistryEntry(datasetQuery, entry);
+
+    if (
+      score > bestScore ||
+      (score === bestScore &&
+        String(entry.description || "").trim() &&
+        !String(bestMatch?.description || "").trim())
+    ) {
+      bestScore = score;
+      bestMatch = entry;
     }
   }
 
@@ -656,17 +736,19 @@ async function findDatasetsByIds(
 ): Promise<DatasetDefinition[]> {
   if (!datasetIds?.length) return [];
 
-  const datasets = await loadDatasetDefinitions();
+  const entries = await loadRegistryEntries();
   const wanted = new Set(
     datasetIds.map((d) => normalize(String(d)).replace(/\.json$/, ""))
   );
 
-  return datasets.filter((dataset) => {
-    const datasetName = normalize(String(dataset.dataset || "")).replace(
+  return entries.filter((entry) => {
+    if (normalize(String(entry.type || "")) !== "dataset") return false;
+
+    const datasetName = normalize(String(entry.dataset || "")).replace(
       /\.json$/,
       ""
     );
-    const sheetName = normalize(String(dataset.sheet_name || "")).replace(
+    const sheetName = normalize(String(entry.sheet_name || "")).replace(
       /\.json$/,
       ""
     );
