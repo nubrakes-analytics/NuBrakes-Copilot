@@ -126,6 +126,16 @@ type OpenAIResponse = {
   output_text?: string;
 };
 
+type AppApiResponse = {
+  answer: string;
+  dataset?: string | null;
+  rows?: Array<Record<string, unknown>>;
+  dataset_link?: string | null;
+  dashboard_link?: string | null;
+  data?: unknown;
+  debug?: unknown;
+};
+
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
@@ -306,48 +316,97 @@ export default {
 
       const directDatasetMatch = await tryDirectDatasetShortcut(userMessage);
       if (directDatasetMatch && !looksLikeBusinessQuestion) {
-        return jsonResponse({
-          answer: `You should use this dataset: ${directDatasetMatch.link}`,
-          data: { found: true, dataset: directDatasetMatch },
-        });
+        return jsonResponse(
+          buildAppResponse({
+            answer: `You should use this dataset: ${directDatasetMatch.link}`,
+            dataset:
+              directDatasetMatch.dataset ||
+              directDatasetMatch.sheet_name ||
+              "dataset_list",
+            datasetLink: directDatasetMatch.link || null,
+            rows: [directDatasetMatch],
+            data: { found: true, dataset: directDatasetMatch },
+          })
+        );
       }
 
       if (looksLikeDashboardLinkQuestion && !looksLikeBusinessQuestion) {
         const result = await findDashboardLink(userMessage);
-        return jsonResponse({
-          answer: result.found
-            ? `You can find the dashboard here: ${result.dashboard.url}`
-            : result.message,
-          data: result,
-        });
+
+        return jsonResponse(
+          result.found
+            ? buildAppResponse({
+                answer: `You can find the dashboard here: ${result.dashboard.url}`,
+                dataset: "dashboard_links",
+                dashboardLink: result.dashboard.url || null,
+                rows: [result.dashboard],
+                data: result,
+              })
+            : buildAppResponse({
+                answer: result.message,
+                dataset: null,
+                rows: [],
+                data: result,
+              })
+        );
       }
 
       if (looksLikeDatasetLinkQuestion && !looksLikeBusinessQuestion) {
         const result = await findDatasetLink(userMessage);
-        return jsonResponse({
-          answer: result.found
-            ? `You should use this dataset: ${result.dataset.link}`
-            : result.message,
-          data: result,
-        });
+
+        return jsonResponse(
+          result.found
+            ? buildAppResponse({
+                answer: `You should use this dataset: ${result.dataset.link}`,
+                dataset:
+                  result.dataset.dataset ||
+                  result.dataset.sheet_name ||
+                  "dataset_list",
+                datasetLink: result.dataset.link || null,
+                rows: [result.dataset],
+                data: result,
+              })
+            : buildAppResponse({
+                answer: result.message,
+                dataset: null,
+                rows: [],
+                data: result,
+              })
+        );
       }
 
       if (looksLikeBusinessQuestion) {
         const directAnalysis = await analyzeBusinessQuestion(userMessage);
 
-        return jsonResponse({
-          answer: directAnalysis.found
-            ? [
-                directAnalysis.analysis.summary,
-                ...directAnalysis.analysis.observations.slice(0, 6),
-              ].join("\n")
-            : directAnalysis.message,
-          data: directAnalysis,
-        });
+        return jsonResponse(
+          directAnalysis.found
+            ? buildAppResponse({
+                answer: [
+                  directAnalysis.analysis.summary,
+                  ...directAnalysis.analysis.observations.slice(0, 6),
+                ].join("\n"),
+                dataset:
+                  directAnalysis.datasets_used[0]?.dataset ||
+                  directAnalysis.metric.metric_id,
+                datasetLink: directAnalysis.datasets_used[0]?.link || null,
+                rows: directAnalysis.datasets_used.map((d) => ({
+                  dataset: d.dataset,
+                  dataset_link: d.link || null,
+                  row_count: d.row_count,
+                })),
+                data: directAnalysis,
+              })
+            : buildAppResponse({
+                answer: directAnalysis.message,
+                dataset: null,
+                rows: [],
+                data: directAnalysis,
+              })
+        );
       }
 
       const firstResp = await callOpenAI(env.OPENAI_API_KEY, {
-        model: "gpt-4.1",
+        model: "gpt-5.4",
         input: [
           {
             role: "system",
@@ -384,10 +443,14 @@ export default {
         output: string;
       }> = [];
 
+      let lastStructuredResult: unknown = null;
+
       for (const item of outputItems) {
         if (item.type === "function_call" && item.name && item.arguments) {
           const args = safeJsonParse<Record<string, unknown>>(item.arguments, {});
           const result = await handleToolCall(item.name, args);
+
+          lastStructuredResult = result;
 
           toolOutputs.push({
             type: "function_call_output",
@@ -398,22 +461,29 @@ export default {
       }
 
       if (toolOutputs.length === 0) {
-        return jsonResponse({
-          answer: extractResponseText(firstResp) || "No response generated.",
-          debug: firstResp,
-        });
+        return jsonResponse(
+          buildAppResponse({
+            answer: extractResponseText(firstResp) || "No response generated.",
+            dataset: null,
+            rows: [],
+            debug: firstResp,
+          })
+        );
       }
 
       const secondResp = await callOpenAI(env.OPENAI_API_KEY, {
-        model: "gpt-4.1",
+        model: "gpt-5.4",
         previous_response_id: firstResp.id,
         input: toolOutputs,
       });
 
-      return jsonResponse({
-        answer: extractResponseText(secondResp) || "No response generated.",
-        debug: secondResp,
-      });
+      return jsonResponse(
+        mergeStructuredToolResultIntoResponse(
+          extractResponseText(secondResp) || "No response generated.",
+          lastStructuredResult,
+          secondResp
+        )
+      );
     } catch (error) {
       const msg = error instanceof Error ? error.message : "Unknown error";
 
@@ -437,6 +507,103 @@ export default {
     }
   },
 };
+
+function buildAppResponse(args: {
+  answer: string;
+  dataset?: string | null;
+  rows?: Array<Record<string, unknown>>;
+  datasetLink?: string | null;
+  dashboardLink?: string | null;
+  data?: unknown;
+  debug?: unknown;
+}): AppApiResponse {
+  return {
+    answer: args.answer,
+    dataset: args.dataset ?? null,
+    rows: args.rows ?? [],
+    dataset_link: args.datasetLink ?? null,
+    dashboard_link: args.dashboardLink ?? null,
+    data: args.data,
+    debug: args.debug,
+  };
+}
+
+function mergeStructuredToolResultIntoResponse(
+  answer: string,
+  toolResult: unknown,
+  debug?: unknown
+): AppApiResponse {
+  const base = buildAppResponse({
+    answer,
+    dataset: null,
+    rows: [],
+    datasetLink: null,
+    dashboardLink: null,
+    data: toolResult,
+    debug,
+  });
+
+  if (!toolResult || typeof toolResult !== "object") {
+    return base;
+  }
+
+  const r = toolResult as Record<string, unknown>;
+
+  if (r.found !== true) {
+    return base;
+  }
+
+  if ("dataset" in r) {
+    const dataset = r.dataset as DatasetDefinition;
+    return buildAppResponse({
+      answer,
+      dataset: dataset?.dataset || dataset?.sheet_name || null,
+      rows: dataset ? [dataset as Record<string, unknown>] : [],
+      datasetLink: dataset?.link || null,
+      dashboardLink: null,
+      data: toolResult,
+      debug,
+    });
+  }
+
+  if ("dashboard" in r) {
+    const dashboard = r.dashboard as DashboardDefinition;
+    return buildAppResponse({
+      answer,
+      dataset: "dashboard_links",
+      rows: dashboard ? [dashboard as Record<string, unknown>] : [],
+      datasetLink: null,
+      dashboardLink: dashboard?.url || null,
+      data: toolResult,
+      debug,
+    });
+  }
+
+  if ("datasets_used" in r) {
+    const analysisResult = r as AnalyzeBusinessQuestionResult & {
+      datasets_used?: Array<{ dataset: string; link?: string; row_count: number }>;
+      metric?: MetricDefinition;
+    };
+
+    const datasetsUsed = analysisResult.datasets_used || [];
+
+    return buildAppResponse({
+      answer,
+      dataset: datasetsUsed[0]?.dataset || analysisResult.metric?.metric_id || null,
+      rows: datasetsUsed.map((d) => ({
+        dataset: d.dataset,
+        dataset_link: d.link || null,
+        row_count: d.row_count,
+      })),
+      datasetLink: datasetsUsed[0]?.link || null,
+      dashboardLink: null,
+      data: toolResult,
+      debug,
+    });
+  }
+
+  return base;
+}
 
 async function handleToolCall(name: string, args: Record<string, unknown>) {
   switch (name) {
