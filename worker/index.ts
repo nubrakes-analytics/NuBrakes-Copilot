@@ -400,16 +400,13 @@ async function handleRequest(request: Request, env: Env): Promise<Response> {
 
   const looksLikeMetricValueQuestion =
     !looksLikeBusinessQuestion &&
-    (
-      hasPhrase("what is") ||
+    (hasPhrase("what is") ||
       hasPhrase("whats") ||
       hasPhrase("what was") ||
       hasPhrase("how much") ||
       hasPhrase("show me") ||
-      hasPhrase("give me")
-    ) &&
-    (
-      hasWord("revenue") ||
+      hasPhrase("give me")) &&
+    (hasWord("revenue") ||
       hasWord("aov") ||
       hasWord("leads") ||
       hasWord("conversion") ||
@@ -420,8 +417,7 @@ async function handleRequest(request: Request, env: Env): Promise<Response> {
       hasWord("cpc") ||
       hasPhrase("marketing spend") ||
       hasPhrase("jobs completed") ||
-      hasPhrase("jobs booked")
-    );
+      hasPhrase("jobs booked"));
 
   const directDatasetMatch = await tryDirectDatasetShortcut(userMessage);
 
@@ -491,7 +487,7 @@ async function handleRequest(request: Request, env: Env): Promise<Response> {
     return jsonResponse(
       valueResult.found
         ? buildAppResponse({
-            answer: valueResult.result.summary,
+            answer: stripMarkdownBold(valueResult.result.summary),
             dataset:
               valueResult.datasets_used[0]?.dataset ||
               valueResult.metric.metric_id,
@@ -504,7 +500,7 @@ async function handleRequest(request: Request, env: Env): Promise<Response> {
             data: valueResult,
           })
         : buildAppResponse({
-            answer: valueResult.message,
+            answer: stripMarkdownBold(valueResult.message),
             dataset: null,
             rows: [],
             data: valueResult,
@@ -518,10 +514,12 @@ async function handleRequest(request: Request, env: Env): Promise<Response> {
     return jsonResponse(
       directAnalysis.found
         ? buildAppResponse({
-            answer: [
-              directAnalysis.analysis.summary,
-              ...directAnalysis.analysis.observations.slice(0, 6),
-            ].join("\n"),
+            answer: stripMarkdownBold(
+              [
+                directAnalysis.analysis.summary,
+                ...directAnalysis.analysis.observations.slice(0, 6),
+              ].join("\n")
+            ),
             dataset:
               directAnalysis.datasets_used[0]?.dataset ||
               directAnalysis.metric.metric_id,
@@ -534,7 +532,7 @@ async function handleRequest(request: Request, env: Env): Promise<Response> {
             data: directAnalysis,
           })
         : buildAppResponse({
-            answer: directAnalysis.message,
+            answer: stripMarkdownBold(directAnalysis.message),
             dataset: null,
             rows: [],
             data: directAnalysis,
@@ -563,7 +561,9 @@ async function handleRequest(request: Request, env: Env): Promise<Response> {
               "For direct fact lookups like revenue/conversion in a specific month, prefer query_metric_value. " +
               "For dashboard link questions, prefer find_dashboard_link. " +
               "For dataset/raw data link questions, prefer find_dataset_link. " +
-              "Keep answers concise, quantitative when possible, and business-focused.",
+              "Keep answers concise, quantitative when possible, and business-focused. " +
+              "Do not use markdown bold. Never use double asterisks in the response. " +
+              "Return plain text only.",
           },
         ],
       },
@@ -602,7 +602,9 @@ async function handleRequest(request: Request, env: Env): Promise<Response> {
   if (toolOutputs.length === 0) {
     return jsonResponse(
       buildAppResponse({
-        answer: extractResponseText(firstResp) || "No response generated.",
+        answer: stripMarkdownBold(
+          extractResponseText(firstResp) || "No response generated."
+        ),
         dataset: null,
         rows: [],
         debug: firstResp,
@@ -618,7 +620,9 @@ async function handleRequest(request: Request, env: Env): Promise<Response> {
 
   return jsonResponse(
     mergeStructuredToolResultIntoResponse(
-      extractResponseText(secondResp) || "No response generated.",
+      stripMarkdownBold(
+        extractResponseText(secondResp) || "No response generated."
+      ),
       lastStructuredResult,
       secondResp
     )
@@ -635,7 +639,7 @@ function buildAppResponse(args: {
   debug?: unknown;
 }): AppApiResponse {
   return {
-    answer: args.answer,
+    answer: stripMarkdownBold(args.answer),
     dataset: args.dataset ?? null,
     rows: args.rows ?? [],
     dataset_link: args.datasetLink ?? null,
@@ -651,7 +655,7 @@ function mergeStructuredToolResultIntoResponse(
   debug?: unknown
 ): AppApiResponse {
   const base = buildAppResponse({
-    answer,
+    answer: stripMarkdownBold(answer),
     dataset: null,
     rows: [],
     datasetLink: null,
@@ -668,7 +672,7 @@ function mergeStructuredToolResultIntoResponse(
   if ("dataset" in r) {
     const dataset = r.dataset as DatasetDefinition;
     return buildAppResponse({
-      answer,
+      answer: stripMarkdownBold(answer),
       dataset: dataset?.dataset || dataset?.sheet_name || null,
       rows: dataset ? [dataset as Record<string, unknown>] : [],
       datasetLink: dataset?.link || null,
@@ -681,7 +685,7 @@ function mergeStructuredToolResultIntoResponse(
   if ("dashboard" in r) {
     const dashboard = r.dashboard as DashboardDefinition;
     return buildAppResponse({
-      answer,
+      answer: stripMarkdownBold(answer),
       dataset: "dashboard_links",
       rows: dashboard ? [dashboard as Record<string, unknown>] : [],
       datasetLink: null,
@@ -700,7 +704,7 @@ function mergeStructuredToolResultIntoResponse(
     const datasetsUsed = structured.datasets_used || [];
 
     return buildAppResponse({
-      answer,
+      answer: stripMarkdownBold(answer),
       dataset:
         datasetsUsed[0]?.dataset || structured.metric?.metric_id || null,
       rows: datasetsUsed.map((d) => ({
@@ -1494,12 +1498,16 @@ async function queryMetricValue(
   const preferredDatasets = primaryDataset
     ? datasetsToUse.filter(
         (d) =>
-          normalize(String(d.dataset || d.sheet_name || "")).replace(/\.json$/, "") ===
-          normalize(primaryDataset)
+          normalize(String(d.dataset || d.sheet_name || "")).replace(
+            /\.json$/,
+            ""
+          ) === normalize(primaryDataset)
       )
     : datasetsToUse;
 
-  const finalDatasets = preferredDatasets.length ? preferredDatasets : datasetsToUse;
+  const finalDatasets = preferredDatasets.length
+    ? preferredDatasets
+    : datasetsToUse;
 
   if (!finalDatasets.length) {
     return {
@@ -1573,7 +1581,9 @@ async function queryMetricValue(
     scope.period_label,
   ].filter(Boolean);
 
-  const summary = `${metric.metric_name} was ${value} for ${scopeParts.join(", ")}.`;
+  const summary = `${metric.metric_name} was ${value} for ${scopeParts.join(
+    ", "
+  )}.`;
 
   return {
     found: true,
@@ -1744,12 +1754,21 @@ function parsePointInTimeScopeFromRows(
     } else {
       const yearsWithMonth = availableYears.filter((y) =>
         rows.some((row) => {
-          const key = getBucketKey(row, ["month", "Month", "day", "Day", "week", "Week"]);
+          const key = getBucketKey(row, [
+            "month",
+            "Month",
+            "day",
+            "Day",
+            "week",
+            "Week",
+          ]);
           return key.startsWith(`${y}-${monthNum}-`);
         })
       );
       yearToUse = String(
-        yearsWithMonth.length ? Math.max(...yearsWithMonth) : new Date().getUTCFullYear()
+        yearsWithMonth.length
+          ? Math.max(...yearsWithMonth)
+          : new Date().getUTCFullYear()
       );
     }
 
@@ -1978,10 +1997,15 @@ function filterRowsToTargetBucket(
     return rows.filter((row) => getBucketKey(row, fieldCandidates) === latest);
   }
 
-  return rows.filter((row) => getBucketKey(row, fieldCandidates) === targetBucket);
+  return rows.filter(
+    (row) => getBucketKey(row, fieldCandidates) === targetBucket
+  );
 }
 
-function getLatestBucket(rows: DatasetRow[], grain: TimeGrain): string | undefined {
+function getLatestBucket(
+  rows: DatasetRow[],
+  grain: TimeGrain
+): string | undefined {
   const fieldCandidates =
     grain === "day"
       ? ["day", "Day"]
@@ -2010,9 +2034,7 @@ function getLatestAndPriorBucket(
 
   const buckets = Array.from(
     new Set(
-      rows
-        .map((row) => getBucketKey(row, fieldCandidates))
-        .filter(Boolean)
+      rows.map((row) => getBucketKey(row, fieldCandidates)).filter(Boolean)
     )
   ).sort((a, b) => Date.parse(a) - Date.parse(b));
 
@@ -2169,53 +2191,38 @@ function computeMetricValue(metricId: string, rows: DatasetRow[]): number | null
   switch (id) {
     case "booking_rate":
       return leads > 0 ? jobsBooked / leads : null;
-
     case "conversion_rate":
       return leads > 0 ? jobsCompleted / leads : null;
-
     case "cancel_rate":
       return jobsBooked > 0 ? canceledJobs / jobsBooked : null;
-
     case "cancel_outcome_rate":
       return jobsCompleted + canceledJobs > 0
         ? canceledJobs / (jobsCompleted + canceledJobs)
         : null;
-
     case "aov":
       return jobsCompleted > 0 ? revenue / jobsCompleted : null;
-
     case "ctr":
       return impressions > 0 ? clicks / impressions : null;
-
     case "cpc":
       return clicks > 0 ? marketingSpend / clicks : null;
-
     case "cost_per_inquiry":
       return leads > 0 ? marketingSpend / leads : null;
-
     case "mac":
       return jobsCompleted > 0 ? marketingSpend / jobsCompleted : null;
-
     case "technician_utilization":
       return availableSlots > 0 ? utilizedSlots / availableSlots : null;
-
     case "customer_cancel_rate":
       return jobsBooked > 0 ? customerCancels / jobsBooked : null;
-
     case "hq_cancel_rate":
       return jobsBooked > 0 ? hqCancels / jobsBooked : null;
-
     case "reschedule_rate":
       return jobsBooked > 0
         ? (customerReschedules + hqReschedules) / jobsBooked
         : null;
-
     case "customer_reschedule_rate":
       return jobsBooked > 0 ? customerReschedules / jobsBooked : null;
-
     case "hq_reschedule_rate":
       return jobsBooked > 0 ? hqReschedules / jobsBooked : null;
-
     default:
       return directMetric || null;
   }
@@ -2446,6 +2453,12 @@ function canonicalMetricId(value: string): string {
 
 function capitalize(value: string): string {
   return value ? value.charAt(0).toUpperCase() + value.slice(1) : value;
+}
+
+function stripMarkdownBold(text: string): string {
+  return String(text || "")
+    .replace(/\*\*(.*?)\*\*/g, "$1")
+    .replace(/__(.*?)__/g, "$1");
 }
 
 function safeJsonParse<T>(value: string, fallback: T): T {
