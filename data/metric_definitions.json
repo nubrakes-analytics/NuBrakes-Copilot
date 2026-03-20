@@ -10,7 +10,26 @@
     "aggregation": "sum",
     "good_direction": "up",
     "owner": "Marketing",
-    "tags": "leads|inquiries|inbound leads|customer inquiries|new inquiries|lead volume|lead count|requests|incoming requests"
+    "tags": [
+      "leads",
+      "inquiries",
+      "inbound leads",
+      "customer inquiries",
+      "new inquiries",
+      "lead volume",
+      "lead count",
+      "requests",
+      "incoming requests"
+    ],
+    "candidate_drivers": [
+      "channel_mix",
+      "market_mix",
+      "jobs_booked",
+      "jobs_completed"
+    ],
+    "relevant_datasets": [
+      "fact_nubrakes_channel_market_kpi_daily"
+    ]
   },
   {
     "metric_id": "jobs_booked",
@@ -23,7 +42,26 @@
     "aggregation": "sum",
     "good_direction": "up",
     "owner": "Operations",
-    "tags": "jobs booked|booked jobs|bookings|appointments booked|scheduled jobs|scheduled appointments|booked appointments"
+    "tags": [
+      "jobs booked",
+      "booked jobs",
+      "bookings",
+      "appointments booked",
+      "scheduled jobs",
+      "scheduled appointments",
+      "booked appointments"
+    ],
+    "candidate_drivers": [
+      "leads",
+      "booking_rate",
+      "channel_mix",
+      "market_mix",
+      "available_slots"
+    ],
+    "relevant_datasets": [
+      "fact_nubrakes_channel_market_kpi_daily",
+      "fact_nubrakes_supply_demand_daily"
+    ]
   },
   {
     "metric_id": "jobs_completed",
@@ -36,7 +74,26 @@
     "aggregation": "sum",
     "good_direction": "up",
     "owner": "Operations",
-    "tags": "jobs completed|completed jobs|completions|finished jobs|closed jobs|completed appointments"
+    "tags": [
+      "jobs completed",
+      "completed jobs",
+      "completions",
+      "finished jobs",
+      "closed jobs",
+      "completed appointments"
+    ],
+    "candidate_drivers": [
+      "jobs_booked",
+      "conversion_rate",
+      "cancel_rate",
+      "reschedule_rate",
+      "technician_utilization",
+      "market_mix"
+    ],
+    "relevant_datasets": [
+      "fact_nubrakes_channel_market_kpi_daily",
+      "fact_nubrakes_supply_demand_daily"
+    ]
   },
   {
     "metric_id": "revenue",
@@ -49,7 +106,27 @@
     "aggregation": "sum",
     "good_direction": "up",
     "owner": "Finance",
-    "tags": "revenue|sales|completed revenue|invoice revenue|invoiced revenue|customer price|topline|gross revenue"
+    "tags": [
+      "revenue",
+      "sales",
+      "completed revenue",
+      "invoice revenue",
+      "invoiced revenue",
+      "customer price",
+      "topline",
+      "gross revenue"
+    ],
+    "candidate_drivers": [
+      "jobs_completed",
+      "aov",
+      "channel_mix",
+      "market_mix",
+      "gross_margin_pct"
+    ],
+    "relevant_datasets": [
+      "fact_nubrakes_channel_market_kpi_daily",
+      "fact_nubrakes_supply_demand_daily"
+    ]
   },
   {
     "metric_id": "booking_rate",
@@ -62,11 +139,29 @@
     "aggregation": "ratio",
     "good_direction": "up",
     "owner": "Operations",
-    "tags": "booking rate|lead to booked|book rate|lead booking conversion|lead to appointment rate|booking conversion"
+    "tags": [
+      "booking rate",
+      "lead to booked",
+      "book rate",
+      "lead booking conversion",
+      "lead to appointment rate",
+      "booking conversion"
+    ],
+    "candidate_drivers": [
+      "leads",
+      "jobs_booked",
+      "channel_mix",
+      "market_mix",
+      "available_slots"
+    ],
+    "relevant_datasets": [
+      "fact_nubrakes_channel_market_kpi_daily",
+      "fact_nubrakes_supply_demand_daily"
+    ]
   },
   {
-    "metric_id": "cancel_rate",
-    "metric_name": "Cancel Rate",
+    "metric_id": "cancel_outcome_rate",
+    "metric_name": "Cancel Outcome Rate",
     "category": "Funnel",
     "definition": "Of all jobs that reached an outcome, what % ended in cancel vs completed?",
     "unit": "percent",
@@ -75,7 +170,24 @@
     "aggregation": "ratio",
     "good_direction": "down",
     "owner": "Operations",
-    "tags": "cancel outcome rate|cancel vs complete rate|cancellation rate by outcome|outcome cancel rate|cancel share of outcomes"
+    "tags": [
+      "cancel outcome rate",
+      "cancel vs complete rate",
+      "cancellation rate by outcome",
+      "outcome cancel rate",
+      "cancel share of outcomes"
+    ],
+    "candidate_drivers": [
+      "jobs_completed",
+      "canceled_jobs",
+      "market_mix",
+      "channel_mix",
+      "technician_utilization"
+    ],
+    "relevant_datasets": [
+      "fact_nubrakes_channel_market_kpi_daily",
+      "fact_nubrakes_supply_demand_daily"
+    ]
   },
   {
     "metric_id": "conversion_rate",
@@ -88,7 +200,25 @@
     "aggregation": "ratio",
     "good_direction": "up",
     "owner": "Operations",
-    "tags": "conversion rate|lead to completed|lead conversion|completion rate from leads|inquiry to completed rate"
+    "tags": [
+      "conversion rate",
+      "lead to completed",
+      "lead conversion",
+      "completion rate from leads",
+      "inquiry to completed rate"
+    ],
+    "candidate_drivers": [
+      "booking_rate",
+      "cancel_rate",
+      "reschedule_rate",
+      "technician_utilization",
+      "channel_mix",
+      "market_mix"
+    ],
+    "relevant_datasets": [
+      "fact_nubrakes_channel_market_kpi_daily",
+      "fact_nubrakes_supply_demand_daily"
+    ]
   },
   {
     "metric_id": "aov",
@@ -101,7 +231,27 @@
     "aggregation": "ratio",
     "good_direction": "up",
     "owner": "Finance",
-    "tags": "aov|average order value|avg order value|average ticket|avg ticket|revenue per completed job|revenue per job"
+    "tags": [
+      "aov",
+      "average order value",
+      "avg order value",
+      "average ticket",
+      "avg ticket",
+      "revenue per completed job",
+      "revenue per job"
+    ],
+    "candidate_drivers": [
+      "revenue",
+      "jobs_completed",
+      "market_mix",
+      "channel_mix",
+      "parts_cost_pct_revenue",
+      "labor_cost_pct_revenue"
+    ],
+    "relevant_datasets": [
+      "fact_nubrakes_channel_market_kpi_daily",
+      "fact_nubrakes_supply_demand_daily"
+    ]
   },
   {
     "metric_id": "impressions",
@@ -114,7 +264,23 @@
     "aggregation": "sum",
     "good_direction": "up",
     "owner": "Marketing",
-    "tags": "impressions|ad impressions|views|ad views|times shown|reach impressions"
+    "tags": [
+      "impressions",
+      "ad impressions",
+      "views",
+      "ad views",
+      "times shown",
+      "reach impressions"
+    ],
+    "candidate_drivers": [
+      "marketing_spend",
+      "clicks",
+      "ctr",
+      "channel_mix"
+    ],
+    "relevant_datasets": [
+      "fact_nubrakes_marketing_performance_daily"
+    ]
   },
   {
     "metric_id": "clicks",
@@ -127,7 +293,22 @@
     "aggregation": "sum",
     "good_direction": "up",
     "owner": "Marketing",
-    "tags": "clicks|ad clicks|link clicks|traffic clicks|paid clicks"
+    "tags": [
+      "clicks",
+      "ad clicks",
+      "link clicks",
+      "traffic clicks",
+      "paid clicks"
+    ],
+    "candidate_drivers": [
+      "impressions",
+      "ctr",
+      "marketing_spend",
+      "channel_mix"
+    ],
+    "relevant_datasets": [
+      "fact_nubrakes_marketing_performance_daily"
+    ]
   },
   {
     "metric_id": "ctr",
@@ -140,7 +321,21 @@
     "aggregation": "ratio",
     "good_direction": "up",
     "owner": "Marketing",
-    "tags": "ctr|click through rate|click rate|impression to click rate"
+    "tags": [
+      "ctr",
+      "click through rate",
+      "click rate",
+      "impression to click rate"
+    ],
+    "candidate_drivers": [
+      "impressions",
+      "clicks",
+      "marketing_spend",
+      "channel_mix"
+    ],
+    "relevant_datasets": [
+      "fact_nubrakes_marketing_performance_daily"
+    ]
   },
   {
     "metric_id": "marketing_spend",
@@ -153,7 +348,25 @@
     "aggregation": "sum",
     "good_direction": "down",
     "owner": "Marketing",
-    "tags": "marketing spend|ad spend|media spend|advertising spend|paid spend|marketing cost"
+    "tags": [
+      "marketing spend",
+      "ad spend",
+      "media spend",
+      "advertising spend",
+      "paid spend",
+      "marketing cost"
+    ],
+    "candidate_drivers": [
+      "impressions",
+      "clicks",
+      "leads",
+      "channel_mix",
+      "google_leads",
+      "non_google_leads"
+    ],
+    "relevant_datasets": [
+      "fact_nubrakes_marketing_performance_daily"
+    ]
   },
   {
     "metric_id": "cpc",
@@ -166,7 +379,22 @@
     "aggregation": "ratio",
     "good_direction": "down",
     "owner": "Marketing",
-    "tags": "cpc|cost per click|avg cpc|average cpc|cost for each click"
+    "tags": [
+      "cpc",
+      "cost per click",
+      "avg cpc",
+      "average cpc",
+      "cost for each click"
+    ],
+    "candidate_drivers": [
+      "marketing_spend",
+      "clicks",
+      "ctr",
+      "channel_mix"
+    ],
+    "relevant_datasets": [
+      "fact_nubrakes_marketing_performance_daily"
+    ]
   },
   {
     "metric_id": "cost_per_inquiry",
@@ -175,11 +403,31 @@
     "definition": "Average marketing cost to generate one inquiry",
     "unit": "usd",
     "format_type": "currency",
-    "formula_logic": "marketing_spend / inquiry_requests",
+    "formula_logic": "marketing_spend / leads",
     "aggregation": "ratio",
     "good_direction": "down",
     "owner": "Marketing",
-    "tags": "cost per inquiry|cpi|cost per lead|cpl|cost per customer inquiry|lead cost|inquiry cost"
+    "tags": [
+      "cost per inquiry",
+      "cpi",
+      "cost per lead",
+      "cpl",
+      "cost per customer inquiry",
+      "lead cost",
+      "inquiry cost"
+    ],
+    "candidate_drivers": [
+      "marketing_spend",
+      "leads",
+      "ctr",
+      "channel_mix",
+      "google_leads",
+      "non_google_leads"
+    ],
+    "relevant_datasets": [
+      "fact_nubrakes_marketing_performance_daily",
+      "fact_nubrakes_channel_market_kpi_daily"
+    ]
   },
   {
     "metric_id": "mac",
@@ -188,11 +436,29 @@
     "definition": "Average marketing cost required to generate one completed job",
     "unit": "usd",
     "format_type": "currency",
-    "formula_logic": "marketing_spend / completed_jobs",
+    "formula_logic": "marketing_spend / jobs_completed",
     "aggregation": "ratio",
     "good_direction": "down",
     "owner": "Marketing",
-    "tags": "mac|marketing acquisition cost|cost per completed job|cost per acquisition|cac|marketing cost per completion"
+    "tags": [
+      "mac",
+      "marketing acquisition cost",
+      "cost per completed job",
+      "cost per acquisition",
+      "cac",
+      "marketing cost per completion"
+    ],
+    "candidate_drivers": [
+      "marketing_spend",
+      "jobs_completed",
+      "conversion_rate",
+      "channel_mix",
+      "market_mix"
+    ],
+    "relevant_datasets": [
+      "fact_nubrakes_marketing_performance_daily",
+      "fact_nubrakes_channel_market_kpi_daily"
+    ]
   },
   {
     "metric_id": "non_google_leads",
@@ -205,7 +471,22 @@
     "aggregation": "sum",
     "good_direction": "up",
     "owner": "Marketing",
-    "tags": "non google leads|leads outside google|non-google inquiries|other channel leads|non google volume"
+    "tags": [
+      "non google leads",
+      "leads outside google",
+      "non-google inquiries",
+      "other channel leads",
+      "non google volume"
+    ],
+    "candidate_drivers": [
+      "leads",
+      "marketing_spend",
+      "channel_mix",
+      "market_mix"
+    ],
+    "relevant_datasets": [
+      "fact_nubrakes_channel_market_kpi_daily"
+    ]
   },
   {
     "metric_id": "google_leads",
@@ -218,7 +499,24 @@
     "aggregation": "sum",
     "good_direction": "up",
     "owner": "Marketing",
-    "tags": "google leads|google inquiries|google volume|leads from google|google ads leads|gbp leads|gmb leads"
+    "tags": [
+      "google leads",
+      "google inquiries",
+      "google volume",
+      "leads from google",
+      "google ads leads",
+      "gbp leads",
+      "gmb leads"
+    ],
+    "candidate_drivers": [
+      "leads",
+      "marketing_spend",
+      "channel_mix",
+      "market_mix"
+    ],
+    "relevant_datasets": [
+      "fact_nubrakes_channel_market_kpi_daily"
+    ]
   },
   {
     "metric_id": "net_contribution_profit",
@@ -231,7 +529,26 @@
     "aggregation": "derived",
     "good_direction": "up",
     "owner": "Finance",
-    "tags": "net contribution profit|contribution profit|ncp|net contribution|profit after direct costs"
+    "tags": [
+      "net contribution profit",
+      "contribution profit",
+      "ncp",
+      "net contribution",
+      "profit after direct costs"
+    ],
+    "candidate_drivers": [
+      "revenue",
+      "parts_cost_pct_revenue",
+      "labor_cost_pct_revenue",
+      "marketing_spend_pct_revenue",
+      "jobs_completed",
+      "aov"
+    ],
+    "relevant_datasets": [
+      "fact_nubrakes_channel_market_kpi_daily",
+      "fact_nubrakes_marketing_performance_daily",
+      "fact_nubrakes_supply_demand_daily"
+    ]
   },
   {
     "metric_id": "gross_margin_pct",
@@ -244,7 +561,25 @@
     "aggregation": "ratio",
     "good_direction": "up",
     "owner": "Finance",
-    "tags": "gross margin|gross margin percent|gross margin %|margin|gm%|gross profit margin"
+    "tags": [
+      "gross margin",
+      "gross margin percent",
+      "gross margin %",
+      "margin",
+      "gm%",
+      "gross profit margin"
+    ],
+    "candidate_drivers": [
+      "revenue",
+      "parts_cost_pct_revenue",
+      "labor_cost_pct_revenue",
+      "market_mix",
+      "aov"
+    ],
+    "relevant_datasets": [
+      "fact_nubrakes_channel_market_kpi_daily",
+      "fact_nubrakes_supply_demand_daily"
+    ]
   },
   {
     "metric_id": "parts_cost_pct_revenue",
@@ -257,7 +592,23 @@
     "aggregation": "ratio",
     "good_direction": "down",
     "owner": "Finance",
-    "tags": "parts cost % of revenue|parts percent of revenue|parts cost ratio|parts share of revenue|parts cost as % revenue"
+    "tags": [
+      "parts cost % of revenue",
+      "parts percent of revenue",
+      "parts cost ratio",
+      "parts share of revenue",
+      "parts cost as % revenue"
+    ],
+    "candidate_drivers": [
+      "revenue",
+      "gross_margin_pct",
+      "market_mix",
+      "aov"
+    ],
+    "relevant_datasets": [
+      "fact_nubrakes_channel_market_kpi_daily",
+      "fact_nubrakes_supply_demand_daily"
+    ]
   },
   {
     "metric_id": "labor_cost_pct_revenue",
@@ -270,7 +621,24 @@
     "aggregation": "ratio",
     "good_direction": "down",
     "owner": "Finance",
-    "tags": "labor cost % of revenue|labor percent of revenue|labor cost ratio|labor share of revenue|labor cost as % revenue"
+    "tags": [
+      "labor cost % of revenue",
+      "labor percent of revenue",
+      "labor cost ratio",
+      "labor share of revenue",
+      "labor cost as % revenue"
+    ],
+    "candidate_drivers": [
+      "revenue",
+      "gross_margin_pct",
+      "technician_utilization",
+      "ft_tech_utilization",
+      "pt_tech_utilization"
+    ],
+    "relevant_datasets": [
+      "fact_nubrakes_channel_market_kpi_daily",
+      "fact_nubrakes_supply_demand_daily"
+    ]
   },
   {
     "metric_id": "marketing_spend_pct_revenue",
@@ -283,7 +651,24 @@
     "aggregation": "ratio",
     "good_direction": "down",
     "owner": "Finance",
-    "tags": "marketing spend % of revenue|marketing spend percent of revenue|marketing spend ratio|marketing spend share of revenue|marketing spend as % revenue"
+    "tags": [
+      "marketing spend % of revenue",
+      "marketing spend percent of revenue",
+      "marketing spend ratio",
+      "marketing spend share of revenue",
+      "marketing spend as % revenue"
+    ],
+    "candidate_drivers": [
+      "marketing_spend",
+      "revenue",
+      "mac",
+      "conversion_rate",
+      "channel_mix"
+    ],
+    "relevant_datasets": [
+      "fact_nubrakes_marketing_performance_daily",
+      "fact_nubrakes_channel_market_kpi_daily"
+    ]
   },
   {
     "metric_id": "available_slots",
@@ -296,7 +681,24 @@
     "aggregation": "sum",
     "good_direction": "up",
     "owner": "Operations",
-    "tags": "available slots|open slots|appointment capacity|booking capacity|available appointments|open appointments"
+    "tags": [
+      "available slots",
+      "open slots",
+      "appointment capacity",
+      "booking capacity",
+      "available appointments",
+      "open appointments"
+    ],
+    "candidate_drivers": [
+      "jobs_booked",
+      "technician_utilization",
+      "ft_tech_utilization",
+      "pt_tech_utilization",
+      "market_mix"
+    ],
+    "relevant_datasets": [
+      "fact_nubrakes_supply_demand_daily"
+    ]
   },
   {
     "metric_id": "technician_utilization",
@@ -309,7 +711,24 @@
     "aggregation": "ratio",
     "good_direction": "up",
     "owner": "Operations",
-    "tags": "technician utilization|tech utilization|overall utilization|capacity utilization|used technician hours %"
+    "tags": [
+      "technician utilization",
+      "tech utilization",
+      "overall utilization",
+      "capacity utilization",
+      "used technician hours %"
+    ],
+    "candidate_drivers": [
+      "jobs_booked",
+      "jobs_completed",
+      "available_slots",
+      "ft_tech_utilization",
+      "pt_tech_utilization",
+      "market_mix"
+    ],
+    "relevant_datasets": [
+      "fact_nubrakes_supply_demand_daily"
+    ]
   },
   {
     "metric_id": "ft_tech_utilization",
@@ -322,7 +741,22 @@
     "aggregation": "ratio",
     "good_direction": "up",
     "owner": "Operations",
-    "tags": "ft tech utilization|full time tech utilization|full-time utilization|fte tech utilization|full time technician capacity used"
+    "tags": [
+      "ft tech utilization",
+      "full time tech utilization",
+      "full-time utilization",
+      "fte tech utilization",
+      "full time technician capacity used"
+    ],
+    "candidate_drivers": [
+      "technician_utilization",
+      "available_slots",
+      "jobs_completed",
+      "market_mix"
+    ],
+    "relevant_datasets": [
+      "fact_nubrakes_supply_demand_daily"
+    ]
   },
   {
     "metric_id": "pt_tech_utilization",
@@ -335,7 +769,22 @@
     "aggregation": "ratio",
     "good_direction": "up",
     "owner": "Operations",
-    "tags": "pt tech utilization|part time tech utilization|part-time utilization|pte tech utilization|part time technician capacity used"
+    "tags": [
+      "pt tech utilization",
+      "part time tech utilization",
+      "part-time utilization",
+      "pte tech utilization",
+      "part time technician capacity used"
+    ],
+    "candidate_drivers": [
+      "technician_utilization",
+      "available_slots",
+      "jobs_completed",
+      "market_mix"
+    ],
+    "relevant_datasets": [
+      "fact_nubrakes_supply_demand_daily"
+    ]
   },
   {
     "metric_id": "cancel_rate",
@@ -344,11 +793,30 @@
     "definition": "Percentage of booked jobs that were canceled",
     "unit": "percent",
     "format_type": "percent",
-    "formula_logic": "canceled_jobs / booked_jobs",
+    "formula_logic": "canceled_jobs / jobs_booked",
     "aggregation": "ratio",
     "good_direction": "down",
     "owner": "Operations",
-    "tags": "cancel rate|cancellation rate|booked cancel rate|booked jobs canceled %|cancel % of bookings|job cancellation rate"
+    "tags": [
+      "cancel rate",
+      "cancellation rate",
+      "booked cancel rate",
+      "booked jobs canceled %",
+      "cancel % of bookings",
+      "job cancellation rate"
+    ],
+    "candidate_drivers": [
+      "jobs_booked",
+      "jobs_completed",
+      "customer_cancel_rate",
+      "hq_cancel_rate",
+      "reschedule_rate",
+      "market_mix"
+    ],
+    "relevant_datasets": [
+      "fact_nubrakes_channel_market_kpi_daily",
+      "fact_nubrakes_supply_demand_daily"
+    ]
   },
   {
     "metric_id": "customer_cancel_rate",
@@ -357,11 +825,25 @@
     "definition": "Percentage of booked jobs canceled by customers",
     "unit": "percent",
     "format_type": "percent",
-    "formula_logic": "customer_cancels / booked_jobs",
+    "formula_logic": "customer_cancels / jobs_booked",
     "aggregation": "ratio",
     "good_direction": "down",
     "owner": "Operations",
-    "tags": "customer cancel rate|customer cancellation rate|customer canceled %|customer initiated cancels"
+    "tags": [
+      "customer cancel rate",
+      "customer cancellation rate",
+      "customer canceled %",
+      "customer initiated cancels"
+    ],
+    "candidate_drivers": [
+      "cancel_rate",
+      "jobs_booked",
+      "market_mix",
+      "channel_mix"
+    ],
+    "relevant_datasets": [
+      "fact_nubrakes_supply_demand_daily"
+    ]
   },
   {
     "metric_id": "hq_cancel_rate",
@@ -370,11 +852,26 @@
     "definition": "Percentage of booked jobs canceled by HQ or internal team",
     "unit": "percent",
     "format_type": "percent",
-    "formula_logic": "hq_cancels / booked_jobs",
+    "formula_logic": "hq_cancels / jobs_booked",
     "aggregation": "ratio",
     "good_direction": "down",
     "owner": "Operations",
-    "tags": "hq cancel rate|internal cancel rate|team cancel rate|ops cancel rate|hq initiated cancels"
+    "tags": [
+      "hq cancel rate",
+      "internal cancel rate",
+      "team cancel rate",
+      "ops cancel rate",
+      "hq initiated cancels"
+    ],
+    "candidate_drivers": [
+      "cancel_rate",
+      "jobs_booked",
+      "market_mix",
+      "available_slots"
+    ],
+    "relevant_datasets": [
+      "fact_nubrakes_supply_demand_daily"
+    ]
   },
   {
     "metric_id": "reschedule_rate",
@@ -383,11 +880,26 @@
     "definition": "Percentage of booked jobs that were rescheduled",
     "unit": "percent",
     "format_type": "percent",
-    "formula_logic": "rescheduled_jobs / booked_jobs",
+    "formula_logic": "rescheduled_jobs / jobs_booked",
     "aggregation": "ratio",
     "good_direction": "down",
     "owner": "Operations",
-    "tags": "reschedule rate|rescheduled jobs %|appointment reschedule rate|reschedule percentage"
+    "tags": [
+      "reschedule rate",
+      "rescheduled jobs %",
+      "appointment reschedule rate",
+      "reschedule percentage"
+    ],
+    "candidate_drivers": [
+      "jobs_booked",
+      "jobs_completed",
+      "customer_reschedule_rate",
+      "hq_reschedule_rate",
+      "market_mix"
+    ],
+    "relevant_datasets": [
+      "fact_nubrakes_supply_demand_daily"
+    ]
   },
   {
     "metric_id": "customer_reschedule_rate",
@@ -396,11 +908,24 @@
     "definition": "Percentage of booked jobs rescheduled by customers",
     "unit": "percent",
     "format_type": "percent",
-    "formula_logic": "customer_reschedules / booked_jobs",
+    "formula_logic": "customer_reschedules / jobs_booked",
     "aggregation": "ratio",
     "good_direction": "down",
     "owner": "Operations",
-    "tags": "customer reschedule rate|customer rescheduled %|customer initiated reschedules"
+    "tags": [
+      "customer reschedule rate",
+      "customer rescheduled %",
+      "customer initiated reschedules"
+    ],
+    "candidate_drivers": [
+      "reschedule_rate",
+      "jobs_booked",
+      "market_mix",
+      "channel_mix"
+    ],
+    "relevant_datasets": [
+      "fact_nubrakes_supply_demand_daily"
+    ]
   },
   {
     "metric_id": "hq_reschedule_rate",
@@ -409,10 +934,24 @@
     "definition": "Percentage of booked jobs rescheduled by HQ or internal team",
     "unit": "percent",
     "format_type": "percent",
-    "formula_logic": "hq_reschedules / booked_jobs",
+    "formula_logic": "hq_reschedules / jobs_booked",
     "aggregation": "ratio",
     "good_direction": "down",
     "owner": "Operations",
-    "tags": "hq reschedule rate|internal reschedule rate|team reschedule rate|hq initiated reschedules"
+    "tags": [
+      "hq reschedule rate",
+      "internal reschedule rate",
+      "team reschedule rate",
+      "hq initiated reschedules"
+    ],
+    "candidate_drivers": [
+      "reschedule_rate",
+      "jobs_booked",
+      "market_mix",
+      "available_slots"
+    ],
+    "relevant_datasets": [
+      "fact_nubrakes_supply_demand_daily"
+    ]
   }
 ]
