@@ -1229,6 +1229,24 @@ async function analyzeBusinessQuestion(
     };
   }
 
+const debugCurrent = {
+  rowCount: allCurrentRows.length,
+  leads: sumField(allCurrentRows, getMetricFieldNames("leads")),
+  jobsBooked: sumField(allCurrentRows, getMetricFieldNames("jobs_booked")),
+  jobsCompleted: sumField(allCurrentRows, getMetricFieldNames("jobs_completed")),
+};
+
+const debugPrior = {
+  rowCount: allPriorRows.length,
+  leads: sumField(allPriorRows, getMetricFieldNames("leads")),
+  jobsBooked: sumField(allPriorRows, getMetricFieldNames("jobs_booked")),
+  jobsCompleted: sumField(allPriorRows, getMetricFieldNames("jobs_completed")),
+};
+
+console.log("conversion debug current", debugCurrent);
+console.log("conversion debug prior", debugPrior);
+
+  
   const currentMetricValue = computeMetricValue(metric.metric_id, allCurrentRows);
   const priorMetricValue = computeMetricValue(metric.metric_id, allPriorRows);
   const deltaMetricValue = computeDelta(currentMetricValue, priorMetricValue);
@@ -1251,15 +1269,21 @@ async function analyzeBusinessQuestion(
   const metricFormat = metric.format_type || inferFormatType(metric.metric_id);
   const comparisonSource = kpiLoaded[0];
 
+  if (currentMetricValue !== null && priorMetricValue !== null) {
   observations.push(
-    currentMetricValue !== null
-      ? `${metric.metric_name} was ${formatMetricValue(currentMetricValue, metricFormat)} in ${
-          comparisonSource?.currentLabel || "current period"
-        } vs ${formatMetricValue(priorMetricValue, metricFormat)} in ${
-          comparisonSource?.priorLabel || "prior period"
-        } (${formatDeltaValue(deltaMetricValue, metricFormat)}).`
-      : `${metric.metric_name} could not be computed for the scoped periods.`
+    `${metric.metric_name} was ${formatMetricValue(currentMetricValue, metricFormat)} in ${
+      comparisonSource?.currentLabel || "current period"
+    } vs ${formatMetricValue(priorMetricValue, metricFormat)} in ${
+      comparisonSource?.priorLabel || "prior period"
+    } (${formatDeltaValue(deltaMetricValue, metricFormat)}).`
   );
+} else {
+  observations.push(
+    `${metric.metric_name} could not be computed from the scoped rows. Check leads and jobs_completed coverage for ${
+      comparisonSource?.currentLabel || "current period"
+    } and ${comparisonSource?.priorLabel || "prior period"}.`
+  );
+}
 
   const rankedDrivers = rankDriverObservations(
     driverObservations,
@@ -1578,14 +1602,25 @@ function getMetricFieldNames(metricId: string): string[] {
 
   const map: Record<string, string[]> = {
     leads: ["leads", "Leads"],
-    jobs_booked: ["jobs_booked", "Jobs Booked", "booked_jobs"],
-    jobs_completed: ["jobs_completed", "Jobs Completed", "completed_jobs"],
-    canceled_jobs: ["canceled_jobs", "Canceled Jobs", "cancelled_jobs"],
+    jobs_booked: ["jobs_booked", "Jobs Booked", "booked_jobs", "JobsBooked"],
+    jobs_completed: [
+      "jobs_completed",
+      "Jobs Completed",
+      "completed_jobs",
+      "JobsCompleted",
+    ],
+    canceled_jobs: [
+      "canceled_jobs",
+      "Canceled Jobs",
+      "cancelled_jobs",
+      "canceled",
+      "cancelled",
+    ],
     revenue: ["revenue", "Revenue"],
     impressions: ["impressions", "Impressions"],
     clicks: ["clicks", "Clicks"],
     marketing_spend: ["marketing_spend", "Marketing Spend"],
-    available_slots: ["available_slots", "Available Slots", "slots"],
+    available_slots: ["available_slots", "Available Slots", "slots", "Slots"],
     utilized_slots: ["utilized_slots", "Utilized Slots"],
     technician_utilization: [
       "technician_utilization",
@@ -1613,11 +1648,11 @@ function getMetricFieldNames(metricId: string): string[] {
 
   return map[m] || [metricId];
 }
-
 function computeMetricValue(metricId: string, rows: DatasetRow[]): number | null {
   const id = normalize(metricId);
 
   const directMetric = sumField(rows, getMetricFieldNames(metricId));
+
   if (
     [
       "leads",
@@ -1646,21 +1681,27 @@ function computeMetricValue(metricId: string, rows: DatasetRow[]): number | null
   const utilizedSlots = sumField(rows, getMetricFieldNames("utilized_slots"));
   const customerCancels = sumField(rows, getMetricFieldNames("customer_cancels"));
   const hqCancels = sumField(rows, getMetricFieldNames("hq_cancels"));
-  const customerReschedules = sumField(
-    rows,
-    getMetricFieldNames("customer_reschedules")
-  );
+  const customerReschedules = sumField(rows, getMetricFieldNames("customer_reschedules"));
   const hqReschedules = sumField(rows, getMetricFieldNames("hq_reschedules"));
 
   switch (id) {
-    case "booking_rate":
-      return leads ? jobsBooked / leads : null;
+    case "booking_rate": {
+      if (leads > 0) return jobsBooked / leads;
+      const directRate = sumField(rows, getMetricFieldNames("booking_rate"));
+      return directRate || null;
+    }
 
-    case "conversion_rate":
-      return leads ? jobsCompleted / leads : null;
+    case "conversion_rate": {
+      if (leads > 0) return jobsCompleted / leads;
+      const directRate = sumField(rows, getMetricFieldNames("conversion_rate"));
+      return directRate || null;
+    }
 
-    case "cancel_rate":
-      return jobsBooked ? canceledJobs / jobsBooked : null;
+    case "cancel_rate": {
+      if (jobsBooked > 0) return canceledJobs / jobsBooked;
+      const directRate = sumField(rows, getMetricFieldNames("cancel_rate"));
+      return directRate || null;
+    }
 
     case "cancel_outcome_rate":
       return jobsCompleted + canceledJobs
@@ -1695,9 +1736,7 @@ function computeMetricValue(metricId: string, rows: DatasetRow[]): number | null
       return directMetric || null;
 
     case "reschedule_rate":
-      if (jobsBooked > 0) {
-        return (customerReschedules + hqReschedules) / jobsBooked;
-      }
+      if (jobsBooked > 0) return (customerReschedules + hqReschedules) / jobsBooked;
       return directMetric || null;
 
     case "customer_reschedule_rate":
