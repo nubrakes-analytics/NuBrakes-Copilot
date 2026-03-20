@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   Send,
   Database,
@@ -41,50 +41,6 @@ function StatCard({ icon: Icon, label, value }) {
   );
 }
 
-function TablePreview({ rows }) {
-  const columns = useMemo(() => {
-    if (!rows?.length) return [];
-    return Object.keys(rows[0]);
-  }, [rows]);
-
-  if (!rows?.length) return null;
-
-  return (
-    <div className="overflow-hidden rounded-2xl border border-[#CDB7B7] bg-white">
-      <div className="overflow-x-auto">
-        <table className="min-w-full text-sm">
-          <thead className="bg-[#CDB7B7]/25 text-left text-[#817E7F]">
-            <tr>
-              {columns.map((col) => (
-                <th
-                  key={col}
-                  className="whitespace-nowrap px-4 py-3 font-medium"
-                >
-                  {col}
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {rows.map((row, idx) => (
-              <tr key={idx} className="border-t border-[#CDB7B7]/60">
-                {columns.map((col) => (
-                  <td
-                    key={col}
-                    className="whitespace-nowrap px-4 py-3 text-[#0E2468]"
-                  >
-                    {String(row[col] ?? "")}
-                  </td>
-                ))}
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    </div>
-  );
-}
-
 function MessageBubble({ message }) {
   const isUser = message.role === "user";
   const firstRow = message.meta?.rows?.[0] || null;
@@ -119,41 +75,30 @@ function MessageBubble({ message }) {
           {message.content}
         </div>
 
-        {!isUser && message.meta && (
-          <div className="mt-4 space-y-4">
-            <div className="flex items-center gap-2 text-xs font-medium uppercase tracking-wide text-[#817E7F]">
-              <Database className="h-4 w-4" />
-              Dataset used: {message.meta.dataset || "Approved dataset"}
-            </div>
+        {!isUser && (datasetLink || dashboardLink) && (
+          <div className="mt-4 flex flex-wrap gap-2">
+            {datasetLink && (
+              <a
+                href={datasetLink}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center gap-2 rounded-2xl bg-[#0E2468] px-4 py-2 text-sm text-white hover:bg-[#16358F]"
+              >
+                <LinkIcon className="h-4 w-4" />
+                Open dataset
+              </a>
+            )}
 
-            <TablePreview rows={message.meta.rows || []} />
-
-            {(datasetLink || dashboardLink) && (
-              <div className="flex flex-wrap gap-2">
-                {datasetLink && (
-                  <a
-                    href={datasetLink}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="inline-flex items-center gap-2 rounded-2xl bg-[#0E2468] px-4 py-2 text-sm text-white hover:bg-[#16358F]"
-                  >
-                    <LinkIcon className="h-4 w-4" />
-                    Open dataset
-                  </a>
-                )}
-
-                {dashboardLink && (
-                  <a
-                    href={dashboardLink}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="inline-flex items-center gap-2 rounded-2xl bg-[#E63F2B] px-4 py-2 text-sm text-white hover:bg-[#cf3826]"
-                  >
-                    <LinkIcon className="h-4 w-4" />
-                    Open dashboard
-                  </a>
-                )}
-              </div>
+            {dashboardLink && (
+              <a
+                href={dashboardLink}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center gap-2 rounded-2xl bg-[#E63F2B] px-4 py-2 text-sm text-white hover:bg-[#cf3826]"
+              >
+                <LinkIcon className="h-4 w-4" />
+                Open dashboard
+              </a>
             )}
           </div>
         )}
@@ -185,8 +130,6 @@ export default function NubrakesAICopilotFrontend() {
         return r.json();
       })
       .then((d) => {
-        console.log("dataset_list.json response:", d);
-
         const parsed = Array.isArray(d)
           ? d
           : d && Array.isArray(d.datasets)
