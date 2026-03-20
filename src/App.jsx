@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
   Send,
   Database,
@@ -6,7 +6,43 @@ import {
   Link as LinkIcon,
   BarChart3,
   Loader2,
+  RotateCcw,
 } from "lucide-react";
+
+type DatasetItem = {
+  sheet_name?: string;
+  dataset?: string;
+  link?: string;
+  description?: string;
+};
+
+type MessageMeta = {
+  dataset?: string;
+  rows?: Record<string, unknown>[];
+  dataset_link?: string | null;
+  dashboard_link?: string | null;
+  error?: boolean;
+};
+
+type ChatMessage = {
+  id: string;
+  role: "user" | "assistant";
+  content: string;
+  meta: MessageMeta | null;
+  createdAt: string;
+};
+
+type AIResponse = {
+  answer?: string;
+  dataset?: string;
+  dataset_used?: string;
+  rows?: Record<string, unknown>[];
+  supporting_rows?: Record<string, unknown>[];
+  dataset_link?: string | null;
+  link?: string | null;
+  dashboard_link?: string | null;
+  url?: string | null;
+};
 
 const EXAMPLES = [
   "What does average order value mean?",
@@ -16,7 +52,7 @@ const EXAMPLES = [
   "What was the referral revenue in February 2026?",
   "Why are completed jobs down?",
   "Which markets are underperforming?",
-  "What changed in lead mix this week?"
+  "What changed in lead mix this week?",
 ];
 
 const DATASET_LIST_URL =
@@ -25,9 +61,55 @@ const DATASET_LIST_URL =
 const AI_ENDPOINT =
   "https://nubrakes-copilot.jonathan-libiran.workers.dev/api/ai";
 
-const DATASETS_FALLBACK = [];
+const STORAGE_KEY = "nubrakes-ai-copilot-chat-v1";
 
-function StatCard({ icon: Icon, label, value }) {
+function createMessage(
+  role: "user" | "assistant",
+  content: string,
+  meta: MessageMeta | null = null
+): ChatMessage {
+  return {
+    id:
+      typeof crypto !== "undefined" && "randomUUID" in crypto
+        ? crypto.randomUUID()
+        : `${Date.now()}-${Math.random().toString(36).slice(2)}`,
+    role,
+    content,
+    meta,
+    createdAt: new Date().toISOString(),
+  };
+}
+
+function isValidHttpUrl(value: unknown): value is string {
+  if (typeof value !== "string" || !value.trim()) return false;
+  try {
+    const url = new URL(value);
+    return url.protocol === "http:" || url.protocol === "https:";
+  } catch {
+    return false;
+  }
+}
+
+function formatTime(iso: string) {
+  try {
+    return new Date(iso).toLocaleTimeString([], {
+      hour: "numeric",
+      minute: "2-digit",
+    });
+  } catch {
+    return "";
+  }
+}
+
+function StatCard({
+  icon: Icon,
+  label,
+  value,
+}: {
+  icon: React.ComponentType<{ className?: string }>;
+  label: string;
+  value: string;
+}) {
   return (
     <div className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-[#CDB7B7]">
       <div className="flex items-center gap-3">
@@ -45,22 +127,42 @@ function StatCard({ icon: Icon, label, value }) {
   );
 }
 
-function MessageBubble({ message }) {
+function MetadataPill({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-full bg-[#F7F2F0] px-3 py-1 text-[11px] font-medium text-[#0E2468] ring-1 ring-[#CDB7B7]">
+      <span className="opacity-70">{label}:</span> {value}
+    </div>
+  );
+}
+
+function MessageBubble({
+  message,
+  onRetry,
+}: {
+  message: ChatMessage;
+  onRetry?: (question: string) => void;
+}) {
   const isUser = message.role === "user";
   const firstRow = message.meta?.rows?.[0] || null;
 
-  const dashboardLink =
+  const dashboardLinkRaw =
     message.meta?.dashboard_link ||
     firstRow?.dashboard_link ||
-    firstRow?.dashboard_url ||
-    firstRow?.url ||
-    null;
+    firstRow?.dashboard_url;
 
-  const datasetLink =
+  const datasetLinkRaw =
     message.meta?.dataset_link ||
-    firstRow?.dataset_link ||
-    firstRow?.link ||
-    null;
+    firstRow?.dataset_link;
+
+  const dashboardLink = isValidHttpUrl(dashboardLinkRaw)
+    ? dashboardLinkRaw
+    : null;
+
+  const datasetLink = isValidHttpUrl(datasetLinkRaw) ? datasetLinkRaw : null;
+
+  const rowsCount = Array.isArray(message.meta?.rows)
+    ? message.meta?.rows?.length
+    : 0;
 
   return (
     <div className={`flex ${isUser ? "justify-end" : "justify-start"}`}>
@@ -71,13 +173,27 @@ function MessageBubble({ message }) {
             : "bg-white/80 text-[#0E2468] ring-1 ring-[#CDB7B7]"
         }`}
       >
-        <div className="mb-2 text-[11px] font-semibold uppercase tracking-[0.2em] opacity-70">
-          {isUser ? "You" : "NuBrakes AI Copilot"}
+        <div className="mb-2 flex items-center justify-between gap-3">
+          <div className="text-[11px] font-semibold uppercase tracking-[0.2em] opacity-70">
+            {isUser ? "You" : "NuBrakes AI Copilot"}
+          </div>
+          <div className="text-[11px] opacity-60">{formatTime(message.createdAt)}</div>
         </div>
 
         <div className="whitespace-pre-wrap text-sm leading-6">
           {message.content}
         </div>
+
+        {!isUser && (message.meta?.dataset || rowsCount > 0) && (
+          <div className="mt-3 flex flex-wrap gap-2">
+            {message.meta?.dataset ? (
+              <MetadataPill label="Dataset" value={message.meta.dataset} />
+            ) : null}
+            {rowsCount > 0 ? (
+              <MetadataPill label="Rows" value={String(rowsCount)} />
+            ) : null}
+          </div>
+        )}
 
         {!isUser && (datasetLink || dashboardLink) && (
           <div className="mt-4 flex flex-wrap gap-2">
@@ -106,34 +222,97 @@ function MessageBubble({ message }) {
             )}
           </div>
         )}
+
+        {!isUser && message.meta?.error && onRetry && (
+          <div className="mt-4">
+            <button
+              onClick={() => onRetry(message.content)}
+              className="inline-flex items-center gap-2 rounded-2xl bg-[#F7F2F0] px-4 py-2 text-sm text-[#0E2468] ring-1 ring-[#CDB7B7] transition hover:bg-[#efe7e3]"
+            >
+              <RotateCcw className="h-4 w-4" />
+              Retry
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );
 }
 
 export default function NubrakesAICopilotFrontend() {
-  const [messages, setMessages] = useState([
-    {
-      role: "assistant",
-      content:
-        "Hi — I’m your NuBrakes AI Copilot. Ask a question about metrics, markets, technicians, stores, dashboards, or datasets.",
-      meta: null,
-    },
-  ]);
+  const [messages, setMessages] = useState<ChatMessage[]>(() => {
+    if (typeof window === "undefined") {
+      return [
+        createMessage(
+          "assistant",
+          "Hi — I’m your NuBrakes AI Copilot. Ask about metrics, markets, stores, dashboards, technicians, channel performance, or which dataset to use."
+        ),
+      ];
+    }
+
+    try {
+      const raw = window.localStorage.getItem(STORAGE_KEY);
+      if (!raw) {
+        return [
+          createMessage(
+            "assistant",
+            "Hi — I’m your NuBrakes AI Copilot. Ask about metrics, markets, stores, dashboards, technicians, channel performance, or which dataset to use."
+          ),
+        ];
+      }
+      const parsed = JSON.parse(raw);
+      return Array.isArray(parsed) && parsed.length > 0
+        ? parsed
+        : [
+            createMessage(
+              "assistant",
+              "Hi — I’m your NuBrakes AI Copilot. Ask about metrics, markets, stores, dashboards, technicians, channel performance, or which dataset to use."
+            ),
+          ];
+    } catch {
+      return [
+        createMessage(
+          "assistant",
+          "Hi — I’m your NuBrakes AI Copilot. Ask about metrics, markets, stores, dashboards, technicians, channel performance, or which dataset to use."
+        ),
+      ];
+    }
+  });
+
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
-  const [datasets, setDatasets] = useState(DATASETS_FALLBACK);
-  const messagesEndRef = useRef(null);
+  const [datasets, setDatasets] = useState<DatasetItem[]>([]);
+  const [lastQuestion, setLastQuestion] = useState("");
+  const [datasetLoadError, setDatasetLoadError] = useState<string | null>(null);
+
+  const messagesEndRef = useRef<HTMLDivElement | null>(null);
+  const inputRef = useRef<HTMLTextAreaElement | null>(null);
+  const askAbortRef = useRef<AbortController | null>(null);
+
+  const datasetCount = useMemo(() => String(datasets.length), [datasets]);
 
   useEffect(() => {
-    fetch(DATASET_LIST_URL)
-      .then((r) => {
+    try {
+      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(messages));
+    } catch {
+      // ignore storage errors
+    }
+  }, [messages]);
+
+  useEffect(() => {
+    const controller = new AbortController();
+
+    async function loadDatasets() {
+      try {
+        setDatasetLoadError(null);
+
+        const r = await fetch(DATASET_LIST_URL, { signal: controller.signal });
         if (!r.ok) {
           throw new Error(`Failed to load dataset list: ${r.status}`);
         }
-        return r.json();
-      })
-      .then((d) => {
+
+        const d = await r.json();
+
         const parsed = Array.isArray(d)
           ? d
           : d && Array.isArray(d.datasets)
@@ -141,27 +320,47 @@ export default function NubrakesAICopilotFrontend() {
           : [];
 
         setDatasets(parsed);
-      })
-      .catch((err) => {
+      } catch (err) {
+        if ((err as Error).name === "AbortError") return;
         console.error("dataset_list.json load failed", err);
         setDatasets([]);
-      });
+        setDatasetLoadError("Could not load dataset list.");
+      }
+    }
+
+    loadDatasets();
+
+    return () => controller.abort();
   }, []);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, loading]);
 
-  const handleAsk = async (questionText) => {
-    const question = questionText.trim();
+  useEffect(() => {
+    inputRef.current?.focus();
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      askAbortRef.current?.abort();
+    };
+  }, []);
+
+  async function handleAsk(questionText?: string) {
+    const question = (questionText ?? input).trim();
     if (!question || loading) return;
 
-    setMessages((prev) => [
-      ...prev,
-      { role: "user", content: question, meta: null },
-    ]);
+    askAbortRef.current?.abort();
+    const controller = new AbortController();
+    askAbortRef.current = controller;
+
+    const userMessage = createMessage("user", question, null);
+
+    setMessages((prev) => [...prev, userMessage]);
     setInput("");
     setLoading(true);
+    setLastQuestion(question);
 
     try {
       const res = await fetch(AI_ENDPOINT, {
@@ -170,6 +369,7 @@ export default function NubrakesAICopilotFrontend() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({ question }),
+        signal: controller.signal,
       });
 
       if (!res.ok) {
@@ -177,42 +377,61 @@ export default function NubrakesAICopilotFrontend() {
         throw new Error(text || `Request failed with ${res.status}`);
       }
 
-      const data = await res.json();
+      const data: AIResponse = await res.json();
 
-      setMessages((prev) => [
-        ...prev,
+      const assistantMessage = createMessage(
+        "assistant",
+        data.answer || "No answer returned.",
         {
-          role: "assistant",
-          content: data.answer || "No answer returned.",
-          meta: {
-            dataset: data.dataset || data.dataset_used || "Approved dataset",
-            rows: data.rows || data.supporting_rows || [],
-            dataset_link: data.dataset_link || data.link || null,
-            dashboard_link: data.dashboard_link || data.url || null,
-          },
-        },
-      ]);
+          dataset: data.dataset || data.dataset_used || "Approved dataset",
+          rows: data.rows || data.supporting_rows || [],
+          dataset_link: data.dataset_link || data.link || null,
+          dashboard_link: data.dashboard_link || data.url || null,
+        }
+      );
+
+      setMessages((prev) => [...prev, assistantMessage]);
     } catch (error) {
+      if ((error as Error).name === "AbortError") return;
+
       console.error("AI request failed", error);
 
-      setMessages((prev) => [
-        ...prev,
+      const failedMessage = createMessage(
+        "assistant",
+        "I couldn’t get a response right now. Please try again. If this keeps happening, check whether the Worker and /api/ai endpoint are live and returning valid JSON.",
         {
-          role: "assistant",
-          content:
-            "I couldn't reach the live AI API. Please check that the Worker is deployed and that /api/ai is returning a valid response.",
-          meta: {
-            dataset: "Connection error",
-            rows: [],
-            dataset_link: null,
-            dashboard_link: null,
-          },
-        },
-      ]);
+          dataset: "Connection error",
+          rows: [],
+          dataset_link: null,
+          dashboard_link: null,
+          error: true,
+        }
+      );
+
+      setMessages((prev) => [...prev, failedMessage]);
     } finally {
       setLoading(false);
     }
-  };
+  }
+
+  function handleRetry() {
+    if (!lastQuestion || loading) return;
+    handleAsk(lastQuestion);
+  }
+
+  function clearChat() {
+    const starter = createMessage(
+      "assistant",
+      "Hi — I’m your NuBrakes AI Copilot. Ask about metrics, markets, stores, dashboards, technicians, channel performance, or which dataset to use."
+    );
+    setMessages([starter]);
+    setLastQuestion("");
+    try {
+      window.localStorage.setItem(STORAGE_KEY, JSON.stringify([starter]));
+    } catch {
+      // ignore storage errors
+    }
+  }
 
   return (
     <div className="min-h-screen bg-[#F7F2F0] text-[#0E2468]">
@@ -236,47 +455,79 @@ export default function NubrakesAICopilotFrontend() {
               </h1>
 
               <p className="mt-3 text-sm leading-6 text-[#817E7F]">
-                A user-friendly chat interface for querying approved NuBrakes
-                datasets and getting structured business answers.
+                A chat interface for querying approved NuBrakes datasets and
+                returning structured business answers.
               </p>
             </div>
           </div>
 
           <div className="grid gap-3">
-            <StatCard
-              icon={Database}
-              label="Datasets"
-              value={String(datasets.length)}
-            />
+            <StatCard icon={Database} label="Datasets" value={datasetCount} />
             <StatCard icon={BarChart3} label="Mode" value="Live AI Chat" />
             <StatCard icon={Bot} label="Backend" value="/api/ai" />
           </div>
 
           <div className="rounded-3xl bg-white p-5 shadow-sm ring-1 ring-[#CDB7B7]">
-            <div className="mb-3 text-sm font-semibold text-[#0E2468]">
-              Available datasets
+            <div className="mb-3 flex items-center justify-between gap-3">
+              <div className="text-sm font-semibold text-[#0E2468]">
+                Available datasets
+              </div>
+              <button
+                onClick={clearChat}
+                className="rounded-full bg-[#F7F2F0] px-3 py-1 text-[11px] font-medium text-[#0E2468] ring-1 ring-[#CDB7B7] transition hover:bg-[#efe7e3]"
+              >
+                Clear chat
+              </button>
             </div>
 
             <div className="space-y-2">
-              {datasets.length === 0 ? (
+              {datasetLoadError ? (
+                <div className="rounded-2xl border border-dashed border-[#CDB7B7] bg-[#F7F2F0] px-3 py-2 text-sm text-[#817E7F]">
+                  {datasetLoadError}
+                </div>
+              ) : datasets.length === 0 ? (
                 <div className="rounded-2xl border border-dashed border-[#CDB7B7] bg-[#F7F2F0] px-3 py-2 text-sm text-[#817E7F]">
                   No datasets loaded.
                 </div>
               ) : (
-                datasets.map((item, idx) => (
-                  <a
-                    key={item.sheet_name || item.dataset || idx}
-                    href={item.link || "#"}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="flex items-center justify-between rounded-2xl bg-[#CDB7B7]/25 px-3 py-2 text-xs text-[#0E2468] ring-1 ring-[#CDB7B7] transition hover:bg-[#CDB7B7]/40"
-                  >
-                    <span className="min-w-0 flex-1 break-all pr-3">
-                      {item.dataset || item.sheet_name || "Unnamed dataset"}
-                    </span>
-                    <LinkIcon className="h-4 w-4 shrink-0" />
-                  </a>
-                ))
+                datasets.map((item, idx) => {
+                  const title =
+                    item.dataset || item.sheet_name || "Unnamed dataset";
+                  const hasLink = isValidHttpUrl(item.link);
+
+                  if (hasLink) {
+                    return (
+                      <a
+                        key={`${title}-${idx}`}
+                        href={item.link}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="flex items-center justify-between rounded-2xl bg-[#CDB7B7]/25 px-3 py-2 text-xs text-[#0E2468] ring-1 ring-[#CDB7B7] transition hover:bg-[#CDB7B7]/40"
+                        title={item.description || title}
+                      >
+                        <span className="min-w-0 flex-1 break-all pr-3">
+                          {title}
+                        </span>
+                        <LinkIcon className="h-4 w-4 shrink-0" />
+                      </a>
+                    );
+                  }
+
+                  return (
+                    <div
+                      key={`${title}-${idx}`}
+                      className="flex items-center justify-between rounded-2xl bg-[#CDB7B7]/15 px-3 py-2 text-xs text-[#0E2468]/70 ring-1 ring-[#CDB7B7]"
+                      title={item.description || title}
+                    >
+                      <span className="min-w-0 flex-1 break-all pr-3">
+                        {title}
+                      </span>
+                      <span className="shrink-0 text-[10px] uppercase tracking-wide opacity-70">
+                        No link
+                      </span>
+                    </div>
+                  );
+                })
               )}
             </div>
           </div>
@@ -286,7 +537,8 @@ export default function NubrakesAICopilotFrontend() {
           <div className="border-b border-[#CDB7B7] p-5">
             <div className="text-lg font-semibold">Ask NuBrakes AI Copilot</div>
             <div className="mt-1 text-sm text-[#817E7F]">
-              Ask naturally, then wait for the answer like a normal chat.
+              Ask naturally about KPI definitions, dashboards, business drivers,
+              markets, or which dataset to use.
             </div>
           </div>
 
@@ -306,8 +558,12 @@ export default function NubrakesAICopilotFrontend() {
           </div>
 
           <div className="flex-1 space-y-4 overflow-y-auto p-5">
-            {messages.map((message, index) => (
-              <MessageBubble key={index} message={message} />
+            {messages.map((message) => (
+              <MessageBubble
+                key={message.id}
+                message={message}
+                onRetry={message.meta?.error ? handleRetry : undefined}
+              />
             ))}
 
             {loading && (
@@ -325,15 +581,17 @@ export default function NubrakesAICopilotFrontend() {
           <div className="border-t border-[#CDB7B7] p-5">
             <div className="flex gap-3">
               <textarea
+                ref={inputRef}
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={(e) => {
+                  if ((e.nativeEvent as KeyboardEvent).isComposing) return;
                   if (e.key === "Enter" && !e.shiftKey) {
                     e.preventDefault();
                     handleAsk(input);
                   }
                 }}
-                placeholder="Ask about metrics, markets, channel, dashboards, or datasets..."
+                placeholder="Ask about metrics, markets, channels, dashboards, or datasets..."
                 rows={2}
                 className="flex-1 resize-none rounded-2xl border border-[#CDB7B7] px-4 py-3 text-sm outline-none placeholder:text-[#817E7F]/80 focus:border-[#6E9CC0]"
               />
@@ -346,8 +604,19 @@ export default function NubrakesAICopilotFrontend() {
                 Send
               </button>
             </div>
-            <div className="mt-2 text-xs text-[#817E7F]">
-              Press Enter to send. Use Shift+Enter for a new line.
+
+            <div className="mt-2 flex items-center justify-between gap-3 text-xs text-[#817E7F]">
+              <span>Press Enter to send. Use Shift+Enter for a new line.</span>
+              {lastQuestion ? (
+                <button
+                  onClick={handleRetry}
+                  disabled={loading}
+                  className="inline-flex items-center gap-1 rounded-full px-2 py-1 text-[#0E2468] ring-1 ring-[#CDB7B7] transition hover:bg-[#F7F2F0] disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  <RotateCcw className="h-3.5 w-3.5" />
+                  Retry last question
+                </button>
+              ) : null}
             </div>
           </div>
         </main>
