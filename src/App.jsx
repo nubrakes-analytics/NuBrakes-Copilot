@@ -16,7 +16,6 @@ const EXAMPLES = [
   "Why is conversion rate down this March?",
   "What was the referral revenue in February 2026?",
   "Why are completed jobs down?",
-  "Which markets are underperforming?",
   "What changed in lead mix this week?",
 ];
 
