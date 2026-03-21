@@ -724,7 +724,7 @@ const TOOLS = [
       required: ["business_question"],
       additionalProperties: false,
     },
-  }
+  },
 ] as const;
 
 export default {
@@ -2127,18 +2127,6 @@ async function analyzeBusinessQuestion(
   };
 }
 
-async function analyzeMarketPerformance(
-  businessQuestion: string
-): Promise<AnalyzeMarketPerformanceResult> {
-  const metricResult = await findMetricDefinition(businessQuestion);
-  if (!metricResult.found) {
-    const fallbackMetric = await findMetricDefinition("jobs completed");
-    if (!fallbackMetric.found) return { found: false, message: metricResult.message };
-    return analyzeMarketPerformanceWithMetric(businessQuestion, fallbackMetric.metric, fallbackMetric.score);
-  }
-  return analyzeMarketPerformanceWithMetric(businessQuestion, metricResult.metric, metricResult.score);
-}
-
 async function analyzeMarketPerformanceWithMetric(
   businessQuestion: string,
   metric: MetricDefinition,
@@ -2146,22 +2134,38 @@ async function analyzeMarketPerformanceWithMetric(
 ): Promise<AnalyzeMarketPerformanceResult> {
   const primaryDatasetId = PRIMARY_DATASET_MAP[canonicalMetricId(metric.metric_id)];
   if (!primaryDatasetId) {
-    return { found: false, message: `No primary dataset mapping found for metric: ${metric.metric_id}` };
+    return {
+      found: false,
+      message: `No primary dataset mapping found for metric: ${metric.metric_id}`,
+    };
   }
 
   const datasets = await findDatasetsByIds([primaryDatasetId]);
   const dataset = datasets.find((d) => d.link);
 
   if (!dataset?.link) {
-    return { found: false, message: `No linked dataset found for metric: ${metric.metric_id}` };
+    return {
+      found: false,
+      message: `No linked dataset found for metric: ${metric.metric_id}`,
+    };
   }
 
   const loadedRows = await loadJsonFromUrl<DatasetRow[]>(String(dataset.link));
   const scope = parseBusinessQuestionScopeFromRows(businessQuestion, loadedRows);
+
   const supportsMarket = datasetSupportsAnyField(loadedRows, ["market", "Market"]);
+  const supportsChannel = datasetSupportsAnyField(loadedRows, [
+    "channel_category",
+    "Channel Category",
+    "channel",
+    "Channel",
+  ]);
 
   if (!supportsMarket) {
-    return { found: false, message: `Dataset ${primaryDatasetId} does not support market analysis.` };
+    return {
+      found: false,
+      message: `Dataset ${primaryDatasetId} does not support market analysis.`,
+    };
   }
 
   const filtered = loadedRows.filter((row) =>
@@ -2169,65 +2173,84 @@ async function analyzeMarketPerformanceWithMetric(
       row,
       { ...scope, market: undefined },
       true,
-      datasetSupportsAnyField(loadedRows, ["channel_category", "Channel Category", "channel", "Channel"])
+      supportsChannel
     )
   );
 
   const scoped = splitRowsCurrentVsPrior(filtered, scope.time_grain, scope.target_bucket);
 
   if (!scoped.current.length || !scoped.prior.length) {
-    return { found: false, message: `Insufficient current versus prior market rows for ${metric.metric_name}.` };
+    return {
+      found: false,
+      message: `Insufficient current versus prior market rows for ${metric.metric_name}.`,
+    };
   }
 
+  const currentByMarket = groupRowsByMarket(scoped.current);
+  const priorByMarket = groupRowsByMarket(scoped.prior);
+
   const markets = Array.from(
-    new Set(
-      [...scoped.current, ...scoped.prior]
-        .map((r) => String(r["market"] || r["Market"] || "").trim())
-        .filter(Boolean)
-    )
+    new Set([...currentByMarket.keys(), ...priorByMarket.keys()])
   );
 
   const formatType = metric.format_type || inferFormatType(metric.metric_id);
 
   const results = markets
-    .map((market) => {
-      const currentRows = scoped.current.filter(
-        (r) => normalize(String(r["market"] || r["Market"] || "")) === normalize(market)
-      );
-      const priorRows = scoped.prior.filter(
-        (r) => normalize(String(r["market"] || r["Market"] || "")) === normalize(market)
-      );
+    .map((marketKey) => {
+      const currentRows = currentByMarket.get(marketKey) || [];
+      const priorRows = priorByMarket.get(marketKey) || [];
 
-      const currentValue = maybeProjectMetricValue({
-        metricId: metric.metric_id,
-        grain: scope.time_grain,
-        allDatasetRows: filtered,
-        scopedBucketRows: currentRows,
-        targetBucket: scoped.current_label,
-      });
-
+      // For ranking underperforming markets, use raw period values.
+      // This avoids expensive pacing recomputation per market.
+      const currentValue = computeMetricValue(metric.metric_id, currentRows);
       const priorValue = computeMetricValue(metric.metric_id, priorRows);
       const deltaValue = computeDelta(currentValue, priorValue);
 
-      return { market, currentValue, priorValue, deltaValue };
+      const marketLabel =
+        currentRows[0]
+          ? String(currentRows[0]["market"] || currentRows[0]["Market"] || "").trim()
+          : priorRows[0]
+          ? String(priorRows[0]["market"] || priorRows[0]["Market"] || "").trim()
+          : marketKey;
+
+      return {
+        market: marketLabel,
+        currentValue,
+        priorValue,
+        deltaValue,
+      };
     })
     .filter((r) => r.currentValue !== null || r.priorValue !== null);
 
   if (!results.length) {
-    return { found: false, message: `No market-level results found for ${metric.metric_name}.` };
+    return {
+      found: false,
+      message: `No market-level results found for ${metric.metric_name}.`,
+    };
   }
 
   const underperforming = results
     .filter((r) => isUnderperformingMetric(metric, r.currentValue, r.priorValue))
-    .sort((a, b) => underperformanceScore(metric, b.currentValue, b.priorValue) - underperformanceScore(metric, a.currentValue, a.priorValue));
+    .sort(
+      (a, b) =>
+        underperformanceScore(metric, b.currentValue, b.priorValue) -
+        underperformanceScore(metric, a.currentValue, a.priorValue)
+    );
 
   const top = underperforming.slice(0, 5);
-  const observations = top.map((row) =>
-    `${row.market}: ${formatMetricValue(row.currentValue, formatType)} vs ${formatMetricValue(row.priorValue, formatType)} (${formatDeltaValue(row.deltaValue, formatType)}).`
+
+  const observations = top.map(
+    (row) =>
+      `${row.market}: ${formatMetricValue(row.currentValue, formatType)} vs ${formatMetricValue(
+        row.priorValue,
+        formatType
+      )} (${formatDeltaValue(row.deltaValue, formatType)}).`
   );
 
   const summary = top.length
-    ? `Most underperforming markets for ${metric.metric_name} in ${scoped.current_label} versus ${scoped.prior_label}: ${top.map((r) => r.market).join(", ")}.`
+    ? `Most underperforming markets for ${metric.metric_name} in ${scoped.current_label} versus ${scoped.prior_label}: ${top
+        .map((r) => r.market)
+        .join(", ")}.`
     : `No markets appear to be underperforming for ${metric.metric_name} in ${scoped.current_label} versus ${scoped.prior_label}.`;
 
   const confidence = buildConfidenceScore({
@@ -2270,6 +2293,25 @@ async function analyzeMarketPerformanceWithMetric(
       confidence,
     },
   };
+}
+
+function groupRowsByMarket(rows: DatasetRow[]): Map<string, DatasetRow[]> {
+  const map = new Map<string, DatasetRow[]>();
+
+  for (const row of rows) {
+    const market = String(row["market"] || row["Market"] || "").trim();
+    if (!market) continue;
+
+    const key = normalize(market);
+    const existing = map.get(key);
+    if (existing) {
+      existing.push(row);
+    } else {
+      map.set(key, [row]);
+    }
+  }
+
+  return map;
 }
 
 async function analyzeMixChange(
