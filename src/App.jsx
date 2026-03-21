@@ -64,16 +64,18 @@ function formatTime(iso) {
 
 function StatCard({ icon: Icon, label, value }) {
   return (
-    <div className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-[#CDB7B7]">
+    <div className="rounded-2xl bg-white p-3 shadow-sm ring-1 ring-[#CDB7B7] sm:p-4">
       <div className="flex items-center gap-3">
         <div className="rounded-2xl bg-[#CDB7B7]/25 p-2">
-          <Icon className="h-5 w-5 text-[#0E2468]" />
+          <Icon className="h-4 w-4 text-[#0E2468] sm:h-5 sm:w-5" />
         </div>
-        <div>
-          <div className="text-xs uppercase tracking-wide text-[#817E7F]">
+        <div className="min-w-0">
+          <div className="text-[10px] uppercase tracking-wide text-[#817E7F] sm:text-xs">
             {label}
           </div>
-          <div className="text-lg font-semibold text-[#0E2468]">{value}</div>
+          <div className="truncate text-base font-semibold text-[#0E2468] sm:text-lg">
+            {value}
+          </div>
         </div>
       </div>
     </div>
@@ -97,9 +99,7 @@ function MessageBubble({ message, onRetry }) {
     firstRow?.dashboard_link ||
     firstRow?.dashboard_url;
 
-  const datasetLinkRaw =
-    message.meta?.dataset_link ||
-    firstRow?.dataset_link;
+  const datasetLinkRaw = message.meta?.dataset_link || firstRow?.dataset_link;
 
   const dashboardLink = isValidHttpUrl(dashboardLinkRaw)
     ? dashboardLinkRaw
@@ -114,20 +114,22 @@ function MessageBubble({ message, onRetry }) {
   return (
     <div className={`flex ${isUser ? "justify-end" : "justify-start"}`}>
       <div
-        className={`max-w-3xl rounded-3xl px-4 py-3 ${
+        className={`w-fit max-w-[92%] rounded-3xl px-3 py-3 sm:max-w-2xl sm:px-4 lg:max-w-3xl ${
           isUser
             ? "bg-[#0E2468] text-white"
-            : "bg-white/80 text-[#0E2468] ring-1 ring-[#CDB7B7]"
+            : "bg-white/90 text-[#0E2468] ring-1 ring-[#CDB7B7]"
         }`}
       >
         <div className="mb-2 flex items-center justify-between gap-3">
-          <div className="text-[11px] font-semibold uppercase tracking-[0.2em] opacity-70">
+          <div className="text-[10px] font-semibold uppercase tracking-[0.18em] opacity-70 sm:text-[11px]">
             {isUser ? "You" : "NuBrakes AI Copilot"}
           </div>
-          <div className="text-[11px] opacity-60">{formatTime(message.createdAt)}</div>
+          <div className="shrink-0 text-[10px] opacity-60 sm:text-[11px]">
+            {formatTime(message.createdAt)}
+          </div>
         </div>
 
-        <div className="whitespace-pre-wrap text-sm leading-6">
+        <div className="whitespace-pre-wrap break-words text-sm leading-6">
           {message.content}
         </div>
 
@@ -149,7 +151,7 @@ function MessageBubble({ message, onRetry }) {
                 href={datasetLink}
                 target="_blank"
                 rel="noreferrer"
-                className="inline-flex items-center gap-2 rounded-2xl bg-[#0E2468] px-4 py-2 text-sm text-white hover:bg-[#16358F]"
+                className="inline-flex items-center gap-2 rounded-2xl bg-[#0E2468] px-3 py-2 text-sm text-white hover:bg-[#16358F] sm:px-4"
               >
                 <LinkIcon className="h-4 w-4" />
                 Open dataset
@@ -161,7 +163,7 @@ function MessageBubble({ message, onRetry }) {
                 href={dashboardLink}
                 target="_blank"
                 rel="noreferrer"
-                className="inline-flex items-center gap-2 rounded-2xl bg-[#E63F2B] px-4 py-2 text-sm text-white hover:bg-[#cf3826]"
+                className="inline-flex items-center gap-2 rounded-2xl bg-[#E63F2B] px-3 py-2 text-sm text-white hover:bg-[#cf3826] sm:px-4"
               >
                 <LinkIcon className="h-4 w-4" />
                 Open dashboard
@@ -187,42 +189,24 @@ function MessageBubble({ message, onRetry }) {
 }
 
 export default function NubrakesAICopilotFrontend() {
+  const starterMessage =
+    "Hi — I’m your NuBrakes AI Copilot. Ask about metrics, markets, stores, dashboards, technicians, channel performance, or which dataset to use.";
+
   const [messages, setMessages] = useState(() => {
     if (typeof window === "undefined") {
-      return [
-        createMessage(
-          "assistant",
-          "Hi — I’m your NuBrakes AI Copilot. Ask about metrics, markets, stores, dashboards, technicians, channel performance, or which dataset to use."
-        ),
-      ];
+      return [createMessage("assistant", starterMessage)];
     }
 
     try {
       const raw = window.localStorage.getItem(STORAGE_KEY);
-      if (!raw) {
-        return [
-          createMessage(
-            "assistant",
-            "Hi — I’m your NuBrakes AI Copilot. Ask about metrics, markets, stores, dashboards, technicians, channel performance, or which dataset to use."
-          ),
-        ];
-      }
+      if (!raw) return [createMessage("assistant", starterMessage)];
+
       const parsed = JSON.parse(raw);
       return Array.isArray(parsed) && parsed.length > 0
         ? parsed
-        : [
-            createMessage(
-              "assistant",
-              "Hi — I’m your NuBrakes AI Copilot. Ask about metrics, markets, stores, dashboards, technicians, channel performance, or which dataset to use."
-            ),
-          ];
+        : [createMessage("assistant", starterMessage)];
     } catch {
-      return [
-        createMessage(
-          "assistant",
-          "Hi — I’m your NuBrakes AI Copilot. Ask about metrics, markets, stores, dashboards, technicians, channel performance, or which dataset to use."
-        ),
-      ];
+      return [createMessage("assistant", starterMessage)];
     }
   });
 
@@ -281,7 +265,7 @@ export default function NubrakesAICopilotFrontend() {
   }, []);
 
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
   }, [messages, loading]);
 
   useEffect(() => {
@@ -367,12 +351,10 @@ export default function NubrakesAICopilotFrontend() {
   }
 
   function clearChat() {
-    const starter = createMessage(
-      "assistant",
-      "Hi — I’m your NuBrakes AI Copilot. Ask about metrics, markets, stores, dashboards, technicians, channel performance, or which dataset to use."
-    );
+    const starter = createMessage("assistant", starterMessage);
     setMessages([starter]);
     setLastQuestion("");
+
     try {
       window.localStorage.setItem(STORAGE_KEY, JSON.stringify([starter]));
     } catch {
@@ -381,192 +363,197 @@ export default function NubrakesAICopilotFrontend() {
   }
 
   return (
-    <div className="min-h-screen bg-[#F7F2F0] text-[#0E2468]">
-      <div className="mx-auto grid max-w-7xl gap-6 p-6 lg:grid-cols-[320px_minmax(0,1fr)]">
-        <aside className="space-y-6">
-          <div className="rounded-3xl bg-white p-6 shadow-sm ring-1 ring-[#CDB7B7]">
-            <div>
-              <div className="mb-3 inline-flex items-center gap-3 rounded-full bg-white/20 px-3 py-1">
+    <div className="min-h-dvh bg-[#F7F2F0] text-[#0E2468]">
+      <div className="mx-auto max-w-7xl p-3 sm:p-4 lg:p-6">
+        <div className="grid grid-cols-1 gap-4 xl:grid-cols-[320px_minmax(0,1fr)] xl:gap-6">
+          <aside className="order-2 space-y-4 xl:order-1 xl:sticky xl:top-6 xl:self-start">
+            <div className="rounded-3xl bg-white p-4 shadow-sm ring-1 ring-[#CDB7B7] sm:p-6">
+              <div className="mb-4 flex items-center gap-3">
                 <img
                   src="/nubrakes-ai-copilot.svg"
                   alt="NuBrakes AI Copilot logo"
-                  className="h-16 w-20 object-contain"
+                  className="h-12 w-14 shrink-0 object-contain sm:h-16 sm:w-20"
                 />
-                <span className="text-sm font-semibold text-[#0E2468]">
-                  NuBrakes AI Copilot
-                </span>
+                <div className="min-w-0">
+                  <div className="text-sm font-semibold text-[#0E2468] sm:text-base">
+                    NuBrakes AI Copilot
+                  </div>
+                  <div className="text-xs text-[#817E7F] sm:text-sm">
+                    Self-serve analytics chat
+                  </div>
+                </div>
               </div>
 
-              <h1 className="text-2xl font-semibold text-[#0E2468]">
-                Self-serve analytics chat
-              </h1>
-
-              <p className="mt-3 text-sm leading-6 text-[#817E7F]">
+              <p className="text-sm leading-6 text-[#817E7F]">
                 A chat interface for querying approved NuBrakes datasets and
                 returning structured business answers.
               </p>
             </div>
-          </div>
 
-          <div className="grid gap-3">
-            <StatCard icon={Database} label="Datasets" value={datasetCount} />
-            <StatCard icon={BarChart3} label="Mode" value="Live AI Chat" />
-            <StatCard icon={Bot} label="Backend" value="/api/ai" />
-          </div>
-
-          <div className="rounded-3xl bg-white p-5 shadow-sm ring-1 ring-[#CDB7B7]">
-            <div className="mb-3 flex items-center justify-between gap-3">
-              <div className="text-sm font-semibold text-[#0E2468]">
-                Available datasets
-              </div>
-              <button
-                onClick={clearChat}
-                className="rounded-full bg-[#F7F2F0] px-3 py-1 text-[11px] font-medium text-[#0E2468] ring-1 ring-[#CDB7B7] transition hover:bg-[#efe7e3]"
-              >
-                Clear chat
-              </button>
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-3 xl:grid-cols-1">
+              <StatCard icon={Database} label="Datasets" value={datasetCount} />
+              <StatCard icon={BarChart3} label="Mode" value="Live AI Chat" />
+              <StatCard icon={Bot} label="Backend" value="/api/ai" />
             </div>
 
-            <div className="space-y-2">
-              {datasetLoadError ? (
-                <div className="rounded-2xl border border-dashed border-[#CDB7B7] bg-[#F7F2F0] px-3 py-2 text-sm text-[#817E7F]">
-                  {datasetLoadError}
+            <div className="rounded-3xl bg-white p-4 shadow-sm ring-1 ring-[#CDB7B7] sm:p-5">
+              <div className="mb-3 flex items-center justify-between gap-3">
+                <div className="text-sm font-semibold text-[#0E2468]">
+                  Available datasets
                 </div>
-              ) : datasets.length === 0 ? (
-                <div className="rounded-2xl border border-dashed border-[#CDB7B7] bg-[#F7F2F0] px-3 py-2 text-sm text-[#817E7F]">
-                  No datasets loaded.
-                </div>
-              ) : (
-                datasets.map((item, idx) => {
-                  const title =
-                    item.dataset || item.sheet_name || "Unnamed dataset";
-                  const hasLink = isValidHttpUrl(item.link);
+                <button
+                  onClick={clearChat}
+                  className="shrink-0 rounded-full bg-[#F7F2F0] px-3 py-1 text-[11px] font-medium text-[#0E2468] ring-1 ring-[#CDB7B7] transition hover:bg-[#efe7e3]"
+                >
+                  Clear chat
+                </button>
+              </div>
 
-                  if (hasLink) {
+              <div className="max-h-56 space-y-2 overflow-y-auto pr-1 sm:max-h-64 xl:max-h-[42dvh]">
+                {datasetLoadError ? (
+                  <div className="rounded-2xl border border-dashed border-[#CDB7B7] bg-[#F7F2F0] px-3 py-2 text-sm text-[#817E7F]">
+                    {datasetLoadError}
+                  </div>
+                ) : datasets.length === 0 ? (
+                  <div className="rounded-2xl border border-dashed border-[#CDB7B7] bg-[#F7F2F0] px-3 py-2 text-sm text-[#817E7F]">
+                    No datasets loaded.
+                  </div>
+                ) : (
+                  datasets.map((item, idx) => {
+                    const title =
+                      item.dataset || item.sheet_name || "Unnamed dataset";
+                    const hasLink = isValidHttpUrl(item.link);
+
+                    if (hasLink) {
+                      return (
+                        <a
+                          key={`${title}-${idx}`}
+                          href={item.link}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="flex items-center justify-between rounded-2xl bg-[#CDB7B7]/25 px-3 py-2 text-xs text-[#0E2468] ring-1 ring-[#CDB7B7] transition hover:bg-[#CDB7B7]/40"
+                          title={item.description || title}
+                        >
+                          <span className="min-w-0 flex-1 break-all pr-3">
+                            {title}
+                          </span>
+                          <LinkIcon className="h-4 w-4 shrink-0" />
+                        </a>
+                      );
+                    }
+
                     return (
-                      <a
+                      <div
                         key={`${title}-${idx}`}
-                        href={item.link}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="flex items-center justify-between rounded-2xl bg-[#CDB7B7]/25 px-3 py-2 text-xs text-[#0E2468] ring-1 ring-[#CDB7B7] transition hover:bg-[#CDB7B7]/40"
+                        className="flex items-center justify-between rounded-2xl bg-[#CDB7B7]/15 px-3 py-2 text-xs text-[#0E2468]/70 ring-1 ring-[#CDB7B7]"
                         title={item.description || title}
                       >
                         <span className="min-w-0 flex-1 break-all pr-3">
                           {title}
                         </span>
-                        <LinkIcon className="h-4 w-4 shrink-0" />
-                      </a>
+                        <span className="shrink-0 text-[10px] uppercase tracking-wide opacity-70">
+                          No link
+                        </span>
+                      </div>
                     );
-                  }
-
-                  return (
-                    <div
-                      key={`${title}-${idx}`}
-                      className="flex items-center justify-between rounded-2xl bg-[#CDB7B7]/15 px-3 py-2 text-xs text-[#0E2468]/70 ring-1 ring-[#CDB7B7]"
-                      title={item.description || title}
-                    >
-                      <span className="min-w-0 flex-1 break-all pr-3">
-                        {title}
-                      </span>
-                      <span className="shrink-0 text-[10px] uppercase tracking-wide opacity-70">
-                        No link
-                      </span>
-                    </div>
-                  );
-                })
-              )}
-            </div>
-          </div>
-        </aside>
-
-        <main className="flex h-[85vh] flex-col rounded-3xl bg-white shadow-sm ring-1 ring-[#CDB7B7]">
-          <div className="border-b border-[#CDB7B7] p-5">
-            <div className="text-lg font-semibold">Ask NuBrakes AI Copilot</div>
-            <div className="mt-1 text-sm text-[#817E7F]">
-              Ask naturally about KPI definitions, dashboards, business drivers,
-              markets, or which dataset to use.
-            </div>
-          </div>
-
-          <div className="border-b border-[#CDB7B7] p-5">
-            <div className="flex flex-wrap gap-2">
-              {EXAMPLES.map((example) => (
-                <button
-                  key={example}
-                  onClick={() => handleAsk(example)}
-                  disabled={loading}
-                  className="rounded-full bg-white px-3 py-2 text-sm text-[#0E2468] ring-1 ring-[#CDB7B7] transition hover:bg-[#CDB7B7]/40 disabled:cursor-not-allowed disabled:opacity-50"
-                >
-                  {example}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <div className="flex-1 space-y-4 overflow-y-auto p-5">
-            {messages.map((message) => (
-              <MessageBubble
-                key={message.id}
-                message={message}
-                onRetry={message.meta?.error ? handleRetry : undefined}
-              />
-            ))}
-
-            {loading && (
-              <div className="flex justify-start">
-                <div className="inline-flex items-center gap-2 rounded-3xl bg-white px-4 py-3 text-sm text-[#0E2468] ring-1 ring-[#CDB7B7]">
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                  Thinking...
-                </div>
+                  })
+                )}
               </div>
-            )}
+            </div>
+          </aside>
 
-            <div ref={messagesEndRef} />
-          </div>
-
-          <div className="border-t border-[#CDB7B7] p-5">
-            <div className="flex gap-3">
-              <textarea
-                ref={inputRef}
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.nativeEvent.isComposing) return;
-                  if (e.key === "Enter" && !e.shiftKey) {
-                    e.preventDefault();
-                    handleAsk(input);
-                  }
-                }}
-                placeholder="Ask about metrics, markets, channels, dashboards, or datasets..."
-                rows={2}
-                className="flex-1 resize-none rounded-2xl border border-[#CDB7B7] px-4 py-3 text-sm outline-none placeholder:text-[#817E7F]/80 focus:border-[#6E9CC0]"
-              />
-              <button
-                onClick={() => handleAsk(input)}
-                disabled={loading || !input.trim()}
-                className="inline-flex items-center gap-2 rounded-2xl bg-[#0E2468] px-5 py-3 text-sm font-medium text-white transition hover:bg-[#16358F] disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                <Send className="h-4 w-4" />
-                Send
-              </button>
+          <main className="order-1 flex min-h-[75dvh] flex-col overflow-hidden rounded-3xl bg-white shadow-sm ring-1 ring-[#CDB7B7] xl:order-2 xl:h-[calc(100dvh-3rem)]">
+            <div className="border-b border-[#CDB7B7] px-4 py-4 sm:px-5">
+              <div className="text-base font-semibold sm:text-lg">
+                Ask NuBrakes AI Copilot
+              </div>
+              <div className="mt-1 text-sm text-[#817E7F]">
+                Ask naturally about KPI definitions, dashboards, business
+                drivers, markets, or which dataset to use.
+              </div>
             </div>
 
-            <div className="mt-2 flex items-center justify-between gap-3 text-xs text-[#817E7F]">
-              <span>Press Enter to send. Use Shift+Enter for a new line.</span>
-              {lastQuestion ? (
+            <div className="border-b border-[#CDB7B7] px-3 py-3 sm:px-5 sm:py-4">
+              <div className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                {EXAMPLES.map((example) => (
+                  <button
+                    key={example}
+                    onClick={() => handleAsk(example)}
+                    disabled={loading}
+                    className="shrink-0 rounded-full bg-white px-3 py-2 text-sm text-[#0E2468] ring-1 ring-[#CDB7B7] transition hover:bg-[#CDB7B7]/40 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    {example}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="flex-1 overflow-y-auto px-3 py-4 sm:px-5">
+              <div className="space-y-4">
+                {messages.map((message) => (
+                  <MessageBubble
+                    key={message.id}
+                    message={message}
+                    onRetry={message.meta?.error ? handleRetry : undefined}
+                  />
+                ))}
+
+                {loading && (
+                  <div className="flex justify-start">
+                    <div className="inline-flex items-center gap-2 rounded-3xl bg-white px-4 py-3 text-sm text-[#0E2468] ring-1 ring-[#CDB7B7]">
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      Thinking...
+                    </div>
+                  </div>
+                )}
+
+                <div ref={messagesEndRef} />
+              </div>
+            </div>
+
+            <div className="border-t border-[#CDB7B7] bg-white px-3 py-3 sm:px-5 sm:py-4">
+              <div className="flex flex-col gap-3 sm:flex-row">
+                <textarea
+                  ref={inputRef}
+                  value={input}
+                  onChange={(e) => setInput(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.nativeEvent.isComposing) return;
+                    if (e.key === "Enter" && !e.shiftKey) {
+                      e.preventDefault();
+                      handleAsk(input);
+                    }
+                  }}
+                  placeholder="Ask about metrics, markets, channels, dashboards, or datasets..."
+                  rows={2}
+                  className="min-h-[52px] w-full resize-none rounded-2xl border border-[#CDB7B7] px-4 py-3 text-sm outline-none placeholder:text-[#817E7F]/80 focus:border-[#6E9CC0] sm:flex-1"
+                />
                 <button
-                  onClick={handleRetry}
-                  disabled={loading}
-                  className="inline-flex items-center gap-1 rounded-full px-2 py-1 text-[#0E2468] ring-1 ring-[#CDB7B7] transition hover:bg-[#F7F2F0] disabled:cursor-not-allowed disabled:opacity-50"
+                  onClick={() => handleAsk(input)}
+                  disabled={loading || !input.trim()}
+                  className="inline-flex h-[52px] items-center justify-center gap-2 rounded-2xl bg-[#0E2468] px-5 py-3 text-sm font-medium text-white transition hover:bg-[#16358F] disabled:cursor-not-allowed disabled:opacity-50 sm:self-end"
                 >
-                  <RotateCcw className="h-3.5 w-3.5" />
-                  Retry last question
+                  <Send className="h-4 w-4" />
+                  Send
                 </button>
-              ) : null}
+              </div>
+
+              <div className="mt-2 flex flex-col gap-2 text-xs text-[#817E7F] sm:flex-row sm:items-center sm:justify-between">
+                <span>Press Enter to send. Use Shift+Enter for a new line.</span>
+                {lastQuestion ? (
+                  <button
+                    onClick={handleRetry}
+                    disabled={loading}
+                    className="inline-flex items-center gap-1 self-start rounded-full px-2 py-1 text-[#0E2468] ring-1 ring-[#CDB7B7] transition hover:bg-[#F7F2F0] disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    <RotateCcw className="h-3.5 w-3.5" />
+                    Retry last question
+                  </button>
+                ) : null}
+              </div>
             </div>
-          </div>
-        </main>
+          </main>
+        </div>
       </div>
     </div>
   );
