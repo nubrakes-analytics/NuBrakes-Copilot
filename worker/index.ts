@@ -576,7 +576,8 @@ async function handleRequest(request: Request, env: Env): Promise<Response> {
       hasPhrase("what was") ||
       hasPhrase("how much") ||
       hasPhrase("show me") ||
-      hasPhrase("give me")) &&
+      hasPhrase("give me") ||
+      hasPhrase("trend")) &&
     (hasWord("revenue") ||
       hasWord("aov") ||
       hasWord("leads") ||
@@ -589,8 +590,8 @@ async function handleRequest(request: Request, env: Env): Promise<Response> {
       hasPhrase("marketing spend") ||
       hasPhrase("jobs completed") ||
       hasPhrase("jobs booked") ||
-      hasPhrase("available slots") ||
-      hasPhrase("available slot"));
+      hasPhrase("available slot") ||
+      hasPhrase("available slots"));
 
   const directDatasetMatch = await tryDirectDatasetShortcut(userMessage);
 
@@ -1626,6 +1627,8 @@ async function analyzeBusinessQuestion(
 
   const allCurrentRows = kpiLoaded.flatMap((d) => d.currentRows);
   const allPriorRows = kpiLoaded.flatMap((d) => d.priorRows);
+  const kpiAllRows = kpiLoaded.flatMap((d) => d.filteredRows);
+  const comparisonSource = kpiLoaded[0];
 
   if (!allCurrentRows.length) {
     return {
@@ -1641,7 +1644,14 @@ async function analyzeBusinessQuestion(
     };
   }
 
-  const currentMetricValue = computeMetricValue(metric.metric_id, allCurrentRows);
+  const currentMetricValue = maybeProjectMetricValue({
+    metricId: metric.metric_id,
+    grain: scope.time_grain,
+    allDatasetRows: kpiAllRows,
+    scopedBucketRows: allCurrentRows,
+    targetBucket: comparisonSource?.currentLabel,
+  });
+
   const priorMetricValue = computeMetricValue(metric.metric_id, allPriorRows);
   const deltaMetricValue = computeDelta(currentMetricValue, priorMetricValue);
   const metricChangeDirection = deriveMetricChangeDirection(
@@ -1714,7 +1724,14 @@ async function analyzeBusinessQuestion(
       const driverCurrentRows = driverLoaded.flatMap((d) => d.currentRows);
       const driverPriorRows = driverLoaded.flatMap((d) => d.priorRows);
 
-      const currentValue = computeMetricValue(driverId, driverCurrentRows);
+      const currentValue = maybeProjectMetricValue({
+        metricId: driverId,
+        grain: scope.time_grain,
+        allDatasetRows: driverLoaded.flatMap((d) => d.filteredRows),
+        scopedBucketRows: driverCurrentRows,
+        targetBucket: driverLoaded[0]?.currentLabel,
+      });
+
       const priorValue = computeMetricValue(driverId, driverPriorRows);
       const deltaValue = computeDelta(currentValue, priorValue);
 
@@ -1743,7 +1760,6 @@ async function analyzeBusinessQuestion(
   const rankedDrivers = rankDriverObservations(driverObservations);
   const observations: string[] = [];
   const metricFormat = metric.format_type || inferFormatType(metric.metric_id);
-  const comparisonSource = kpiLoaded[0];
 
   if (currentMetricValue === null || priorMetricValue === null) {
     observations.push(
@@ -1958,7 +1974,14 @@ async function analyzeMarketPerformanceWithMetric(
           normalize(market)
       );
 
-      const currentValue = computeMetricValue(metric.metric_id, currentRows);
+      const currentValue = maybeProjectMetricValue({
+        metricId: metric.metric_id,
+        grain: scope.time_grain,
+        allDatasetRows: filtered,
+        scopedBucketRows: currentRows,
+        targetBucket: scoped.current_label,
+      });
+
       const priorValue = computeMetricValue(metric.metric_id, priorRows);
       const deltaValue = computeDelta(currentValue, priorValue);
 
@@ -2133,11 +2156,18 @@ async function analyzeMixChange(
           ).trim()
       : (row: DatasetRow) => String(row["market"] || row["Market"] || "").trim();
 
-  const currentTotal = computeMetricValue(baseMetric, scoped.current);
+  const currentTotal =
+    maybeProjectMetricValue({
+      metricId: baseMetric,
+      grain: scope.time_grain,
+      allDatasetRows: filtered,
+      scopedBucketRows: scoped.current,
+      targetBucket: scoped.current_label,
+    }) ?? 0;
+
   const priorTotal = computeMetricValue(baseMetric, scoped.prior);
 
   if (
-    currentTotal === null ||
     priorTotal === null ||
     currentTotal === 0 ||
     priorTotal === 0
@@ -2161,7 +2191,15 @@ async function analyzeMixChange(
         (r) => normalize(dimAccessor(r)) === normalize(value)
       );
 
-      const currentValue = computeMetricValue(baseMetric, currentRows) || 0;
+      const currentValue =
+        maybeProjectMetricValue({
+          metricId: baseMetric,
+          grain: scope.time_grain,
+          allDatasetRows: filtered,
+          scopedBucketRows: currentRows,
+          targetBucket: scoped.current_label,
+        }) ?? 0;
+
       const priorValue = computeMetricValue(baseMetric, priorRows) || 0;
       const currentShare = currentTotal > 0 ? currentValue / currentTotal : 0;
       const priorShare = priorTotal > 0 ? priorValue / priorTotal : 0;
@@ -2315,8 +2353,16 @@ async function queryMetricValue(
   }
 
   const allRows = usable.flatMap((d) => d.bucketRows);
+  const fullDatasetRows = loaded.flatMap((d) => d.rows);
   const formatType = metric.format_type || inferFormatType(metric.metric_id);
-  const rawValue = computeMetricValue(metric.metric_id, allRows);
+
+  const rawValue = maybeProjectMetricValue({
+    metricId: metric.metric_id,
+    grain: scope.time_grain,
+    allDatasetRows: fullDatasetRows,
+    scopedBucketRows: allRows,
+    targetBucket: scope.target_bucket,
+  });
 
   if (rawValue === null) {
     return {
@@ -2533,7 +2579,7 @@ function parsePointInTimeScopeFromRows(
     target_bucket = `${yearToUse}-${monthNum}-01`;
     period_label = `${capitalize(monthName)} ${yearToUse}`;
     time_grain = "month";
-  } else if (q.includes("this month")) {
+  } else if (q.includes("this month") || q.includes("monthly trend")) {
     const latest = getLatestBucket(rows, "month");
     if (latest) {
       target_bucket = latest;
@@ -2547,7 +2593,7 @@ function parsePointInTimeScopeFromRows(
       period_label = latestAndPrior.prior;
       time_grain = "month";
     }
-  } else if (q.includes("this week")) {
+  } else if (q.includes("this week") || q.includes("weekly trend")) {
     const latest = getLatestBucket(rows, "week");
     if (latest) {
       target_bucket = latest;
@@ -2714,8 +2760,8 @@ function splitRowsCurrentVsPrior(
     grain === "day"
       ? ["day", "Day"]
       : grain === "month"
-        ? ["month", "Month"]
-        : ["week", "Week"];
+      ? ["month", "Month"]
+      : ["week", "Week"];
 
   const bucketMap = new Map<string, DatasetRow[]>();
 
@@ -2765,8 +2811,8 @@ function filterRowsToTargetBucket(
     grain === "day"
       ? ["day", "Day"]
       : grain === "month"
-        ? ["month", "Month"]
-        : ["week", "Week"];
+      ? ["month", "Month"]
+      : ["week", "Week"];
 
   if (!targetBucket) {
     const latest = getLatestBucket(rows, grain);
@@ -2787,8 +2833,8 @@ function getLatestBucket(
     grain === "day"
       ? ["day", "Day"]
       : grain === "month"
-        ? ["month", "Month"]
-        : ["week", "Week"];
+      ? ["month", "Month"]
+      : ["week", "Week"];
 
   const buckets = rows
     .map((row) => getBucketKey(row, fieldCandidates))
@@ -2806,8 +2852,8 @@ function getLatestAndPriorBucket(
     grain === "day"
       ? ["day", "Day"]
       : grain === "month"
-        ? ["month", "Month"]
-        : ["week", "Week"];
+      ? ["month", "Month"]
+      : ["week", "Week"];
 
   const buckets = Array.from(
     new Set(
@@ -3087,6 +3133,222 @@ function computeMetricValue(metricId: string, rows: DatasetRow[]): number | null
   }
 }
 
+function isAdditiveMetric(metricId: string): boolean {
+  const id = canonicalMetricId(metricId);
+
+  return new Set([
+    "leads",
+    "jobs_booked",
+    "jobs_completed",
+    "canceled_jobs",
+    "revenue",
+    "impressions",
+    "clicks",
+    "marketing_spend",
+    "available_slots",
+    "utilized_slots",
+    "customer_cancels",
+    "hq_cancels",
+    "customer_reschedules",
+    "hq_reschedules",
+  ]).has(id);
+}
+
+function getBucketDateFieldCandidates(grain: TimeGrain): string[] {
+  return grain === "day"
+    ? ["day", "Day"]
+    : grain === "month"
+    ? ["month", "Month"]
+    : ["week", "Week"];
+}
+
+function getMaxRowDate(rows: DatasetRow[]): Date | null {
+  const dates = rows
+    .flatMap((row) =>
+      ["day", "Day", "week", "Week", "month", "Month"]
+        .map((field) => row[field])
+        .filter(Boolean)
+    )
+    .map((v) => new Date(String(v)))
+    .filter((d) => !isNaN(d.getTime()));
+
+  if (!dates.length) return null;
+  return new Date(Math.max(...dates.map((d) => d.getTime())));
+}
+
+function getPointInPeriodFromRow(row: DatasetRow, grain: TimeGrain): number | null {
+  const raw =
+    row["day"] ||
+    row["Day"] ||
+    row["week"] ||
+    row["Week"] ||
+    row["month"] ||
+    row["Month"];
+
+  if (!raw) return null;
+
+  const d = new Date(String(raw));
+  if (isNaN(d.getTime())) return null;
+
+  if (grain === "week") {
+    const dow = d.getUTCDay();
+    return dow === 0 ? 7 : dow;
+  }
+
+  if (grain === "month") {
+    return d.getUTCDate();
+  }
+
+  return null;
+}
+
+function getPeriodLengthFromBucket(bucket: string, grain: TimeGrain): number | null {
+  if (grain === "week") return 7;
+  if (grain === "month") {
+    const [y, m] = bucket.slice(0, 10).split("-");
+    return new Date(Date.UTC(Number(y), Number(m), 0)).getUTCDate();
+  }
+  return null;
+}
+
+function isLatestBucketForGrain(
+  rows: DatasetRow[],
+  grain: TimeGrain,
+  bucket: string | undefined
+): boolean {
+  if (!bucket) return false;
+  const latest = getLatestBucket(rows, grain);
+  return !!latest && latest === bucket;
+}
+
+function calcHistoricalPacingForWorker(
+  grain: TimeGrain,
+  rows: DatasetRow[],
+  metricId: string,
+  targetBucket?: string
+): {
+  projected: number;
+  actual: number;
+  pct: number;
+  method: "historical" | "fallback";
+  sampleSize: number;
+} | null {
+  if (!rows.length) return null;
+  if (grain !== "week" && grain !== "month") return null;
+  if (!isAdditiveMetric(metricId)) return null;
+
+  const fieldCandidates = getBucketDateFieldCandidates(grain);
+  const grouped = new Map<string, DatasetRow[]>();
+
+  for (const row of rows) {
+    const key = getBucketKey(row, fieldCandidates);
+    if (!key) continue;
+    if (!grouped.has(key)) grouped.set(key, []);
+    grouped.get(key)!.push(row);
+  }
+
+  const keys = Array.from(grouped.keys()).sort((a, b) => Date.parse(a) - Date.parse(b));
+  if (!keys.length) return null;
+
+  const currentBucket =
+    targetBucket && grouped.has(targetBucket)
+      ? targetBucket
+      : keys[keys.length - 1];
+
+  const currentRows = grouped.get(currentBucket) || [];
+  if (!currentRows.length) return null;
+
+  const maxDate = getMaxRowDate(currentRows) || getMaxRowDate(rows);
+  if (!maxDate) return null;
+
+  const currentPoint =
+    grain === "week"
+      ? (maxDate.getUTCDay() === 0 ? 7 : maxDate.getUTCDay())
+      : maxDate.getUTCDate();
+
+  const currentActual = computeMetricValue(metricId, currentRows);
+  if (currentActual === null) return null;
+
+  const historicalKeys = keys.filter((k) => k !== currentBucket);
+  const shares = historicalKeys
+    .map((bucket) => {
+      const bucketRows = grouped.get(bucket) || [];
+      const total = computeMetricValue(metricId, bucketRows);
+      if (total === null || total === 0) return null;
+
+      const periodLength = getPeriodLengthFromBucket(bucket, grain);
+      if (!periodLength) return null;
+
+      const maxPoint = Math.max(
+        ...bucketRows.map((r) => getPointInPeriodFromRow(r, grain) || 0)
+      );
+      if (maxPoint < periodLength) return null;
+
+      const cumulativeRows = bucketRows.filter((r) => {
+        const p = getPointInPeriodFromRow(r, grain);
+        return p !== null && p <= currentPoint;
+      });
+
+      const cumulative = computeMetricValue(metricId, cumulativeRows);
+      if (cumulative === null) return null;
+
+      const share = cumulative / total;
+      if (!share || share <= 0 || share > 1.25) return null;
+
+      return share;
+    })
+    .filter((v): v is number => v !== null);
+
+  const totalPoints = getPeriodLengthFromBucket(currentBucket, grain) || 1;
+
+  if (!shares.length) {
+    const fallbackPct = grain === "week" ? currentPoint / 7 : currentPoint / totalPoints;
+    return {
+      actual: currentActual,
+      projected: fallbackPct > 0 ? currentActual / fallbackPct : currentActual,
+      pct: fallbackPct,
+      method: "fallback",
+      sampleSize: 0,
+    };
+  }
+
+  const historicalPct = shares.reduce((a, b) => a + b, 0) / shares.length;
+
+  return {
+    actual: currentActual,
+    projected: historicalPct > 0 ? currentActual / historicalPct : currentActual,
+    pct: historicalPct,
+    method: "historical",
+    sampleSize: shares.length,
+  };
+}
+
+function maybeProjectMetricValue(args: {
+  metricId: string;
+  grain: TimeGrain;
+  allDatasetRows: DatasetRow[];
+  scopedBucketRows: DatasetRow[];
+  targetBucket?: string;
+}): number | null {
+  const { metricId, grain, allDatasetRows, scopedBucketRows, targetBucket } = args;
+
+  const rawValue = computeMetricValue(metricId, scopedBucketRows);
+  if (rawValue === null) return null;
+
+  if (grain !== "week" && grain !== "month") return rawValue;
+  if (!isAdditiveMetric(metricId)) return rawValue;
+  if (!isLatestBucketForGrain(allDatasetRows, grain, targetBucket)) return rawValue;
+
+  const pacing = calcHistoricalPacingForWorker(
+    grain,
+    allDatasetRows,
+    metricId,
+    targetBucket
+  );
+
+  return pacing?.projected ?? rawValue;
+}
+
 function computeDelta(
   currentValue: number | null,
   priorValue: number | null
@@ -3188,15 +3450,15 @@ function classifyDriverEffect(args: {
     relationship === "positive"
       ? driverMovedUp
       : relationship === "negative"
-        ? driverMovedDown
-        : false;
+      ? driverMovedDown
+      : false;
 
   const hurtsMetric =
     relationship === "positive"
       ? driverMovedDown
       : relationship === "negative"
-        ? driverMovedUp
-        : false;
+      ? driverMovedUp
+      : false;
 
   if (metricChangeDirection === "up") {
     if (helpsMetric) return { direction: "supports", score: Math.abs(deltaValue) };
