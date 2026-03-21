@@ -86,7 +86,6 @@
       "jobs_booked",
       "conversion_rate",
       "cancel_rate",
-      "reschedule_rate",
       "technician_utilization",
       "market_mix"
     ],
@@ -210,7 +209,6 @@
     "candidate_drivers": [
       "booking_rate",
       "cancel_rate",
-      "reschedule_rate",
       "technician_utilization",
       "channel_mix",
       "market_mix"
@@ -810,7 +808,6 @@
       "jobs_completed",
       "customer_cancel_rate",
       "hq_cancel_rate",
-      "reschedule_rate",
       "market_mix"
     ],
     "relevant_datasets": [
@@ -918,7 +915,6 @@
       "customer initiated reschedules"
     ],
     "candidate_drivers": [
-      "reschedule_rate",
       "jobs_booked",
       "market_mix",
       "channel_mix"
@@ -945,10 +941,43 @@
       "hq initiated reschedules"
     ],
     "candidate_drivers": [
-      "reschedule_rate",
       "jobs_booked",
       "market_mix",
       "available_slots"
+    ],
+    "relevant_datasets": [
+      "fact_nubrakes_supply_demand_daily"
+    ]
+  },
+  {
+    "metric_id": "slots",
+    "metric_name": "Slots",
+    "category": "Operations",
+    "definition": "Total number of technician appointment slots available to service customers",
+    "unit": "count",
+    "format_type": "number",
+    "formula_logic": "Total service capacity available for booking within the period",
+    "aggregation": "sum",
+    "good_direction": "up",
+    "owner": "Operations",
+    "tags": [
+      "slots",
+      "available slots",
+      "capacity",
+      "service capacity",
+      "appointment slots",
+      "technician capacity",
+      "bookable slots",
+      "supply capacity",
+      "schedule capacity",
+      "availability"
+    ],
+    "candidate_drivers": [
+      "tech_count",
+      "hours_available",
+      "utilized_slots",
+      "technician_utilization",
+      "market_mix"
     ],
     "relevant_datasets": [
       "fact_nubrakes_supply_demand_daily"
