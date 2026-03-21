@@ -397,16 +397,10 @@ export default function NubrakesAICopilotFrontend() {
             </div>
 
             <div className="rounded-3xl bg-white p-4 shadow-sm ring-1 ring-[#CDB7B7] sm:p-5">
-              <div className="mb-3 flex items-center justify-between gap-3">
+              <div className="mb-3">
                 <div className="text-sm font-semibold text-[#0E2468]">
                   Available datasets
                 </div>
-                <button
-                  onClick={clearChat}
-                  className="shrink-0 rounded-full bg-[#F7F2F0] px-3 py-1 text-[11px] font-medium text-[#0E2468] ring-1 ring-[#CDB7B7] transition hover:bg-[#efe7e3]"
-                >
-                  Clear chat
-                </button>
               </div>
 
               <div className="max-h-56 space-y-2 overflow-y-auto pr-1 sm:max-h-64 xl:max-h-[42dvh]">
@@ -464,12 +458,26 @@ export default function NubrakesAICopilotFrontend() {
 
           <main className="order-1 flex min-h-[75dvh] flex-col overflow-hidden rounded-3xl bg-white shadow-sm ring-1 ring-[#CDB7B7] xl:order-2 xl:h-[calc(100dvh-3rem)]">
             <div className="border-b border-[#CDB7B7] px-4 py-4 sm:px-5">
-              <div className="text-base font-semibold sm:text-lg">
-                Ask NuBrakes AI Copilot
-              </div>
-              <div className="mt-1 text-sm text-[#817E7F]">
-                Ask naturally about KPI definitions, dashboards, business
-                drivers, markets, or which dataset to use.
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <div className="text-base font-semibold sm:text-lg">
+                    Ask NuBrakes AI Copilot
+                  </div>
+                  <div className="mt-1 text-sm text-[#817E7F]">
+                    Ask naturally about KPI definitions, dashboards, business
+                    drivers, markets, or which dataset to use.
+                  </div>
+                </div>
+
+                {messages.length > 1 && (
+                  <button
+                    onClick={clearChat}
+                    disabled={loading}
+                    className="shrink-0 rounded-2xl bg-[#F7F2F0] px-4 py-2 text-sm font-medium text-[#0E2468] ring-1 ring-[#CDB7B7] transition hover:bg-[#efe7e3] disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    Clear chat
+                  </button>
+                )}
               </div>
             </div>
 
