@@ -588,7 +588,9 @@ async function handleRequest(request: Request, env: Env): Promise<Response> {
       hasWord("cpc") ||
       hasPhrase("marketing spend") ||
       hasPhrase("jobs completed") ||
-      hasPhrase("jobs booked"));
+      hasPhrase("jobs booked") ||
+      hasPhrase("available slots") ||
+      hasPhrase("available slot"));
 
   const directDatasetMatch = await tryDirectDatasetShortcut(userMessage);
 
@@ -2313,8 +2315,8 @@ async function queryMetricValue(
   }
 
   const allRows = usable.flatMap((d) => d.bucketRows);
-  const rawValue = computeMetricValue(metric.metric_id, allRows);
   const formatType = metric.format_type || inferFormatType(metric.metric_id);
+  const rawValue = computeMetricValue(metric.metric_id, allRows);
 
   if (rawValue === null) {
     return {
@@ -2418,9 +2420,11 @@ function parseBusinessQuestionScopeFromRows(
     const explicitYear = explicitYearMatch
       ? Number(explicitYearMatch[1])
       : undefined;
-    const year = explicitYear ?? (candidateYears.length
-      ? Math.max(...candidateYears)
-      : new Date().getUTCFullYear());
+    const year =
+      explicitYear ??
+      (candidateYears.length
+        ? Math.max(...candidateYears)
+        : new Date().getUTCFullYear());
     target_bucket = `${year}-${monthMap[matchedMonth]}-01`;
   }
 
@@ -2845,14 +2849,23 @@ function toNumber(value: unknown): number {
   return Number.isFinite(n) ? n : 0;
 }
 
+function canonicalFieldName(value: string): string {
+  return String(value || "")
+    .replace(/([a-z])([A-Z])/g, "$1 $2")
+    .toLowerCase()
+    .trim()
+    .replace(/[_-]+/g, " ")
+    .replace(/\s+/g, " ");
+}
+
 function avgField(rows: DatasetRow[], fieldNames: string[]): number | null {
-  const normalizedTargets = new Set(fieldNames.map((f) => normalize(f)));
+  const normalizedTargets = new Set(fieldNames.map(canonicalFieldName));
   let total = 0;
   let count = 0;
 
   for (const row of rows) {
     for (const [key, value] of Object.entries(row)) {
-      if (normalizedTargets.has(normalize(key))) {
+      if (normalizedTargets.has(canonicalFieldName(key))) {
         const n = Number(value);
         if (Number.isFinite(n)) {
           total += n;
@@ -2867,11 +2880,11 @@ function avgField(rows: DatasetRow[], fieldNames: string[]): number | null {
 }
 
 function sumField(rows: DatasetRow[], fieldNames: string[]): number {
-  const normalizedTargets = new Set(fieldNames.map((f) => normalize(f)));
+  const normalizedTargets = new Set(fieldNames.map(canonicalFieldName));
 
   return rows.reduce((sum, row) => {
     for (const [key, value] of Object.entries(row)) {
-      if (normalizedTargets.has(normalize(key))) {
+      if (normalizedTargets.has(canonicalFieldName(key))) {
         return sum + toNumber(value);
       }
     }
@@ -2906,8 +2919,29 @@ function getMetricFieldNames(metricId: string): string[] {
     impressions: ["impressions", "Impressions"],
     clicks: ["clicks", "Clicks"],
     marketing_spend: ["marketing_spend", "Marketing Spend"],
-    available_slots: ["available_slots", "Available Slots", "slots"],
-    utilized_slots: ["utilized_slots", "Utilized Slots"],
+    available_slots: [
+      "available_slots",
+      "Available Slots",
+      "available slots",
+      "available_slot",
+      "Available Slot",
+      "available slot",
+      "slots_available",
+      "Slots Available",
+      "availableSlots",
+      "slots",
+    ],
+    utilized_slots: [
+      "utilized_slots",
+      "Utilized Slots",
+      "utilized slots",
+      "utilized_slot",
+      "Utilized Slot",
+      "utilized slot",
+      "slots_utilized",
+      "Slots Utilized",
+      "utilizedSlots",
+    ],
     technician_utilization: [
       "technician_utilization",
       "Technician Utilization",
