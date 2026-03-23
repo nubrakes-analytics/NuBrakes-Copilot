@@ -1,1 +1,37 @@
-
+[
+  {
+    "Weekday": "Sunday",
+    "Day of week": 1,
+    "% of Daily Avg Revenue": 0.7425748909967052
+  },
+  {
+    "Weekday": "Monday",
+    "Day of week": 2,
+    "% of Daily Avg Revenue": 0.9048698996423155
+  },
+  {
+    "Weekday": "Tuesday",
+    "Day of week": 3,
+    "% of Daily Avg Revenue": 1.0045760926509948
+  },
+  {
+    "Weekday": "Wednesday",
+    "Day of week": 4,
+    "% of Daily Avg Revenue": 1.0362865668560013
+  },
+  {
+    "Weekday": "Thursday",
+    "Day of week": 5,
+    "% of Daily Avg Revenue": 1.0461075649753608
+  },
+  {
+    "Weekday": "Friday",
+    "Day of week": 6,
+    "% of Daily Avg Revenue": 1.129450522318704
+  },
+  {
+    "Weekday": "Saturday",
+    "Day of week": 7,
+    "% of Daily Avg Revenue": 1.1361344625599192
+  }
+]
