@@ -1321,6 +1321,8 @@ function MultiLineShareChart({ data, groups, period, dimension = "channel" }) {
 }
 
 function TrendChart({ data, metricKey, metric, period, chartType, pacing }) {
+  const [hoveredIndex, setHoveredIndex] = React.useState(null);
+
   const isRateOrAov = metricKey.includes("Rate") || metricKey === "aov";
   const hasProjection = pacing && !isRateOrAov && (period === "week" || period === "month");
 
@@ -1409,9 +1411,30 @@ function TrendChart({ data, metricKey, metric, period, chartType, pacing }) {
 
   const yTicks = Array.from({ length: 5 }, (_, i) => yMin + (yRange * i) / 4);
 
+  const tooltipIndex = hoveredIndex;
+  const tooltipValue = tooltipIndex !== null ? vals[tooltipIndex] : null;
+  const tooltipX = tooltipIndex !== null ? xP(tooltipIndex) : null;
+  const tooltipY = tooltipIndex !== null ? yP(tooltipValue) : null;
+  const tooltipLabel =
+    tooltipIndex !== null
+      ? `${fmtLabel(data[tooltipIndex].label, period)} • ${fmtFullValue(tooltipValue)}`
+      : "";
+
+  const tooltipWidth = Math.max(92, Math.min(170, tooltipLabel.length * 6.3));
+  let tooltipLeft = tooltipX !== null ? tooltipX - tooltipWidth / 2 : 0;
+  if (tooltipLeft < 8) tooltipLeft = 8;
+  if (tooltipLeft + tooltipWidth > W - 8) tooltipLeft = W - tooltipWidth - 8;
+
+  let tooltipTop = tooltipY !== null ? tooltipY - 34 : 0;
+  if (tooltipTop < 6) tooltipTop = tooltipY + 12;
+
   return React.createElement(
     "svg",
-    { viewBox: `0 0 ${W} ${H}`, style: { width: "100%", height: "auto", overflow: "visible" } },
+    {
+      viewBox: `0 0 ${W} ${H}`,
+      style: { width: "100%", height: "auto", overflow: "visible" },
+      onMouseLeave: () => setHoveredIndex(null)
+    },
 
     yTicks.map((tick, idx) => {
       const y = yP(tick);
@@ -1435,6 +1458,39 @@ function TrendChart({ data, metricKey, metric, period, chartType, pacing }) {
         }, fmtY(tick))
       );
     }),
+
+    tooltipIndex !== null
+      ? React.createElement(
+          "g",
+          null,
+          React.createElement("line", {
+            x1: tooltipX,
+            x2: tooltipX,
+            y1: pT,
+            y2: pT + cH,
+            stroke: "#cbd5e1",
+            strokeWidth: "1",
+            strokeDasharray: "4,4"
+          }),
+          React.createElement("rect", {
+            x: tooltipLeft,
+            y: tooltipTop,
+            width: tooltipWidth,
+            height: 22,
+            rx: "6",
+            fill: "#111827",
+            opacity: 0.96
+          }),
+          React.createElement("text", {
+            x: tooltipLeft + tooltipWidth / 2,
+            y: tooltipTop + 14,
+            textAnchor: "middle",
+            fontSize: "9.5",
+            fill: "#fff",
+            fontWeight: "600"
+          }, tooltipLabel)
+        )
+      : null,
 
     chartType === "line"
       ? React.createElement(
@@ -1496,22 +1552,20 @@ function TrendChart({ data, metricKey, metric, period, chartType, pacing }) {
               React.createElement("circle", {
                 cx: xP(i),
                 cy: yP(v),
-                r: i === lastIdx && hasProjection ? 4 : 3,
-                fill: i === lastIdx && hasProjection ? "#3b82f6" : metric.color,
+                r: hoveredIndex === i ? 5 : (i === lastIdx && hasProjection ? 4 : 3),
+                fill: hoveredIndex === i ? "#111827" : (i === lastIdx && hasProjection ? "#3b82f6" : metric.color),
                 stroke: "#fff",
                 strokeWidth: "1.5"
               }),
               React.createElement("circle", {
                 cx: xP(i),
                 cy: yP(v),
-                r: 14,
-                fill: "transparent"
-              }),
-              React.createElement(
-                "g",
-                { style: { pointerEvents: "none" } },
-                React.createElement("title", null, `${fmtLabel(data[i].label, period)}: ${fmtFullValue(v)}`)
-              )
+                r: 16,
+                fill: "transparent",
+                style: { cursor: "pointer" },
+                onMouseEnter: () => setHoveredIndex(i),
+                onMouseMove: () => setHoveredIndex(i)
+              })
             )
           ),
 
@@ -1569,7 +1623,7 @@ function TrendChart({ data, metricKey, metric, period, chartType, pacing }) {
                 width: bW,
                 height: Math.max(barH, 0),
                 rx: "3",
-                fill: isProj ? "#3b82f6" : metric.color,
+                fill: hoveredIndex === i ? "#111827" : (isProj ? "#3b82f6" : metric.color),
                 opacity: isProj ? 1 : 0.88
               }),
               React.createElement("rect", {
@@ -1577,9 +1631,11 @@ function TrendChart({ data, metricKey, metric, period, chartType, pacing }) {
                 y: pT,
                 width: Math.max(bW, 22),
                 height: cH,
-                fill: "transparent"
+                fill: "transparent",
+                style: { cursor: "pointer" },
+                onMouseEnter: () => setHoveredIndex(i),
+                onMouseMove: () => setHoveredIndex(i)
               }),
-              React.createElement("title", null, `${fmtLabel(data[i].label, period)}: ${fmtFullValue(v)}`),
               isProj
                 ? React.createElement(
                     "g",
