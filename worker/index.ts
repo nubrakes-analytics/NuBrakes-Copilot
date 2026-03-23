@@ -3493,6 +3493,100 @@ function isLatestBucketForGrain(rows: DatasetRow[], grain: TimeGrain, bucket: st
   return !!latest && latest === bucket;
 }
 
+function startOfUtcDay(d: Date): Date {
+  return new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()));
+}
+
+function getRowDateForPacing(row: DatasetRow): Date | null {
+  const raw =
+    row["day"] ||
+    row["Day"] ||
+    row["date"] ||
+    row["Date"] ||
+    row["week"] ||
+    row["Week"] ||
+    row["month"] ||
+    row["Month"];
+
+  if (!raw) return null;
+
+  const d = new Date(String(raw));
+  return Number.isFinite(d.getTime()) ? d : null;
+}
+
+function getPeriodStartDateFromBucket(bucket: string, grain: TimeGrain): Date | null {
+  if (!bucket) return null;
+
+  if (grain === "week") {
+    const d = new Date(bucket);
+    if (!Number.isFinite(d.getTime())) return null;
+    return startOfUtcDay(d);
+  }
+
+  if (grain === "month") {
+    const parts = bucket.slice(0, 10).split("-");
+    if (parts.length < 2) return null;
+    const y = Number(parts[0]);
+    const m = Number(parts[1]);
+    if (!Number.isFinite(y) || !Number.isFinite(m)) return null;
+    return new Date(Date.UTC(y, m - 1, 1));
+  }
+
+  return null;
+}
+
+function getPeriodEndDateFromBucket(bucket: string, grain: TimeGrain): Date | null {
+  const start = getPeriodStartDateFromBucket(bucket, grain);
+  if (!start) return null;
+
+  if (grain === "week") {
+    const end = new Date(start);
+    end.setUTCDate(end.getUTCDate() + 6);
+    return end;
+  }
+
+  if (grain === "month") {
+    return new Date(Date.UTC(start.getUTCFullYear(), start.getUTCMonth() + 1, 0));
+  }
+
+  return null;
+}
+
+function countWeekdaysBetweenUtc(startDate: Date | null, endDate: Date | null): number[] {
+  const counts = [0, 0, 0, 0, 0, 0, 0]; // Sun..Sat
+  if (!startDate || !endDate || endDate.getTime() < startDate.getTime()) return counts;
+
+  const d = startOfUtcDay(startDate);
+  const end = startOfUtcDay(endDate);
+
+  while (d.getTime() <= end.getTime()) {
+    counts[d.getUTCDay()] += 1;
+    d.setUTCDate(d.getUTCDate() + 1);
+  }
+
+  return counts;
+}
+
+function sumNumberArray(values: number[]): number {
+  return values.reduce((a, b) => a + b, 0);
+}
+
+function getMetricTotalByWeekdayForWorker(rows: DatasetRow[], metricId: string): number[] {
+  const totals = [0, 0, 0, 0, 0, 0, 0]; // Sun..Sat
+
+  for (const row of rows) {
+    const d = getRowDateForPacing(row);
+    if (!d) continue;
+
+    const rowValue = computeMetricValue(metricId, [row]);
+    if (rowValue === null) continue;
+
+    totals[d.getUTCDay()] += rowValue;
+  }
+
+  return totals;
+}
+
 function calcHistoricalPacingForWorker(
   grain: TimeGrain,
   rows: DatasetRow[],
@@ -3522,48 +3616,78 @@ function calcHistoricalPacingForWorker(
   const keys = Array.from(grouped.keys()).sort((a, b) => Date.parse(a) - Date.parse(b));
   if (!keys.length) return null;
 
-  const currentBucket = targetBucket && grouped.has(targetBucket) ? targetBucket : keys[keys.length - 1];
+  const currentBucket =
+    targetBucket && grouped.has(targetBucket) ? targetBucket : keys[keys.length - 1];
+
   const currentRows = grouped.get(currentBucket) || [];
   if (!currentRows.length) return null;
 
-  const maxDate = getMaxRowDate(currentRows) || getMaxRowDate(rows);
-  if (!maxDate) return null;
-
-  const currentPoint = grain === "week" ? (maxDate.getUTCDay() === 0 ? 7 : maxDate.getUTCDay()) : maxDate.getUTCDate();
   const currentActual = computeMetricValue(metricId, currentRows);
   if (currentActual === null) return null;
 
+  const currentMaxDate = currentRows
+    .map(getRowDateForPacing)
+    .filter((d): d is Date => d !== null)
+    .sort((a, b) => a.getTime() - b.getTime())
+    .slice(-1)[0];
+
+  if (!currentMaxDate) return null;
+
+  const currentPeriodStart = getPeriodStartDateFromBucket(currentBucket, grain);
+  const currentPeriodEnd = getPeriodEndDateFromBucket(currentBucket, grain);
+  if (!currentPeriodStart || !currentPeriodEnd) return null;
+
+  const currentElapsedWeekdayCounts = countWeekdaysBetweenUtc(
+    currentPeriodStart,
+    currentMaxDate
+  );
+
+  const fullCurrentPeriodWeekdayCounts = countWeekdaysBetweenUtc(
+    currentPeriodStart,
+    currentPeriodEnd
+  );
+
+  const elapsedDays = sumNumberArray(currentElapsedWeekdayCounts);
+  const totalDays = sumNumberArray(fullCurrentPeriodWeekdayCounts);
+
   const historicalKeys = keys.filter((k) => k !== currentBucket);
+
   const shares = historicalKeys
     .map((bucket) => {
       const bucketRows = grouped.get(bucket) || [];
-      const total = computeMetricValue(metricId, bucketRows);
-      if (total === null || total === 0) return null;
+      if (!bucketRows.length) return null;
 
-      const periodLength = getPeriodLengthFromBucket(bucket, grain);
-      if (!periodLength) return null;
+      const bucketStart = getPeriodStartDateFromBucket(bucket, grain);
+      const bucketEnd = getPeriodEndDateFromBucket(bucket, grain);
+      if (!bucketStart || !bucketEnd) return null;
 
-      const maxPoint = Math.max(...bucketRows.map((r) => getPointInPeriodFromRow(r, grain) || 0));
-      if (maxPoint < periodLength) return null;
+      const fullWeekdayCounts = countWeekdaysBetweenUtc(bucketStart, bucketEnd);
+      const weekdayTotals = getMetricTotalByWeekdayForWorker(bucketRows, metricId);
+      const total = weekdayTotals.reduce((a, b) => a + b, 0);
 
-      const cumulativeRows = bucketRows.filter((r) => {
-        const p = getPointInPeriodFromRow(r, grain);
-        return p !== null && p <= currentPoint;
-      });
+      if (!total) return null;
 
-      const cumulative = computeMetricValue(metricId, cumulativeRows);
-      if (cumulative === null) return null;
+      let expectedElapsed = 0;
 
-      const share = cumulative / total;
+      for (let i = 0; i < 7; i++) {
+        const fullCount = fullWeekdayCounts[i] || 0;
+        const elapsedCount = currentElapsedWeekdayCounts[i] || 0;
+        if (!fullCount || !elapsedCount) continue;
+
+        const avgPerOccurrence = (weekdayTotals[i] || 0) / fullCount;
+        expectedElapsed += avgPerOccurrence * elapsedCount;
+      }
+
+      const share = expectedElapsed / total;
       if (!share || share <= 0 || share > 1.25) return null;
+
       return share;
     })
     .filter((v): v is number => v !== null);
 
-  const totalPoints = getPeriodLengthFromBucket(currentBucket, grain) || 1;
-
   if (!shares.length) {
-    const fallbackPct = grain === "week" ? currentPoint / 7 : currentPoint / totalPoints;
+    const fallbackPct = totalDays > 0 ? elapsedDays / totalDays : 0;
+
     return {
       actual: currentActual,
       projected: fallbackPct > 0 ? currentActual / fallbackPct : currentActual,
