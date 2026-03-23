@@ -3945,7 +3945,7 @@ function Dashboard() {
                   whiteSpace: "nowrap"
                 }
               },
-              period === "month" ? "Revenue DOW Pace" : "Projected"
+              period === "month" ? "Projected" : "Projected"
             )
           )
         )
