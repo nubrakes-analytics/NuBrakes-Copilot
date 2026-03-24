@@ -746,9 +746,6 @@ export default {
 
 async function handleRequest(request: Request, env: Env): Promise<Response> {
   const url = new URL(request.url);
-  const bypassCache =
-    url.searchParams.get("fresh") === "1" ||
-    url.searchParams.get("nocache") === "1";
 
   if (request.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -886,7 +883,7 @@ async function handleRequest(request: Request, env: Env): Promise<Response> {
       hasPhrase("available slot") ||
       hasPhrase("available slots"));
 
-  const directDatasetMatch = await tryDirectDatasetShortcut(userMessage, bypassCache);
+  const directDatasetMatch = await tryDirectDatasetShortcut(userMessage);
 
   if (directDatasetMatch && looksLikeDatasetLinkQuestion) {
     return jsonResponse(
@@ -901,7 +898,7 @@ async function handleRequest(request: Request, env: Env): Promise<Response> {
   }
 
   if (looksLikeDatasetLinkQuestion) {
-    const result = await findDatasetLink(userMessage, bypassCache);
+    const result = await findDatasetLink(userMessage);
     return jsonResponse(
       result.found
         ? buildAppResponse({
@@ -921,7 +918,7 @@ async function handleRequest(request: Request, env: Env): Promise<Response> {
   }
 
   if (looksLikeDashboardLinkQuestion) {
-    const result = await findDashboardLink(userMessage, bypassCache);
+    const result = await findDashboardLink(userMessage);
     return jsonResponse(
       result.found
         ? buildAppResponse({
@@ -941,7 +938,7 @@ async function handleRequest(request: Request, env: Env): Promise<Response> {
   }
 
   if (looksLikeTrendQuestion) {
-    const trendResult = await analyzeMetricTrend(userMessage, bypassCache);
+    const trendResult = await analyzeMetricTrend(userMessage);
     return jsonResponse(
       trendResult.found
         ? buildAppResponse({
@@ -966,7 +963,7 @@ async function handleRequest(request: Request, env: Env): Promise<Response> {
   }
 
   if (looksLikeContributionQuestion) {
-    const contributionResult = await analyzeContributionToChange(userMessage, bypassCache);
+    const contributionResult = await analyzeContributionToChange(userMessage);
     return jsonResponse(
       contributionResult.found
         ? buildAppResponse({
@@ -991,7 +988,7 @@ async function handleRequest(request: Request, env: Env): Promise<Response> {
   }
 
   if (looksLikeSegmentCompareQuestion) {
-    const compareResult = await compareSegments(userMessage, bypassCache);
+    const compareResult = await compareSegments(userMessage);
     if (compareResult.found) {
       return jsonResponse(
         buildAppResponse({
@@ -1017,7 +1014,7 @@ async function handleRequest(request: Request, env: Env): Promise<Response> {
   }
 
   if (looksLikeMarketPerformanceQuestion) {
-    const marketResult = await analyzeMarketPerformance(userMessage, bypassCache);
+    const marketResult = await analyzeMarketPerformance(userMessage);
     return jsonResponse(
       marketResult.found
         ? buildAppResponse({
@@ -1042,7 +1039,7 @@ async function handleRequest(request: Request, env: Env): Promise<Response> {
   }
 
   if (looksLikeMixChangeQuestion) {
-    const mixResult = await analyzeMixChange(userMessage, bypassCache);
+    const mixResult = await analyzeMixChange(userMessage);
     return jsonResponse(
       mixResult.found
         ? buildAppResponse({
@@ -1069,7 +1066,7 @@ async function handleRequest(request: Request, env: Env): Promise<Response> {
   }
 
   if (looksLikeMetricValueQuestion) {
-    const valueResult = await queryMetricValue(userMessage, bypassCache);
+    const valueResult = await queryMetricValue(userMessage);
     return jsonResponse(
       valueResult.found
         ? buildAppResponse({
@@ -1093,7 +1090,7 @@ async function handleRequest(request: Request, env: Env): Promise<Response> {
   }
 
   if (looksLikeBusinessQuestion) {
-    const directAnalysis = await analyzeBusinessQuestion(userMessage, bypassCache);
+    const directAnalysis = await analyzeBusinessQuestion(userMessage);
     return jsonResponse(
       directAnalysis.found
         ? buildAppResponse({
@@ -1166,7 +1163,7 @@ async function handleRequest(request: Request, env: Env): Promise<Response> {
   for (const item of outputItems) {
     if (item.type === "function_call" && item.name && item.arguments) {
       const args = safeJsonParse<Record<string, unknown>>(item.arguments, {});
-      const result = await handleToolCall(item.name, args, bypassCache);
+      const result = await handleToolCall(item.name, args);
       lastStructuredResult = result;
       toolOutputs.push({
         type: "function_call_output",
@@ -1302,34 +1299,30 @@ function mergeStructuredToolResultIntoResponse(
   return base;
 }
 
-async function handleToolCall(
-  name: string,
-  args: Record<string, unknown>,
-  bypassCache = false
-) {
+async function handleToolCall(name: string, args: Record<string, unknown>) {
   switch (name) {
     case "find_metric_definition":
-      return await findMetricDefinition(String(args.metric_query || ""), bypassCache);
+      return await findMetricDefinition(String(args.metric_query || ""));
     case "find_dashboard_link":
-      return await findDashboardLink(String(args.dashboard_query || ""), bypassCache);
+      return await findDashboardLink(String(args.dashboard_query || ""));
     case "find_dataset_link":
-      return await findDatasetLink(String(args.dataset_query || ""), bypassCache);
+      return await findDatasetLink(String(args.dataset_query || ""));
     case "business_question_drivers":
-      return await buildBusinessQuestionDriverPlan(String(args.business_question || ""), bypassCache);
+      return await buildBusinessQuestionDriverPlan(String(args.business_question || ""));
     case "analyze_business_question":
-      return await analyzeBusinessQuestion(String(args.business_question || ""), bypassCache);
+      return await analyzeBusinessQuestion(String(args.business_question || ""));
     case "query_metric_value":
-      return await queryMetricValue(String(args.question || ""), bypassCache);
+      return await queryMetricValue(String(args.question || ""));
     case "analyze_market_performance":
-      return await analyzeMarketPerformance(String(args.business_question || ""), bypassCache);
+      return await analyzeMarketPerformance(String(args.business_question || ""));
     case "analyze_mix_change":
-      return await analyzeMixChange(String(args.business_question || ""), bypassCache);
+      return await analyzeMixChange(String(args.business_question || ""));
     case "analyze_metric_trend":
-      return await analyzeMetricTrend(String(args.business_question || ""), bypassCache);
+      return await analyzeMetricTrend(String(args.business_question || ""));
     case "analyze_contribution_to_change":
-      return await analyzeContributionToChange(String(args.business_question || ""), bypassCache);
+      return await analyzeContributionToChange(String(args.business_question || ""));
     case "compare_segments":
-      return await compareSegments(String(args.business_question || ""), bypassCache);
+      return await compareSegments(String(args.business_question || ""));
     default:
       return { error: `Unknown tool: ${name}` };
   }
@@ -1337,20 +1330,15 @@ async function handleToolCall(
 
 async function fetchJsonCached<T = unknown>(
   url: string,
-  ttlMs = CACHE_TTL_MS,
-  bypassCache = false
+  ttlMs = CACHE_TTL_MS
 ): Promise<T> {
   const now = Date.now();
-
-  if (!bypassCache) {
-    const mem = memoryCache.get(url);
-    if (mem && mem.expiresAt > now) {
-      return mem.value as T;
-    }
+  const mem = memoryCache.get(url);
+  if (mem && mem.expiresAt > now) {
+    return mem.value as T;
   }
 
-  const inFlightKey = `${url}::${bypassCache ? "fresh" : "cached"}`;
-  const existing = inFlight.get(inFlightKey);
+  const existing = inFlight.get(url);
   if (existing) {
     return (await existing) as T;
   }
@@ -1359,31 +1347,25 @@ async function fetchJsonCached<T = unknown>(
     const cache = caches.default;
     const cacheKey = new Request(url, { method: "GET" });
 
-    if (!bypassCache && ttlMs > 0) {
-      const cachedResp = await cache.match(cacheKey);
-      if (cachedResp) {
-        const value = (await cachedResp.json()) as T;
-        memoryCache.set(url, {
-          value,
-          expiresAt: now + ttlMs,
-        });
-        return value;
-      }
+    const cachedResp = await cache.match(cacheKey);
+    if (cachedResp) {
+      const value = (await cachedResp.json()) as T;
+      memoryCache.set(url, {
+        value,
+        expiresAt: now + ttlMs,
+      });
+      return value;
     }
 
     const res = await fetch(url, {
       method: "GET",
       headers: {
-        "Cache-Control": bypassCache
-          ? "no-store"
-          : `public, max-age=${Math.floor(ttlMs / 1000)}`,
+        "Cache-Control": `public, max-age=${Math.floor(ttlMs / 1000)}`,
       },
-      cf: bypassCache
-        ? { cacheTtl: 0, cacheEverything: false }
-        : {
-            cacheTtl: Math.floor(ttlMs / 1000),
-            cacheEverything: true,
-          },
+      cf: {
+        cacheTtl: Math.floor(ttlMs / 1000),
+        cacheEverything: true,
+      },
     });
 
     if (!res.ok) {
@@ -1393,59 +1375,57 @@ async function fetchJsonCached<T = unknown>(
     const cloned = res.clone();
     const value = (await cloned.json()) as T;
 
-    if (!bypassCache && ttlMs > 0) {
-      memoryCache.set(url, {
-        value,
-        expiresAt: Date.now() + ttlMs,
-      });
+    memoryCache.set(url, {
+      value,
+      expiresAt: Date.now() + ttlMs,
+    });
 
-      await cache.put(
-        cacheKey,
-        new Response(JSON.stringify(value), {
-          headers: {
-            "Content-Type": "application/json",
-            "Cache-Control": `public, max-age=${Math.floor(ttlMs / 1000)}`,
-          },
-        })
-      );
-    }
+    await cache.put(
+      cacheKey,
+      new Response(JSON.stringify(value), {
+        headers: {
+          "Content-Type": "application/json",
+          "Cache-Control": `public, max-age=${Math.floor(ttlMs / 1000)}`,
+        },
+      })
+    );
 
     return value;
   })();
 
-  inFlight.set(inFlightKey, promise);
+  inFlight.set(url, promise);
 
   try {
     return (await promise) as T;
   } finally {
-    inFlight.delete(inFlightKey);
+    inFlight.delete(url);
   }
 }
 
-async function loadDashboardDefinitions(bypassCache = false): Promise<DashboardDefinition[]> {
-  return await fetchJsonCached<DashboardDefinition[]>(DASHBOARD_LINKS_URL, CACHE_TTL_MS, bypassCache);
+async function loadDashboardDefinitions(): Promise<DashboardDefinition[]> {
+  return await fetchJsonCached<DashboardDefinition[]>(DASHBOARD_LINKS_URL, CACHE_TTL_MS);
 }
 
-async function loadDatasetDefinitions(bypassCache = false): Promise<DatasetDefinition[]> {
-  return await fetchJsonCached<DatasetDefinition[]>(DATASET_LIST_URL, CACHE_TTL_MS, bypassCache);
+async function loadDatasetDefinitions(): Promise<DatasetDefinition[]> {
+  return await fetchJsonCached<DatasetDefinition[]>(DATASET_LIST_URL, CACHE_TTL_MS);
 }
 
-async function loadMetricDefinitions(bypassCache = false): Promise<MetricDefinition[]> {
-  return await fetchJsonCached<MetricDefinition[]>(METRIC_DEFINITIONS_URL, CACHE_TTL_MS, bypassCache);
+async function loadMetricDefinitions(): Promise<MetricDefinition[]> {
+  return await fetchJsonCached<MetricDefinition[]>(METRIC_DEFINITIONS_URL, CACHE_TTL_MS);
 }
 
-async function loadJsonFromUrl<T = unknown>(url: string, bypassCache = false): Promise<T> {
-  return await fetchJsonCached<T>(url, DATASET_TTL_MS, bypassCache);
+async function loadJsonFromUrl<T = unknown>(url: string): Promise<T> {
+  return await fetchJsonCached<T>(url, DATASET_TTL_MS);
 }
 
-async function loadMetricRegistry(bypassCache = false): Promise<Map<string, MetricRegistryEntry>> {
-  const cacheKey = `__metric_registry__::${bypassCache ? "fresh" : "cached"}`;
+async function loadMetricRegistry(): Promise<Map<string, MetricRegistryEntry>> {
+  const cacheKey = "__metric_registry__";
   const mem = memoryCache.get(cacheKey);
   if (mem && mem.expiresAt > Date.now()) {
     return mem.value as Map<string, MetricRegistryEntry>;
   }
 
-  const defs = await loadMetricDefinitions(bypassCache);
+  const defs = await loadMetricDefinitions();
   const map = new Map<string, MetricRegistryEntry>();
 
   for (const metric of defs) {
@@ -1537,12 +1517,9 @@ function buildConfidenceScore(args: {
   };
 }
 
-async function tryDirectDatasetShortcut(
-  userMessage: string,
-  bypassCache = false
-): Promise<DatasetDefinition | null> {
+async function tryDirectDatasetShortcut(userMessage: string): Promise<DatasetDefinition | null> {
   const q = normalize(userMessage);
-  const datasets = await loadDatasetDefinitions(bypassCache);
+  const datasets = await loadDatasetDefinitions();
 
   const shortcutMatchers: Array<{ patterns: string[]; sheetName: string }> = [
     {
@@ -1665,11 +1642,8 @@ function scoreDatasetEntry(query: string, entry: DatasetDefinition): number {
   return score;
 }
 
-async function findDashboardLink(
-  dashboardQuery: string,
-  bypassCache = false
-): Promise<DashboardLookupResult> {
-  const dashboards = await loadDashboardDefinitions(bypassCache);
+async function findDashboardLink(dashboardQuery: string): Promise<DashboardLookupResult> {
+  const dashboards = await loadDashboardDefinitions();
 
   let bestMatch: DashboardDefinition | null = null;
   let bestScore = -1;
@@ -1700,11 +1674,8 @@ async function findDashboardLink(
   };
 }
 
-async function findDatasetLink(
-  datasetQuery: string,
-  bypassCache = false
-): Promise<DatasetLookupResult> {
-  const datasets = await loadDatasetDefinitions(bypassCache);
+async function findDatasetLink(datasetQuery: string): Promise<DatasetLookupResult> {
+  const datasets = await loadDatasetDefinitions();
 
   let bestMatch: DatasetDefinition | null = null;
   let bestScore = -1;
@@ -1735,11 +1706,8 @@ async function findDatasetLink(
   };
 }
 
-async function findMetricDefinition(
-  metricQuery: string,
-  bypassCache = false
-): Promise<MetricLookupResult> {
-  const metrics = await loadMetricDefinitions(bypassCache);
+async function findMetricDefinition(metricQuery: string): Promise<MetricLookupResult> {
+  const metrics = await loadMetricDefinitions();
   const q = normalize(metricQuery);
 
   if (!q) {
@@ -1812,12 +1780,9 @@ async function findMetricDefinition(
   };
 }
 
-async function findDatasetsByIds(
-  datasetIds: string[],
-  bypassCache = false
-): Promise<DatasetDefinition[]> {
+async function findDatasetsByIds(datasetIds: string[]): Promise<DatasetDefinition[]> {
   if (!datasetIds?.length) return [];
-  const datasets = await loadDatasetDefinitions(bypassCache);
+  const datasets = await loadDatasetDefinitions();
   const wanted = new Set(datasetIds.map((d) => normalize(String(d)).replace(/\.json$/, "")));
 
   return datasets.filter((dataset) => {
@@ -1828,22 +1793,21 @@ async function findDatasetsByIds(
 }
 
 async function buildBusinessQuestionDriverPlan(
-  businessQuestion: string,
-  bypassCache = false
+  businessQuestion: string
 ): Promise<BusinessQuestionDriverResult> {
-  const metricResult = await findMetricDefinition(businessQuestion, bypassCache);
+  const metricResult = await findMetricDefinition(businessQuestion);
 
   if (!metricResult.found) {
     return { found: false, message: metricResult.message };
   }
 
-  const registry = await loadMetricRegistry(bypassCache);
+  const registry = await loadMetricRegistry();
   const metric = metricResult.metric;
   const entry = registry.get(canonicalMetricId(metric.metric_id));
 
   const relevantDatasets = entry?.relevantDatasets || metric.relevant_datasets || [];
   const candidateDrivers = entry?.candidateDrivers || metric.candidate_drivers || [];
-  const allMetrics = await loadMetricDefinitions(bypassCache);
+  const allMetrics = await loadMetricDefinitions();
 
   const driverDefinitions = candidateDrivers
     .map((driverId) => allMetrics.find((m) => normalize(m.metric_id || "") === normalize(driverId)))
@@ -1854,7 +1818,7 @@ async function buildBusinessQuestionDriverPlan(
     .filter((d): d is string => Boolean(d));
 
   const mergedDatasetIds = Array.from(new Set([...relevantDatasets, ...driverPrimaryDatasetIds]));
-  const datasets = await findDatasetsByIds(mergedDatasetIds, bypassCache);
+  const datasets = await findDatasetsByIds(mergedDatasetIds);
 
   return {
     found: true,
@@ -1875,7 +1839,7 @@ async function buildBusinessQuestionDriverPlan(
         candidateDrivers.length ? `Analyze candidate drivers: ${candidateDrivers.join(", ")}` : `No candidate drivers defined for this metric`,
         `Slice trend by time period`,
         `Slice performance by market and channel where available`,
-        `Classify driver movements into tailwinds, headwinds, and context signals`,
+        `Classify driver movements into contributing factors, headwinds, and context signals`,
       ],
     },
     confidence: buildConfidenceScore({
@@ -1890,14 +1854,13 @@ async function buildBusinessQuestionDriverPlan(
 }
 
 async function analyzeBusinessQuestion(
-  businessQuestion: string,
-  bypassCache = false
+  businessQuestion: string
 ): Promise<AnalyzeBusinessQuestionResult> {
-  const plan = await buildBusinessQuestionDriverPlan(businessQuestion, bypassCache);
+  const plan = await buildBusinessQuestionDriverPlan(businessQuestion);
 
   if (!plan.found) return { found: false, message: plan.message };
 
-  const registry = await loadMetricRegistry(bypassCache);
+  const registry = await loadMetricRegistry();
   const metric = plan.metric;
   const metricEntry = registry.get(canonicalMetricId(metric.metric_id));
   const candidateDrivers = (metricEntry?.candidateDrivers || metric.candidate_drivers || []).filter(
@@ -1913,7 +1876,7 @@ async function analyzeBusinessQuestion(
     datasets.map(async (d) => ({
       dataset: String(d.dataset || d.sheet_name || ""),
       link: d.link,
-      rows: await loadJsonFromUrl<DatasetRow[]>(String(d.link), bypassCache),
+      rows: await loadJsonFromUrl<DatasetRow[]>(String(d.link)),
     }))
   );
 
@@ -2076,7 +2039,6 @@ async function analyzeBusinessQuestion(
 
   const rankedDrivers = rankDriverObservations(driverObservations);
   const observations: string[] = [];
-  const metricFormat = metricEntry?.formatType || metric.format_type || inferFormatType(metric.metric_id);
 
   if (currentMetricValue === null || priorMetricValue === null) {
     observations.push(
@@ -2090,73 +2052,73 @@ async function analyzeBusinessQuestion(
   const contextSignal = rankedDrivers.find((d) => d.explanatoryDirection === "context");
 
   if (metricChangeDirection === "up") {
-  if (support) {
-    observations.push(
-      `Primary contributing factor: ${buildDriverObservationText(
-        support,
-        "tailwind",
-        metricChangeDirection
-      )}`
-    );
+    if (support) {
+      observations.push(
+        `Primary contributing factor: ${buildDriverObservationText(
+          support,
+          "tailwind",
+          metricChangeDirection
+        )}`
+      );
+    }
+    if (primaryHeadwind) {
+      observations.push(
+        `Headwind: ${buildDriverObservationText(
+          primaryHeadwind,
+          "headwind",
+          metricChangeDirection
+        )}`
+      );
+    }
+    if (secondaryHeadwind) {
+      observations.push(
+        `Secondary headwind: ${buildDriverObservationText(
+          secondaryHeadwind,
+          "headwind",
+          metricChangeDirection
+        )}`
+      );
+    }
+  } else {
+    if (primaryHeadwind) {
+      observations.push(
+        `Primary driver: ${buildDriverObservationText(
+          primaryHeadwind,
+          "headwind",
+          metricChangeDirection
+        )}`
+      );
+    }
+    if (secondaryHeadwind) {
+      observations.push(
+        `Secondary driver: ${buildDriverObservationText(
+          secondaryHeadwind,
+          "headwind",
+          metricChangeDirection
+        )}`
+      );
+    }
+    if (support) {
+      observations.push(
+        `Offsetting factor: ${buildDriverObservationText(
+          support,
+          "tailwind",
+          metricChangeDirection
+        )}`
+      );
+    }
   }
-  if (primaryHeadwind) {
-    observations.push(
-      `Headwind: ${buildDriverObservationText(
-        primaryHeadwind,
-        "headwind",
-        metricChangeDirection
-      )}`
-    );
-  }
-  if (secondaryHeadwind) {
-    observations.push(
-      `Secondary headwind: ${buildDriverObservationText(
-        secondaryHeadwind,
-        "headwind",
-        metricChangeDirection
-      )}`
-    );
-  }
-} else {
-  if (primaryHeadwind) {
-    observations.push(
-      `Primary driver: ${buildDriverObservationText(
-        primaryHeadwind,
-        "headwind",
-        metricChangeDirection
-      )}`
-    );
-  }
-  if (secondaryHeadwind) {
-    observations.push(
-      `Secondary driver: ${buildDriverObservationText(
-        secondaryHeadwind,
-        "headwind",
-        metricChangeDirection
-      )}`
-    );
-  }
-  if (support) {
-    observations.push(
-      `Offsetting factor: ${buildDriverObservationText(
-        support,
-        "tailwind",
-        metricChangeDirection
-      )}`
-    );
-  }
-}
 
-if (!primaryHeadwind && !support && contextSignal) {
-  observations.push(
-    `Context: ${buildDriverObservationText(
-      contextSignal,
-      "context",
-      metricChangeDirection
-    )}`
-  );
-}
+  if (!primaryHeadwind && !support && contextSignal) {
+    observations.push(
+      `Context: ${buildDriverObservationText(
+        contextSignal,
+        "context",
+        metricChangeDirection
+      )}`
+    );
   }
+
   if (scope.market) observations.push(`Scope: market = ${scope.market}.`);
   if (scope.channel) observations.push(`Scope: channel = ${scope.channel}.`);
   if (primaryDataset) observations.push(`Dataset used: ${primaryDataset}.`);
@@ -2200,9 +2162,9 @@ if (!primaryHeadwind && !support && contextSignal) {
       business_question: businessQuestion,
       metric_id: metric.metric_id,
       metric_name: metric.metric_name,
-      current_value: formatMetricValue(currentMetricValue, metricFormat),
-      prior_value: formatMetricValue(priorMetricValue, metricFormat),
-      delta_value: formatDeltaValue(deltaMetricValue, metricFormat),
+      current_value: formatMetricValue(currentMetricValue, metric.format_type || inferFormatType(metric.metric_id)),
+      prior_value: formatMetricValue(priorMetricValue, metric.format_type || inferFormatType(metric.metric_id)),
+      delta_value: formatDeltaValue(deltaMetricValue, metric.format_type || inferFormatType(metric.metric_id)),
       candidate_drivers: candidateDrivers,
       summary,
       observations,
@@ -2221,24 +2183,21 @@ if (!primaryHeadwind && !support && contextSignal) {
 }
 
 async function analyzeMarketPerformance(
-  businessQuestion: string,
-  bypassCache = false
+  businessQuestion: string
 ): Promise<AnalyzeMarketPerformanceResult> {
-  const metricResult = await findMetricDefinition(businessQuestion, bypassCache);
+  const metricResult = await findMetricDefinition(businessQuestion);
   if (!metricResult.found) return { found: false, message: metricResult.message };
   return await analyzeMarketPerformanceWithMetric(
     businessQuestion,
     metricResult.metric,
-    metricResult.score,
-    bypassCache
+    metricResult.score
   );
 }
 
 async function analyzeMarketPerformanceWithMetric(
   businessQuestion: string,
   metric: MetricDefinition,
-  metricScore: number,
-  bypassCache = false
+  metricScore: number
 ): Promise<AnalyzeMarketPerformanceResult> {
   const primaryDatasetId = PRIMARY_DATASET_MAP[canonicalMetricId(metric.metric_id)];
   if (!primaryDatasetId) {
@@ -2248,7 +2207,7 @@ async function analyzeMarketPerformanceWithMetric(
     };
   }
 
-  const datasets = await findDatasetsByIds([primaryDatasetId], bypassCache);
+  const datasets = await findDatasetsByIds([primaryDatasetId]);
   const dataset = datasets.find((d) => d.link);
 
   if (!dataset?.link) {
@@ -2258,7 +2217,7 @@ async function analyzeMarketPerformanceWithMetric(
     };
   }
 
-  const loadedRows = await loadJsonFromUrl<DatasetRow[]>(String(dataset.link), bypassCache);
+  const loadedRows = await loadJsonFromUrl<DatasetRow[]>(String(dataset.link));
   const scope = parseBusinessQuestionScopeFromRows(businessQuestion, loadedRows);
 
   const supportsMarket = datasetSupportsAnyField(loadedRows, ["market", "Market"]);
@@ -2296,11 +2255,7 @@ async function analyzeMarketPerformanceWithMetric(
 
   const currentByMarket = groupRowsByMarket(scoped.current);
   const priorByMarket = groupRowsByMarket(scoped.prior);
-
-  const markets = Array.from(
-    new Set([...currentByMarket.keys(), ...priorByMarket.keys()])
-  );
-
+  const markets = Array.from(new Set([...currentByMarket.keys(), ...priorByMarket.keys()]));
   const formatType = metric.format_type || inferFormatType(metric.metric_id);
 
   const results = markets
@@ -2421,8 +2376,7 @@ function groupRowsByMarket(rows: DatasetRow[]): Map<string, DatasetRow[]> {
 }
 
 async function analyzeMixChange(
-  businessQuestion: string,
-  bypassCache = false
+  businessQuestion: string
 ): Promise<AnalyzeMixChangeResult> {
   const normalized = normalize(businessQuestion);
   const mixDimension: "channel" | "market" =
@@ -2438,14 +2392,14 @@ async function analyzeMixChange(
     return { found: false, message: `No primary dataset mapping found for mix base metric: ${baseMetric}` };
   }
 
-  const datasets = await findDatasetsByIds([primaryDatasetId], bypassCache);
+  const datasets = await findDatasetsByIds([primaryDatasetId]);
   const dataset = datasets.find((d) => d.link);
 
   if (!dataset?.link) {
     return { found: false, message: `No linked dataset found for mix analysis.` };
   }
 
-  const loadedRows = await loadJsonFromUrl<DatasetRow[]>(String(dataset.link), bypassCache);
+  const loadedRows = await loadJsonFromUrl<DatasetRow[]>(String(dataset.link));
   const scope = parseBusinessQuestionScopeFromRows(businessQuestion, loadedRows);
 
   const supportsMarket = datasetSupportsAnyField(loadedRows, ["market", "Market"]);
@@ -2590,23 +2544,17 @@ async function analyzeMixChange(
   };
 }
 
-async function queryMetricValue(
-  question: string,
-  bypassCache = false
-): Promise<QueryMetricValueResult> {
-  const metricResult = await findMetricDefinition(question, bypassCache);
+async function queryMetricValue(question: string): Promise<QueryMetricValueResult> {
+  const metricResult = await findMetricDefinition(question);
   if (!metricResult.found) return { found: false, message: metricResult.message };
 
-  const registry = await loadMetricRegistry(bypassCache);
+  const registry = await loadMetricRegistry();
   const metric = metricResult.metric;
   const entry = registry.get(canonicalMetricId(metric.metric_id));
 
   const primaryDataset = entry?.primaryDatasetId || PRIMARY_DATASET_MAP[canonicalMetricId(metric.metric_id)];
   const relevantDatasets = entry?.relevantDatasets || metric.relevant_datasets || [];
-  const linkedDatasets = await findDatasetsByIds(
-    relevantDatasets.length ? relevantDatasets : primaryDataset ? [primaryDataset] : [],
-    bypassCache
-  );
+  const linkedDatasets = await findDatasetsByIds(relevantDatasets.length ? relevantDatasets : primaryDataset ? [primaryDataset] : []);
 
   const datasetsToUse = linkedDatasets.filter((d) => d.link);
   const preferredDatasets = primaryDataset
@@ -2625,7 +2573,7 @@ async function queryMetricValue(
     finalDatasets.map(async (d) => ({
       dataset: String(d.dataset || d.sheet_name || ""),
       link: d.link,
-      rows: await loadJsonFromUrl<DatasetRow[]>(String(d.link), bypassCache),
+      rows: await loadJsonFromUrl<DatasetRow[]>(String(d.link)),
     }))
   );
 
@@ -2712,13 +2660,12 @@ async function queryMetricValue(
 }
 
 async function analyzeMetricTrend(
-  businessQuestion: string,
-  bypassCache = false
+  businessQuestion: string
 ): Promise<AnalyzeMetricTrendResult> {
-  const metricResult = await findMetricDefinition(businessQuestion, bypassCache);
+  const metricResult = await findMetricDefinition(businessQuestion);
   if (!metricResult.found) return { found: false, message: metricResult.message };
 
-  const registry = await loadMetricRegistry(bypassCache);
+  const registry = await loadMetricRegistry();
   const metric = metricResult.metric;
   const entry = registry.get(canonicalMetricId(metric.metric_id));
   const primaryDatasetId = entry?.primaryDatasetId || PRIMARY_DATASET_MAP[canonicalMetricId(metric.metric_id)];
@@ -2727,11 +2674,11 @@ async function analyzeMetricTrend(
     return { found: false, message: `No primary dataset mapping found for metric: ${metric.metric_id}` };
   }
 
-  const datasets = await findDatasetsByIds([primaryDatasetId], bypassCache);
+  const datasets = await findDatasetsByIds([primaryDatasetId]);
   const dataset = datasets.find((d) => d.link);
   if (!dataset?.link) return { found: false, message: `No linked dataset found for metric trend.` };
 
-  const rows = await loadJsonFromUrl<DatasetRow[]>(String(dataset.link), bypassCache);
+  const rows = await loadJsonFromUrl<DatasetRow[]>(String(dataset.link));
   const pointScope = parsePointInTimeScopeFromRows(businessQuestion, rows);
 
   const supportsMarket = datasetSupportsAnyField(rows, ["market", "Market"]);
@@ -2755,23 +2702,23 @@ async function analyzeMetricTrend(
 
   const points = bucketKeys.map((bucket) => {
     const bucketRows = filtered.filter((row) => getBucketKey(row, fieldCandidates) === bucket);
-    const projectedValue = maybeProjectMetricValue({
-      metricId: metric.metric_id,
-      grain: pointScope.time_grain,
-      allDatasetRows: filtered,
-      scopedBucketRows: bucketRows,
-      targetBucket: bucket,
-    });
-    const rawActual = computeMetricValue(metric.metric_id, bucketRows);
-    const isProjected =
-      projectedValue !== null &&
-      rawActual !== null &&
-      Math.abs(projectedValue - rawActual) > 1e-9;
+    const isProjected = ADDITIVE_METRICS.has(canonicalMetricId(metric.metric_id)) &&
+      isLatestBucketForGrain(filtered, pointScope.time_grain, bucket);
+
+    const rawValue = isProjected
+      ? maybeProjectMetricValue({
+          metricId: metric.metric_id,
+          grain: pointScope.time_grain,
+          allDatasetRows: filtered,
+          scopedBucketRows: bucketRows,
+          targetBucket: bucket,
+        })
+      : computeMetricValue(metric.metric_id, bucketRows);
 
     return {
       period: bucket,
-      value: formatMetricValue(projectedValue, formatType),
-      raw_value: projectedValue,
+      value: formatMetricValue(rawValue, formatType),
+      raw_value: rawValue,
       is_projected: Boolean(isProjected),
     };
   });
@@ -2826,13 +2773,12 @@ async function analyzeMetricTrend(
 }
 
 async function analyzeContributionToChange(
-  businessQuestion: string,
-  bypassCache = false
+  businessQuestion: string
 ): Promise<AnalyzeContributionToChangeResult> {
-  const metricResult = await findMetricDefinition(businessQuestion, bypassCache);
+  const metricResult = await findMetricDefinition(businessQuestion);
   if (!metricResult.found) return { found: false, message: metricResult.message };
 
-  const registry = await loadMetricRegistry(bypassCache);
+  const registry = await loadMetricRegistry();
   const metric = metricResult.metric;
   const entry = registry.get(canonicalMetricId(metric.metric_id));
 
@@ -2848,11 +2794,11 @@ async function analyzeContributionToChange(
     return { found: false, message: `No primary dataset mapping found for metric: ${metric.metric_id}` };
   }
 
-  const datasets = await findDatasetsByIds([primaryDatasetId], bypassCache);
+  const datasets = await findDatasetsByIds([primaryDatasetId]);
   const dataset = datasets.find((d) => d.link);
   if (!dataset?.link) return { found: false, message: `No linked dataset found.` };
 
-  const rows = await loadJsonFromUrl<DatasetRow[]>(String(dataset.link), bypassCache);
+  const rows = await loadJsonFromUrl<DatasetRow[]>(String(dataset.link));
   const scope = parseBusinessQuestionScopeFromRows(businessQuestion, rows);
 
   const dimension: "market" | "channel" =
@@ -2970,13 +2916,12 @@ async function analyzeContributionToChange(
 }
 
 async function compareSegments(
-  businessQuestion: string,
-  bypassCache = false
+  businessQuestion: string
 ): Promise<CompareSegmentsResult> {
-  const metricResult = await findMetricDefinition(businessQuestion, bypassCache);
+  const metricResult = await findMetricDefinition(businessQuestion);
   if (!metricResult.found) return { found: false, message: metricResult.message };
 
-  const registry = await loadMetricRegistry(bypassCache);
+  const registry = await loadMetricRegistry();
   const metric = metricResult.metric;
   const entry = registry.get(canonicalMetricId(metric.metric_id));
   const primaryDatasetId = entry?.primaryDatasetId || PRIMARY_DATASET_MAP[canonicalMetricId(metric.metric_id)];
@@ -2985,11 +2930,11 @@ async function compareSegments(
     return { found: false, message: `No primary dataset mapping found for metric: ${metric.metric_id}` };
   }
 
-  const datasets = await findDatasetsByIds([primaryDatasetId], bypassCache);
+  const datasets = await findDatasetsByIds([primaryDatasetId]);
   const dataset = datasets.find((d) => d.link);
   if (!dataset?.link) return { found: false, message: `No linked dataset found.` };
 
-  const rows = await loadJsonFromUrl<DatasetRow[]>(String(dataset.link), bypassCache);
+  const rows = await loadJsonFromUrl<DatasetRow[]>(String(dataset.link));
   const scope = parsePointInTimeScopeFromRows(businessQuestion, rows);
   const supportsMarket = datasetSupportsAnyField(rows, ["market", "Market"]);
   const supportsChannel = datasetSupportsAnyField(rows, ["channel_category", "Channel Category", "channel", "Channel"]);
@@ -3104,14 +3049,13 @@ function parseBusinessQuestionScopeFromRows(
     time_grain = "month";
   }
 
-  const monthMap = MONTH_MAP;
-  const matchedMonth = Object.keys(monthMap).find((m) => q.includes(m));
+  const matchedMonth = Object.keys(MONTH_MAP).find((m) => q.includes(m));
   if (matchedMonth) {
     const candidateYears = extractAvailableYears(rows, ["month", "Month", "day", "Day", "week", "Week"]);
     const explicitYearMatch = q.match(/\b(20\d{2})\b/);
     const explicitYear = explicitYearMatch ? Number(explicitYearMatch[1]) : undefined;
     const year = explicitYear ?? (candidateYears.length ? Math.max(...candidateYears) : new Date().getUTCFullYear());
-    target_bucket = `${year}-${monthMap[matchedMonth]}-01`;
+    target_bucket = `${year}-${MONTH_MAP[matchedMonth]}-01`;
   }
 
   const markets = uniqueDimensionValues(rows, ["market", "Market"]);
@@ -3456,10 +3400,18 @@ function canonicalFieldName(value: string): string {
 function toNumberOrNull(value: unknown): number | null {
   if (value === null || value === undefined || value === "") return null;
   if (typeof value === "number") return Number.isFinite(value) ? value : null;
-  const stripped = String(value).replace(/[$,%\s,]/g, "");
+
+  const str = String(value).trim();
+  if (!str) return null;
+
+  const isPercent = str.includes("%");
+  const stripped = str.replace(/[$,\s]/g, "");
   if (!stripped) return null;
-  const n = Number(stripped);
-  return Number.isFinite(n) ? n : null;
+
+  const n = Number(stripped.replace(/%/g, ""));
+  if (!Number.isFinite(n)) return null;
+
+  return isPercent ? n / 100 : n;
 }
 
 function collectNumericValues(rows: DatasetRow[], fieldNames: string[]): number[] {
@@ -3565,42 +3517,21 @@ function isAdditiveMetric(metricId: string): boolean {
   return ADDITIVE_METRICS.has(canonicalMetricId(metricId));
 }
 
-function getMaxRowDate(rows: DatasetRow[]): Date | null {
-  const dates = rows
-    .flatMap((row) => ["day", "Day", "week", "Week", "month", "Month"].map((field) => row[field]).filter(Boolean))
-    .map((v) => new Date(String(v)))
-    .filter((d) => !isNaN(d.getTime()));
+function getRowDateForPacing(row: DatasetRow): Date | null {
+  const raw =
+    row["day"] ||
+    row["Day"] ||
+    row["date"] ||
+    row["Date"] ||
+    row["week"] ||
+    row["Week"] ||
+    row["month"] ||
+    row["Month"];
 
-  if (!dates.length) return null;
-  return new Date(Math.max(...dates.map((d) => d.getTime())));
-}
-
-function getPointInPeriodFromRow(row: DatasetRow, grain: TimeGrain): number | null {
-  const raw = row["day"] || row["Day"] || row["week"] || row["Week"] || row["month"] || row["Month"];
   if (!raw) return null;
 
   const d = new Date(String(raw));
-  if (isNaN(d.getTime())) return null;
-
-  if (grain === "week") {
-    const dow = d.getUTCDay();
-    return dow === 0 ? 7 : dow;
-  }
-
-  if (grain === "month") {
-    return d.getUTCDate();
-  }
-
-  return null;
-}
-
-function getPeriodLengthFromBucket(bucket: string, grain: TimeGrain): number | null {
-  if (grain === "week") return 7;
-  if (grain === "month") {
-    const [y, m] = bucket.slice(0, 10).split("-");
-    return new Date(Date.UTC(Number(y), Number(m), 0)).getUTCDate();
-  }
-  return null;
+  return Number.isFinite(d.getTime()) ? d : null;
 }
 
 function isLatestBucketForGrain(rows: DatasetRow[], grain: TimeGrain, bucket: string | undefined): boolean {
@@ -3611,14 +3542,6 @@ function isLatestBucketForGrain(rows: DatasetRow[], grain: TimeGrain, bucket: st
 
 function startOfUtcDay(d: Date): Date {
   return new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()));
-}
-
-function getRowDateForPacing(row: DatasetRow): Date | null {
-  const raw = row["day"] || row["Day"] || row["date"] || row["Date"];
-  if (!raw) return null;
-
-  const d = new Date(String(raw));
-  return Number.isFinite(d.getTime()) ? startOfUtcDay(d) : null;
 }
 
 function getPeriodStartDateFromBucket(bucket: string, grain: TimeGrain): Date | null {
@@ -3678,16 +3601,6 @@ function sumNumberArray(values: number[]): number {
   return values.reduce((a, b) => a + b, 0);
 }
 
-function hasDailyProgression(rows: DatasetRow[]): boolean {
-  const uniqueDays = new Set(
-    rows
-      .map((row) => getRowDateForPacing(row))
-      .filter((d): d is Date => d !== null)
-      .map((d) => d.toISOString().slice(0, 10))
-  );
-  return uniqueDays.size >= 2;
-}
-
 function getMetricTotalByWeekdayForWorker(rows: DatasetRow[], metricId: string): number[] {
   const totals = [0, 0, 0, 0, 0, 0, 0];
 
@@ -3742,45 +3655,21 @@ function calcHistoricalPacingForWorker(
   const currentActual = computeMetricValue(metricId, currentRows);
   if (currentActual === null) return null;
 
-  if (!hasDailyProgression(currentRows)) {
-    return {
-      actual: currentActual,
-      projected: currentActual,
-      pct: 1,
-      method: "fallback",
-      sampleSize: 0,
-    };
-  }
-
-  const currentDates = currentRows
+  const currentMaxDate = currentRows
     .map(getRowDateForPacing)
     .filter((d): d is Date => d !== null)
-    .sort((a, b) => a.getTime() - b.getTime());
+    .sort((a, b) => a.getTime() - b.getTime())
+    .slice(-1)[0];
 
-  const currentMaxDate = currentDates[currentDates.length - 1];
   if (!currentMaxDate) return null;
 
   const currentPeriodStart = getPeriodStartDateFromBucket(currentBucket, grain);
   const currentPeriodEnd = getPeriodEndDateFromBucket(currentBucket, grain);
   if (!currentPeriodStart || !currentPeriodEnd) return null;
 
-  const todayUtc = startOfUtcDay(new Date());
-  const effectiveCurrentDate =
-    currentMaxDate.getTime() > todayUtc.getTime() ? todayUtc : currentMaxDate;
-
-  if (effectiveCurrentDate.getTime() >= currentPeriodEnd.getTime()) {
-    return {
-      actual: currentActual,
-      projected: currentActual,
-      pct: 1,
-      method: "fallback",
-      sampleSize: 0,
-    };
-  }
-
   const currentElapsedWeekdayCounts = countWeekdaysBetweenUtc(
     currentPeriodStart,
-    effectiveCurrentDate
+    currentMaxDate
   );
 
   const fullCurrentPeriodWeekdayCounts = countWeekdaysBetweenUtc(
@@ -3791,23 +3680,12 @@ function calcHistoricalPacingForWorker(
   const elapsedDays = sumNumberArray(currentElapsedWeekdayCounts);
   const totalDays = sumNumberArray(fullCurrentPeriodWeekdayCounts);
 
-  if (elapsedDays <= 0 || totalDays <= 0 || elapsedDays >= totalDays) {
-    return {
-      actual: currentActual,
-      projected: currentActual,
-      pct: 1,
-      method: "fallback",
-      sampleSize: 0,
-    };
-  }
-
   const historicalKeys = keys.filter((k) => k !== currentBucket);
 
   const shares = historicalKeys
     .map((bucket) => {
       const bucketRows = grouped.get(bucket) || [];
       if (!bucketRows.length) return null;
-      if (!hasDailyProgression(bucketRows)) return null;
 
       const bucketStart = getPeriodStartDateFromBucket(bucket, grain);
       const bucketEnd = getPeriodEndDateFromBucket(bucket, grain);
@@ -3831,7 +3709,7 @@ function calcHistoricalPacingForWorker(
       }
 
       const share = expectedElapsed / total;
-      if (!share || share <= 0 || share >= 1) return null;
+      if (!share || share <= 0 || share > 1.25) return null;
 
       return share;
     })
@@ -3842,8 +3720,8 @@ function calcHistoricalPacingForWorker(
 
     return {
       actual: currentActual,
-      projected: fallbackPct > 0 && fallbackPct < 1 ? currentActual / fallbackPct : currentActual,
-      pct: fallbackPct > 0 && fallbackPct < 1 ? fallbackPct : 1,
+      projected: fallbackPct > 0 ? currentActual / fallbackPct : currentActual,
+      pct: fallbackPct,
       method: "fallback",
       sampleSize: 0,
     };
@@ -3853,8 +3731,8 @@ function calcHistoricalPacingForWorker(
 
   return {
     actual: currentActual,
-    projected: historicalPct > 0 && historicalPct < 1 ? currentActual / historicalPct : currentActual,
-    pct: historicalPct > 0 && historicalPct < 1 ? historicalPct : 1,
+    projected: historicalPct > 0 ? currentActual / historicalPct : currentActual,
+    pct: historicalPct,
     method: "historical",
     sampleSize: shares.length,
   };
@@ -3876,8 +3754,7 @@ function maybeProjectMetricValue(args: {
   if (!isLatestBucketForGrain(allDatasetRows, grain, targetBucket)) return rawValue;
 
   const pacing = calcHistoricalPacingForWorker(grain, allDatasetRows, metricId, targetBucket);
-  if (!pacing) return rawValue;
-  return pacing.projected;
+  return pacing?.projected ?? rawValue;
 }
 
 function computeDelta(currentValue: number | null, priorValue: number | null): number | null {
@@ -4088,7 +3965,6 @@ function buildAnalysisSummary(args: {
   }
 
   const metricDirection = deriveMetricChangeDirection(currentMetricValue, priorMetricValue);
-
   const primarySupport = rankedDrivers.find((d) => d.explanatoryDirection === "supports");
   const primaryHeadwind = rankedDrivers.find((d) => d.explanatoryDirection === "hurts");
 
@@ -4157,6 +4033,7 @@ function formatMetricValue(value: number | null, formatType?: string): string {
     case "currency":
       return `$${value.toFixed(2)}`;
     default:
+      if (Number.isInteger(value)) return value.toFixed(0);
       if (Math.abs(value) >= 100) return value.toFixed(0);
       if (Math.abs(value) >= 10) return value.toFixed(1);
       return value.toFixed(2);
@@ -4173,6 +4050,7 @@ function formatDeltaValue(value: number | null, formatType?: string): string {
     case "currency":
       return `${sign}$${value.toFixed(2)}`;
     default:
+      if (Number.isInteger(value)) return `${sign}${value.toFixed(0)}`;
       if (Math.abs(value) >= 100) return `${sign}${value.toFixed(0)}`;
       if (Math.abs(value) >= 10) return `${sign}${value.toFixed(1)}`;
       return `${sign}${value.toFixed(2)}`;
