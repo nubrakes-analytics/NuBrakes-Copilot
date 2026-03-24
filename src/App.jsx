@@ -328,7 +328,7 @@ export default function NubrakesAICopilotFrontend() {
 
       const failedMessage = createMessage(
         "assistant",
-        "I couldn’t get a response right now. Please try again. If this keeps happening, check whether the Worker and /api/ai endpoint are live and returning valid JSON.",
+        "This request hit the Worker CPU limit and could not complete. Please try again. If it keeps happening, check whether /api/ai is exceeding Cloudflare CPU time limits or doing too much work in a single request.",
         {
           dataset: "Connection error",
           rows: [],
