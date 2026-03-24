@@ -2255,7 +2255,11 @@ async function analyzeMarketPerformanceWithMetric(
 
   const currentByMarket = groupRowsByMarket(scoped.current);
   const priorByMarket = groupRowsByMarket(scoped.prior);
-  const markets = Array.from(new Set([...currentByMarket.keys(), ...priorByMarket.keys()]));
+
+  const markets = Array.from(
+    new Set([...currentByMarket.keys(), ...priorByMarket.keys()])
+  );
+
   const formatType = metric.format_type || inferFormatType(metric.metric_id);
 
   const results = markets
@@ -2263,7 +2267,17 @@ async function analyzeMarketPerformanceWithMetric(
       const currentRows = currentByMarket.get(marketKey) || [];
       const priorRows = priorByMarket.get(marketKey) || [];
 
-      const currentValue = computeMetricValue(metric.metric_id, currentRows);
+      const currentValue = maybeProjectMetricValue({
+        metricId: metric.metric_id,
+        grain: scope.time_grain,
+        allDatasetRows: filtered.filter((row) => {
+          const value = String(row["market"] || row["Market"] || "").trim();
+          return normalize(value) === marketKey;
+        }),
+        scopedBucketRows: currentRows,
+        targetBucket: scoped.current_label,
+      });
+
       const priorValue = computeMetricValue(metric.metric_id, priorRows);
       const deltaValue = computeDelta(currentValue, priorValue);
 
