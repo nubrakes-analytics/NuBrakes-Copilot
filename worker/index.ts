@@ -1571,8 +1571,8 @@ function scoreDashboardEntry(query: string, entry: DashboardDefinition): number 
   if (!q) return -1;
 
   const STOPWORDS = new Set([
-    "a","an","the","for","of","to","in","on","by","and","or","with","from",
-    "link","need","show","give","me","where","can","i","find",
+    "a", "an", "the", "for", "of", "to", "in", "on", "by", "and", "or", "with", "from",
+    "link", "need", "show", "give", "me", "where", "can", "i", "find",
   ]);
 
   const queryWords = q.split(/\s+/).map((w) => w.trim()).filter((w) => w && !STOPWORDS.has(w));
@@ -1612,9 +1612,9 @@ function scoreDatasetEntry(query: string, entry: DatasetDefinition): number {
   if (!q) return -1;
 
   const STOPWORDS = new Set([
-    "a","an","the","for","of","to","in","on","by","and","or","with","from","data",
-    "dataset","json","link","file","need","show","give","me","where","can","i",
-    "find","should","use","best",
+    "a", "an", "the", "for", "of", "to", "in", "on", "by", "and", "or", "with", "from", "data",
+    "dataset", "json", "link", "file", "need", "show", "give", "me", "where", "can", "i",
+    "find", "should", "use", "best",
   ]);
 
   const queryWords = q.split(/\s+/).map((w) => w.trim()).filter((w) => w && !STOPWORDS.has(w));
@@ -1715,11 +1715,11 @@ async function findMetricDefinition(metricQuery: string): Promise<MetricLookupRe
   }
 
   const STOPWORDS = new Set([
-    "a","an","the","for","of","to","in","on","by","and","or","with","from","what","why",
-    "how","did","does","is","are","was","were","show","tell","me","about","metric","kpi",
-    "driver","drivers","business","question","drop","dropped","increase","increased","decrease",
-    "decreased","change","changed","trend","performing","performance","last","this","week",
-    "month","day","during","compare","vs","versus",
+    "a", "an", "the", "for", "of", "to", "in", "on", "by", "and", "or", "with", "from", "what", "why",
+    "how", "did", "does", "is", "are", "was", "were", "show", "tell", "me", "about", "metric", "kpi",
+    "driver", "drivers", "business", "question", "drop", "dropped", "increase", "increased", "decrease",
+    "decreased", "change", "changed", "trend", "performing", "performance", "last", "this", "week",
+    "month", "day", "during", "compare", "vs", "versus",
   ]);
 
   const queryWords = q.split(/\s+/).map((w) => w.trim()).filter((w) => w && !STOPWORDS.has(w));
@@ -2702,7 +2702,8 @@ async function analyzeMetricTrend(
 
   const points = bucketKeys.map((bucket) => {
     const bucketRows = filtered.filter((row) => getBucketKey(row, fieldCandidates) === bucket);
-    const isProjected = ADDITIVE_METRICS.has(canonicalMetricId(metric.metric_id)) &&
+    const isProjected =
+      ADDITIVE_METRICS.has(canonicalMetricId(metric.metric_id)) &&
       isLatestBucketForGrain(filtered, pointScope.time_grain, bucket);
 
     const rawValue = isProjected
@@ -3054,7 +3055,7 @@ function parseBusinessQuestionScopeFromRows(
     const candidateYears = extractAvailableYears(rows, ["month", "Month", "day", "Day", "week", "Week"]);
     const explicitYearMatch = q.match(/\b(20\d{2})\b/);
     const explicitYear = explicitYearMatch ? Number(explicitYearMatch[1]) : undefined;
-    const year = explicitYear ?? (candidateYears.length ? Math.max(...candidateYears) : new Date().getUTCFullYear());
+    const year = explicitYear ?? (candidateYears.length ? Math.max(...candidateYears) : new Date().getFullYear());
     target_bucket = `${year}-${MONTH_MAP[matchedMonth]}-01`;
   }
 
@@ -3111,7 +3112,7 @@ function parsePointInTimeScopeFromRows(
           return key.startsWith(`${y}-${monthNum}-`);
         })
       );
-      yearToUse = String(yearsWithMonth.length ? Math.max(...yearsWithMonth) : new Date().getUTCFullYear());
+      yearToUse = String(yearsWithMonth.length ? Math.max(...yearsWithMonth) : new Date().getFullYear());
     }
 
     target_bucket = `${yearToUse}-${monthNum}-01`;
@@ -3181,14 +3182,26 @@ const MONTH_NAMES = Object.keys(MONTH_MAP);
 
 function extractAvailableYears(rows: DatasetRow[], fields: string[]): number[] {
   const years = new Set<number>();
+
   for (const row of rows) {
     for (const field of fields) {
       const raw = row[field];
       if (!raw) continue;
-      const parsed = Date.parse(String(raw));
-      if (Number.isFinite(parsed)) years.add(new Date(parsed).getUTCFullYear());
+
+      const value = String(raw).trim();
+      const directYear = value.match(/^(\d{4})[-/]/);
+      if (directYear) {
+        years.add(Number(directYear[1]));
+        continue;
+      }
+
+      const parsed = new Date(value);
+      if (!Number.isNaN(parsed.getTime())) {
+        years.add(parsed.getFullYear());
+      }
     }
   }
+
   return Array.from(years);
 }
 
@@ -3375,16 +3388,31 @@ function getBucketKey(row: DatasetRow, fieldCandidates: string[]): string {
     const value = String(raw).trim();
     if (!value) continue;
 
-    const parsed = Date.parse(value);
-    if (Number.isFinite(parsed)) return new Date(parsed).toISOString().slice(0, 10);
+    const canonicalField = canonicalFieldName(field);
 
-    const ym = value.match(/^(\d{4})[-/](\d{1,2})$/);
-    if (ym) {
-      const y = ym[1];
-      const m = ym[2].padStart(2, "0");
-      return `${y}-${m}-01`;
+    if (canonicalField === "month") {
+      if (/^\d{4}-\d{2}-\d{2}/.test(value)) return `${value.slice(0, 7)}-01`;
+      const ym = value.match(/^(\d{4})[-/](\d{1,2})$/);
+      if (ym) {
+        const y = ym[1];
+        const m = ym[2].padStart(2, "0");
+        return `${y}-${m}-01`;
+      }
+    }
+
+    if (canonicalField === "week" || canonicalField === "day") {
+      if (/^\d{4}-\d{2}-\d{2}/.test(value)) return value.slice(0, 10);
+    }
+
+    const parsed = new Date(value);
+    if (!Number.isNaN(parsed.getTime())) {
+      const y = parsed.getFullYear();
+      const m = String(parsed.getMonth() + 1).padStart(2, "0");
+      const d = String(parsed.getDate()).padStart(2, "0");
+      return canonicalField === "month" ? `${y}-${m}-01` : `${y}-${m}-${d}`;
     }
   }
+
   return "";
 }
 
@@ -3530,7 +3558,13 @@ function getRowDateForPacing(row: DatasetRow): Date | null {
 
   if (!raw) return null;
 
-  const d = new Date(String(raw));
+  const value = String(raw).trim();
+  if (!value) return null;
+
+  const d = /^\d{4}-\d{2}-\d{2}$/.test(value)
+    ? new Date(`${value}T12:00:00`)
+    : new Date(value);
+
   return Number.isFinite(d.getTime()) ? d : null;
 }
 
@@ -3540,17 +3574,17 @@ function isLatestBucketForGrain(rows: DatasetRow[], grain: TimeGrain, bucket: st
   return !!latest && latest === bucket;
 }
 
-function startOfUtcDay(d: Date): Date {
-  return new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()));
+function startOfLocalDay(d: Date): Date {
+  return new Date(d.getFullYear(), d.getMonth(), d.getDate());
 }
 
 function getPeriodStartDateFromBucket(bucket: string, grain: TimeGrain): Date | null {
   if (!bucket) return null;
 
   if (grain === "week") {
-    const d = new Date(bucket);
+    const d = new Date(`${bucket}T12:00:00`);
     if (!Number.isFinite(d.getTime())) return null;
-    return startOfUtcDay(d);
+    return startOfLocalDay(d);
   }
 
   if (grain === "month") {
@@ -3559,7 +3593,7 @@ function getPeriodStartDateFromBucket(bucket: string, grain: TimeGrain): Date | 
     const y = Number(parts[0]);
     const m = Number(parts[1]);
     if (!Number.isFinite(y) || !Number.isFinite(m)) return null;
-    return new Date(Date.UTC(y, m - 1, 1));
+    return new Date(y, m - 1, 1);
   }
 
   return null;
@@ -3571,27 +3605,27 @@ function getPeriodEndDateFromBucket(bucket: string, grain: TimeGrain): Date | nu
 
   if (grain === "week") {
     const end = new Date(start);
-    end.setUTCDate(end.getUTCDate() + 6);
+    end.setDate(end.getDate() + 6);
     return end;
   }
 
   if (grain === "month") {
-    return new Date(Date.UTC(start.getUTCFullYear(), start.getUTCMonth() + 1, 0));
+    return new Date(start.getFullYear(), start.getMonth() + 1, 0);
   }
 
   return null;
 }
 
-function countWeekdaysBetweenUtc(startDate: Date | null, endDate: Date | null): number[] {
+function countWeekdaysBetweenLocal(startDate: Date | null, endDate: Date | null): number[] {
   const counts = [0, 0, 0, 0, 0, 0, 0];
   if (!startDate || !endDate || endDate.getTime() < startDate.getTime()) return counts;
 
-  const d = startOfUtcDay(startDate);
-  const end = startOfUtcDay(endDate);
+  const d = startOfLocalDay(startDate);
+  const end = startOfLocalDay(endDate);
 
   while (d.getTime() <= end.getTime()) {
-    counts[d.getUTCDay()] += 1;
-    d.setUTCDate(d.getUTCDate() + 1);
+    counts[d.getDay()] += 1;
+    d.setDate(d.getDate() + 1);
   }
 
   return counts;
@@ -3611,7 +3645,7 @@ function getMetricTotalByWeekdayForWorker(rows: DatasetRow[], metricId: string):
     const rowValue = computeMetricValue(metricId, [row]);
     if (rowValue === null) continue;
 
-    totals[d.getUTCDay()] += rowValue;
+    totals[d.getDay()] += rowValue;
   }
 
   return totals;
@@ -3667,12 +3701,12 @@ function calcHistoricalPacingForWorker(
   const currentPeriodEnd = getPeriodEndDateFromBucket(currentBucket, grain);
   if (!currentPeriodStart || !currentPeriodEnd) return null;
 
-  const currentElapsedWeekdayCounts = countWeekdaysBetweenUtc(
+  const currentElapsedWeekdayCounts = countWeekdaysBetweenLocal(
     currentPeriodStart,
     currentMaxDate
   );
 
-  const fullCurrentPeriodWeekdayCounts = countWeekdaysBetweenUtc(
+  const fullCurrentPeriodWeekdayCounts = countWeekdaysBetweenLocal(
     currentPeriodStart,
     currentPeriodEnd
   );
@@ -3691,7 +3725,7 @@ function calcHistoricalPacingForWorker(
       const bucketEnd = getPeriodEndDateFromBucket(bucket, grain);
       if (!bucketStart || !bucketEnd) return null;
 
-      const fullWeekdayCounts = countWeekdaysBetweenUtc(bucketStart, bucketEnd);
+      const fullWeekdayCounts = countWeekdaysBetweenLocal(bucketStart, bucketEnd);
       const weekdayTotals = getMetricTotalByWeekdayForWorker(bucketRows, metricId);
       const total = weekdayTotals.reduce((a, b) => a + b, 0);
 
@@ -4062,11 +4096,11 @@ function inferFormatType(metricId: string): string {
 
   if (
     [
-      "booking_rate","conversion_rate","cancel_rate","cancel_outcome_rate","ctr",
-      "technician_utilization","ft_tech_utilization","pt_tech_utilization",
-      "gross_margin_pct","parts_cost_pct_revenue","labor_cost_pct_revenue",
-      "marketing_spend_pct_revenue","customer_cancel_rate","hq_cancel_rate",
-      "reschedule_rate","customer_reschedule_rate","hq_reschedule_rate",
+      "booking_rate", "conversion_rate", "cancel_rate", "cancel_outcome_rate", "ctr",
+      "technician_utilization", "ft_tech_utilization", "pt_tech_utilization",
+      "gross_margin_pct", "parts_cost_pct_revenue", "labor_cost_pct_revenue",
+      "marketing_spend_pct_revenue", "customer_cancel_rate", "hq_cancel_rate",
+      "reschedule_rate", "customer_reschedule_rate", "hq_reschedule_rate",
     ].includes(id)
   ) {
     return "percent";
@@ -4074,7 +4108,7 @@ function inferFormatType(metricId: string): string {
 
   if (
     [
-      "revenue","aov","marketing_spend","cpc","cost_per_inquiry","mac","net_contribution_profit",
+      "revenue", "aov", "marketing_spend", "cpc", "cost_per_inquiry", "mac", "net_contribution_profit",
     ].includes(id)
   ) {
     return "currency";
