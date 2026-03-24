@@ -404,7 +404,6 @@ const corsHeaders = {
   "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
   "Access-Control-Allow-Headers": "Content-Type, Authorization",
   "Access-Control-Max-Age": "86400",
-};
 
 const DASHBOARD_LINKS_URL =
   "https://cdn.jsdelivr.net/gh/nubrakes-analytics/NuBrakes-Copilot@main/data/dashboard_links.json";
@@ -417,7 +416,7 @@ const METRIC_DEFINITIONS_URL =
 
 const CACHE_TTL_MS = 5 * 60 * 1000;
 const DATASET_TTL_MS = 10 * 60 * 1000;
-const MAX_TREND_POINTS = 8;
+const MAX_TREND_POINTS = 12;
 
 const memoryCache = new Map<string, { expiresAt: number; value: unknown }>();
 const inFlight = new Map<string, Promise<unknown>>();
