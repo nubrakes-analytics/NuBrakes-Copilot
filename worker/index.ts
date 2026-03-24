@@ -426,7 +426,7 @@ const METRIC_FIELD_MAP: Record<string, string[]> = {
   jobs_booked: ["jobs_booked", "Jobs Booked", "booked_jobs", "jobs booked"],
   jobs_completed: ["jobs_completed", "Jobs Completed", "completed_jobs", "jobs completed"],
   canceled_jobs: ["canceled_jobs", "Canceled Jobs", "cancelled_jobs", "canceled jobs"],
-  revenue: ["revenue", "Revenue"],
+  revenue: ["revenue", "Revenue", "invoiced_customer_price", "Invoiced Customer Price"],
   impressions: ["impressions", "Impressions"],
   clicks: ["clicks", "Clicks"],
   marketing_spend: ["marketing_spend", "Marketing Spend"],
