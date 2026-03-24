@@ -1839,7 +1839,7 @@ async function buildBusinessQuestionDriverPlan(
         candidateDrivers.length ? `Analyze candidate drivers: ${candidateDrivers.join(", ")}` : `No candidate drivers defined for this metric`,
         `Slice trend by time period`,
         `Slice performance by market and channel where available`,
-        `Classify driver movements into tailwinds, headwinds, and context signals`,
+        `Classify driver movements into contributing factors, headwinds, and context signals`,
       ],
     },
     confidence: buildConfidenceScore({
@@ -2039,7 +2039,6 @@ async function analyzeBusinessQuestion(
 
   const rankedDrivers = rankDriverObservations(driverObservations);
   const observations: string[] = [];
-  const metricFormat = metricEntry?.formatType || metric.format_type || inferFormatType(metric.metric_id);
 
   if (currentMetricValue === null || priorMetricValue === null) {
     observations.push(
@@ -2052,18 +2051,74 @@ async function analyzeBusinessQuestion(
   const support = rankedDrivers.find((d) => d.explanatoryDirection === "supports");
   const contextSignal = rankedDrivers.find((d) => d.explanatoryDirection === "context");
 
-  if (primaryHeadwind) {
-    observations.push(`Primary driver: ${buildDriverObservationText(primaryHeadwind, "headwind")}`);
+  if (metricChangeDirection === "up") {
+    if (support) {
+      observations.push(
+        `Primary contributing factor: ${buildDriverObservationText(
+          support,
+          "tailwind",
+          metricChangeDirection
+        )}`
+      );
+    }
+    if (primaryHeadwind) {
+      observations.push(
+        `Headwind: ${buildDriverObservationText(
+          primaryHeadwind,
+          "headwind",
+          metricChangeDirection
+        )}`
+      );
+    }
+    if (secondaryHeadwind) {
+      observations.push(
+        `Secondary headwind: ${buildDriverObservationText(
+          secondaryHeadwind,
+          "headwind",
+          metricChangeDirection
+        )}`
+      );
+    }
+  } else {
+    if (primaryHeadwind) {
+      observations.push(
+        `Primary driver: ${buildDriverObservationText(
+          primaryHeadwind,
+          "headwind",
+          metricChangeDirection
+        )}`
+      );
+    }
+    if (secondaryHeadwind) {
+      observations.push(
+        `Secondary driver: ${buildDriverObservationText(
+          secondaryHeadwind,
+          "headwind",
+          metricChangeDirection
+        )}`
+      );
+    }
+    if (support) {
+      observations.push(
+        `Offsetting factor: ${buildDriverObservationText(
+          support,
+          "tailwind",
+          metricChangeDirection
+        )}`
+      );
+    }
   }
-  if (secondaryHeadwind) {
-    observations.push(`Secondary driver: ${buildDriverObservationText(secondaryHeadwind, "headwind")}`);
-  }
-  if (support) {
-    observations.push(`Offsetting factor: ${buildDriverObservationText(support, "tailwind")}`);
-  }
+
   if (!primaryHeadwind && !support && contextSignal) {
-    observations.push(`Context: ${buildDriverObservationText(contextSignal, "context")}`);
+    observations.push(
+      `Context: ${buildDriverObservationText(
+        contextSignal,
+        "context",
+        metricChangeDirection
+      )}`
+    );
   }
+
   if (scope.market) observations.push(`Scope: market = ${scope.market}.`);
   if (scope.channel) observations.push(`Scope: channel = ${scope.channel}.`);
   if (primaryDataset) observations.push(`Dataset used: ${primaryDataset}.`);
@@ -2107,9 +2162,9 @@ async function analyzeBusinessQuestion(
       business_question: businessQuestion,
       metric_id: metric.metric_id,
       metric_name: metric.metric_name,
-      current_value: formatMetricValue(currentMetricValue, metricFormat),
-      prior_value: formatMetricValue(priorMetricValue, metricFormat),
-      delta_value: formatDeltaValue(deltaMetricValue, metricFormat),
+      current_value: formatMetricValue(currentMetricValue, metric.format_type || inferFormatType(metric.metric_id)),
+      prior_value: formatMetricValue(priorMetricValue, metric.format_type || inferFormatType(metric.metric_id)),
+      delta_value: formatDeltaValue(deltaMetricValue, metric.format_type || inferFormatType(metric.metric_id)),
       candidate_drivers: candidateDrivers,
       summary,
       observations,
@@ -2125,6 +2180,18 @@ async function analyzeBusinessQuestion(
       },
     },
   };
+}
+
+async function analyzeMarketPerformance(
+  businessQuestion: string
+): Promise<AnalyzeMarketPerformanceResult> {
+  const metricResult = await findMetricDefinition(businessQuestion);
+  if (!metricResult.found) return { found: false, message: metricResult.message };
+  return await analyzeMarketPerformanceWithMetric(
+    businessQuestion,
+    metricResult.metric,
+    metricResult.score
+  );
 }
 
 async function analyzeMarketPerformanceWithMetric(
@@ -2188,11 +2255,7 @@ async function analyzeMarketPerformanceWithMetric(
 
   const currentByMarket = groupRowsByMarket(scoped.current);
   const priorByMarket = groupRowsByMarket(scoped.prior);
-
-  const markets = Array.from(
-    new Set([...currentByMarket.keys(), ...priorByMarket.keys()])
-  );
-
+  const markets = Array.from(new Set([...currentByMarket.keys(), ...priorByMarket.keys()]));
   const formatType = metric.format_type || inferFormatType(metric.metric_id);
 
   const results = markets
@@ -2200,8 +2263,6 @@ async function analyzeMarketPerformanceWithMetric(
       const currentRows = currentByMarket.get(marketKey) || [];
       const priorRows = priorByMarket.get(marketKey) || [];
 
-      // For ranking underperforming markets, use raw period values.
-      // This avoids expensive pacing recomputation per market.
       const currentValue = computeMetricValue(metric.metric_id, currentRows);
       const priorValue = computeMetricValue(metric.metric_id, priorRows);
       const deltaValue = computeDelta(currentValue, priorValue);
@@ -2988,14 +3049,13 @@ function parseBusinessQuestionScopeFromRows(
     time_grain = "month";
   }
 
-  const monthMap = MONTH_MAP;
-  const matchedMonth = Object.keys(monthMap).find((m) => q.includes(m));
+  const matchedMonth = Object.keys(MONTH_MAP).find((m) => q.includes(m));
   if (matchedMonth) {
     const candidateYears = extractAvailableYears(rows, ["month", "Month", "day", "Day", "week", "Week"]);
     const explicitYearMatch = q.match(/\b(20\d{2})\b/);
     const explicitYear = explicitYearMatch ? Number(explicitYearMatch[1]) : undefined;
     const year = explicitYear ?? (candidateYears.length ? Math.max(...candidateYears) : new Date().getUTCFullYear());
-    target_bucket = `${year}-${monthMap[matchedMonth]}-01`;
+    target_bucket = `${year}-${MONTH_MAP[matchedMonth]}-01`;
   }
 
   const markets = uniqueDimensionValues(rows, ["market", "Market"]);
@@ -3340,10 +3400,18 @@ function canonicalFieldName(value: string): string {
 function toNumberOrNull(value: unknown): number | null {
   if (value === null || value === undefined || value === "") return null;
   if (typeof value === "number") return Number.isFinite(value) ? value : null;
-  const stripped = String(value).replace(/[$,%\s,]/g, "");
+
+  const str = String(value).trim();
+  if (!str) return null;
+
+  const isPercent = str.includes("%");
+  const stripped = str.replace(/[$,\s]/g, "");
   if (!stripped) return null;
-  const n = Number(stripped);
-  return Number.isFinite(n) ? n : null;
+
+  const n = Number(stripped.replace(/%/g, ""));
+  if (!Number.isFinite(n)) return null;
+
+  return isPercent ? n / 100 : n;
 }
 
 function collectNumericValues(rows: DatasetRow[], fieldNames: string[]): number[] {
@@ -3449,54 +3517,6 @@ function isAdditiveMetric(metricId: string): boolean {
   return ADDITIVE_METRICS.has(canonicalMetricId(metricId));
 }
 
-function getMaxRowDate(rows: DatasetRow[]): Date | null {
-  const dates = rows
-    .flatMap((row) => ["day", "Day", "week", "Week", "month", "Month"].map((field) => row[field]).filter(Boolean))
-    .map((v) => new Date(String(v)))
-    .filter((d) => !isNaN(d.getTime()));
-
-  if (!dates.length) return null;
-  return new Date(Math.max(...dates.map((d) => d.getTime())));
-}
-
-function getPointInPeriodFromRow(row: DatasetRow, grain: TimeGrain): number | null {
-  const raw = row["day"] || row["Day"] || row["week"] || row["Week"] || row["month"] || row["Month"];
-  if (!raw) return null;
-
-  const d = new Date(String(raw));
-  if (isNaN(d.getTime())) return null;
-
-  if (grain === "week") {
-    const dow = d.getUTCDay();
-    return dow === 0 ? 7 : dow;
-  }
-
-  if (grain === "month") {
-    return d.getUTCDate();
-  }
-
-  return null;
-}
-
-function getPeriodLengthFromBucket(bucket: string, grain: TimeGrain): number | null {
-  if (grain === "week") return 7;
-  if (grain === "month") {
-    const [y, m] = bucket.slice(0, 10).split("-");
-    return new Date(Date.UTC(Number(y), Number(m), 0)).getUTCDate();
-  }
-  return null;
-}
-
-function isLatestBucketForGrain(rows: DatasetRow[], grain: TimeGrain, bucket: string | undefined): boolean {
-  if (!bucket) return false;
-  const latest = getLatestBucket(rows, grain);
-  return !!latest && latest === bucket;
-}
-
-function startOfUtcDay(d: Date): Date {
-  return new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()));
-}
-
 function getRowDateForPacing(row: DatasetRow): Date | null {
   const raw =
     row["day"] ||
@@ -3512,6 +3532,16 @@ function getRowDateForPacing(row: DatasetRow): Date | null {
 
   const d = new Date(String(raw));
   return Number.isFinite(d.getTime()) ? d : null;
+}
+
+function isLatestBucketForGrain(rows: DatasetRow[], grain: TimeGrain, bucket: string | undefined): boolean {
+  if (!bucket) return false;
+  const latest = getLatestBucket(rows, grain);
+  return !!latest && latest === bucket;
+}
+
+function startOfUtcDay(d: Date): Date {
+  return new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()));
 }
 
 function getPeriodStartDateFromBucket(bucket: string, grain: TimeGrain): Date | null {
@@ -3553,7 +3583,7 @@ function getPeriodEndDateFromBucket(bucket: string, grain: TimeGrain): Date | nu
 }
 
 function countWeekdaysBetweenUtc(startDate: Date | null, endDate: Date | null): number[] {
-  const counts = [0, 0, 0, 0, 0, 0, 0]; // Sun..Sat
+  const counts = [0, 0, 0, 0, 0, 0, 0];
   if (!startDate || !endDate || endDate.getTime() < startDate.getTime()) return counts;
 
   const d = startOfUtcDay(startDate);
@@ -3572,7 +3602,7 @@ function sumNumberArray(values: number[]): number {
 }
 
 function getMetricTotalByWeekdayForWorker(rows: DatasetRow[], metricId: string): number[] {
-  const totals = [0, 0, 0, 0, 0, 0, 0]; // Sun..Sat
+  const totals = [0, 0, 0, 0, 0, 0, 0];
 
   for (const row of rows) {
     const d = getRowDateForPacing(row);
@@ -3877,7 +3907,8 @@ function prettifyMetricLabel(metricId: string): string {
 
 function buildDriverObservationText(
   obs: DriverObservation,
-  label: "headwind" | "tailwind" | "context"
+  label: "headwind" | "tailwind" | "context",
+  metricChangeDirection?: "up" | "down" | "flat" | "unknown"
 ): string {
   if (obs.currentValue === null && obs.priorValue === null) {
     return `${prettifyMetricLabel(obs.driverId)} is not directly computable from ${obs.datasetUsed}.`;
@@ -3889,11 +3920,20 @@ function buildDriverObservationText(
   const delta = formatDeltaValue(obs.deltaValue, obs.formatType);
 
   if (label === "headwind") {
+    if (metricChangeDirection === "up") {
+      return `${metricLabel} moved from ${prior} to ${current} (${delta}), which acted as a headwind against the increase.`;
+    }
     return `${metricLabel} moved from ${prior} to ${current} (${delta}), which looks like a headwind.`;
   }
 
   if (label === "tailwind") {
-    return `${metricLabel} moved from ${prior} to ${current} (${delta}), which helped offset the decline.`;
+    if (metricChangeDirection === "down") {
+      return `${metricLabel} moved from ${prior} to ${current} (${delta}), which partially offset the decline.`;
+    }
+    if (metricChangeDirection === "up") {
+      return `${metricLabel} moved from ${prior} to ${current} (${delta}), which contributed to the increase.`;
+    }
+    return `${metricLabel} moved from ${prior} to ${current} (${delta}), which looks supportive.`;
   }
 
   return `${metricLabel} moved from ${prior} to ${current} (${delta}), which looks more like context than a direct driver.`;
@@ -3908,20 +3948,56 @@ function buildAnalysisSummary(args: {
   currentLabel: string;
   priorLabel: string;
 }): string {
-  const { metric, currentMetricValue, priorMetricValue, deltaMetricValue, rankedDrivers, currentLabel, priorLabel } = args;
+  const {
+    metric,
+    currentMetricValue,
+    priorMetricValue,
+    deltaMetricValue,
+    rankedDrivers,
+    currentLabel,
+    priorLabel,
+  } = args;
+
   const formatType = metric.format_type || inferFormatType(metric.metric_id);
 
   if (currentMetricValue === null || priorMetricValue === null) {
     return `${metric.metric_name} could not be fully computed for ${currentLabel} versus ${priorLabel}.`;
   }
 
-  const headwind = rankedDrivers.find((d) => d.explanatoryDirection === "hurts");
-  const support = rankedDrivers.find((d) => d.explanatoryDirection === "supports");
+  const metricDirection = deriveMetricChangeDirection(currentMetricValue, priorMetricValue);
+  const primarySupport = rankedDrivers.find((d) => d.explanatoryDirection === "supports");
+  const primaryHeadwind = rankedDrivers.find((d) => d.explanatoryDirection === "hurts");
 
-  let summary = `${metric.metric_name} was ${formatMetricValue(currentMetricValue, formatType)} in ${currentLabel} versus ${formatMetricValue(priorMetricValue, formatType)} in ${priorLabel} (${formatDeltaValue(deltaMetricValue, formatType)}).`;
+  let summary = `${metric.metric_name} was ${formatMetricValue(
+    currentMetricValue,
+    formatType
+  )} in ${currentLabel} versus ${formatMetricValue(
+    priorMetricValue,
+    formatType
+  )} in ${priorLabel} (${formatDeltaValue(deltaMetricValue, formatType)}).`;
 
-  if (headwind) summary += ` Primary driver: ${prettifyMetricLabel(headwind.driverId)}.`;
-  if (support) summary += ` Offsetting factor: ${prettifyMetricLabel(support.driverId)}.`;
+  if (metricDirection === "up") {
+    if (primarySupport) {
+      summary += ` Primary contributing factor: ${prettifyMetricLabel(primarySupport.driverId)}.`;
+    }
+    if (primaryHeadwind) {
+      summary += ` Headwind: ${prettifyMetricLabel(primaryHeadwind.driverId)}.`;
+    }
+  } else if (metricDirection === "down") {
+    if (primaryHeadwind) {
+      summary += ` Primary driver of the decline: ${prettifyMetricLabel(primaryHeadwind.driverId)}.`;
+    }
+    if (primarySupport) {
+      summary += ` Partial offset: ${prettifyMetricLabel(primarySupport.driverId)}.`;
+    }
+  } else {
+    if (primarySupport) {
+      summary += ` Supporting factor: ${prettifyMetricLabel(primarySupport.driverId)}.`;
+    }
+    if (primaryHeadwind) {
+      summary += ` Headwind: ${prettifyMetricLabel(primaryHeadwind.driverId)}.`;
+    }
+  }
 
   return summary;
 }
@@ -3957,6 +4033,7 @@ function formatMetricValue(value: number | null, formatType?: string): string {
     case "currency":
       return `$${value.toFixed(2)}`;
     default:
+      if (Number.isInteger(value)) return value.toFixed(0);
       if (Math.abs(value) >= 100) return value.toFixed(0);
       if (Math.abs(value) >= 10) return value.toFixed(1);
       return value.toFixed(2);
@@ -3973,6 +4050,7 @@ function formatDeltaValue(value: number | null, formatType?: string): string {
     case "currency":
       return `${sign}$${value.toFixed(2)}`;
     default:
+      if (Number.isInteger(value)) return `${sign}${value.toFixed(0)}`;
       if (Math.abs(value) >= 100) return `${sign}${value.toFixed(0)}`;
       if (Math.abs(value) >= 10) return `${sign}${value.toFixed(1)}`;
       return `${sign}${value.toFixed(2)}`;
