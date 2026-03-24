@@ -12,12 +12,6 @@
     "description": ""
   },
   {
-    "sheet_name": "fact_nubrakes_dow_lookup",
-    "dataset": "fact_nubrakes_dow_lookup.json",
-    "link": "https://cdn.jsdelivr.net/gh/nubrakes-analytics/NuBrakes-Copilot@main/data/fact_nubrakes_dow_lookup.json",
-    "description": ""
-  },
-  {
     "sheet_name": "fact_nubrakes_supply_demand_daily",
     "dataset": "fact_nubrakes_supply_demand_daily.json",
     "link": "https://cdn.jsdelivr.net/gh/nubrakes-analytics/NuBrakes-Copilot@main/data/fact_nubrakes_supply_demand_daily.json",
