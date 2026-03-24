@@ -2089,17 +2089,73 @@ async function analyzeBusinessQuestion(
   const support = rankedDrivers.find((d) => d.explanatoryDirection === "supports");
   const contextSignal = rankedDrivers.find((d) => d.explanatoryDirection === "context");
 
+  if (metricChangeDirection === "up") {
+  if (support) {
+    observations.push(
+      `Primary contributing factor: ${buildDriverObservationText(
+        support,
+        "tailwind",
+        metricChangeDirection
+      )}`
+    );
+  }
   if (primaryHeadwind) {
-    observations.push(`Primary driver: ${buildDriverObservationText(primaryHeadwind, "headwind")}`);
+    observations.push(
+      `Headwind: ${buildDriverObservationText(
+        primaryHeadwind,
+        "headwind",
+        metricChangeDirection
+      )}`
+    );
   }
   if (secondaryHeadwind) {
-    observations.push(`Secondary driver: ${buildDriverObservationText(secondaryHeadwind, "headwind")}`);
+    observations.push(
+      `Secondary headwind: ${buildDriverObservationText(
+        secondaryHeadwind,
+        "headwind",
+        metricChangeDirection
+      )}`
+    );
+  }
+} else {
+  if (primaryHeadwind) {
+    observations.push(
+      `Primary driver: ${buildDriverObservationText(
+        primaryHeadwind,
+        "headwind",
+        metricChangeDirection
+      )}`
+    );
+  }
+  if (secondaryHeadwind) {
+    observations.push(
+      `Secondary driver: ${buildDriverObservationText(
+        secondaryHeadwind,
+        "headwind",
+        metricChangeDirection
+      )}`
+    );
   }
   if (support) {
-    observations.push(`Offsetting factor: ${buildDriverObservationText(support, "tailwind")}`);
+    observations.push(
+      `Offsetting factor: ${buildDriverObservationText(
+        support,
+        "tailwind",
+        metricChangeDirection
+      )}`
+    );
   }
-  if (!primaryHeadwind && !support && contextSignal) {
-    observations.push(`Context: ${buildDriverObservationText(contextSignal, "context")}`);
+}
+
+if (!primaryHeadwind && !support && contextSignal) {
+  observations.push(
+    `Context: ${buildDriverObservationText(
+      contextSignal,
+      "context",
+      metricChangeDirection
+    )}`
+  );
+}
   }
   if (scope.market) observations.push(`Scope: market = ${scope.market}.`);
   if (scope.channel) observations.push(`Scope: channel = ${scope.channel}.`);
@@ -3974,7 +4030,8 @@ function prettifyMetricLabel(metricId: string): string {
 
 function buildDriverObservationText(
   obs: DriverObservation,
-  label: "headwind" | "tailwind" | "context"
+  label: "headwind" | "tailwind" | "context",
+  metricChangeDirection?: "up" | "down" | "flat" | "unknown"
 ): string {
   if (obs.currentValue === null && obs.priorValue === null) {
     return `${prettifyMetricLabel(obs.driverId)} is not directly computable from ${obs.datasetUsed}.`;
@@ -3986,11 +4043,20 @@ function buildDriverObservationText(
   const delta = formatDeltaValue(obs.deltaValue, obs.formatType);
 
   if (label === "headwind") {
+    if (metricChangeDirection === "up") {
+      return `${metricLabel} moved from ${prior} to ${current} (${delta}), which acted as a headwind against the increase.`;
+    }
     return `${metricLabel} moved from ${prior} to ${current} (${delta}), which looks like a headwind.`;
   }
 
   if (label === "tailwind") {
-    return `${metricLabel} moved from ${prior} to ${current} (${delta}), which helped offset the decline.`;
+    if (metricChangeDirection === "down") {
+      return `${metricLabel} moved from ${prior} to ${current} (${delta}), which partially offset the decline.`;
+    }
+    if (metricChangeDirection === "up") {
+      return `${metricLabel} moved from ${prior} to ${current} (${delta}), which contributed to the increase.`;
+    }
+    return `${metricLabel} moved from ${prior} to ${current} (${delta}), which looks supportive.`;
   }
 
   return `${metricLabel} moved from ${prior} to ${current} (${delta}), which looks more like context than a direct driver.`;
@@ -4005,20 +4071,57 @@ function buildAnalysisSummary(args: {
   currentLabel: string;
   priorLabel: string;
 }): string {
-  const { metric, currentMetricValue, priorMetricValue, deltaMetricValue, rankedDrivers, currentLabel, priorLabel } = args;
+  const {
+    metric,
+    currentMetricValue,
+    priorMetricValue,
+    deltaMetricValue,
+    rankedDrivers,
+    currentLabel,
+    priorLabel,
+  } = args;
+
   const formatType = metric.format_type || inferFormatType(metric.metric_id);
 
   if (currentMetricValue === null || priorMetricValue === null) {
     return `${metric.metric_name} could not be fully computed for ${currentLabel} versus ${priorLabel}.`;
   }
 
-  const headwind = rankedDrivers.find((d) => d.explanatoryDirection === "hurts");
-  const support = rankedDrivers.find((d) => d.explanatoryDirection === "supports");
+  const metricDirection = deriveMetricChangeDirection(currentMetricValue, priorMetricValue);
 
-  let summary = `${metric.metric_name} was ${formatMetricValue(currentMetricValue, formatType)} in ${currentLabel} versus ${formatMetricValue(priorMetricValue, formatType)} in ${priorLabel} (${formatDeltaValue(deltaMetricValue, formatType)}).`;
+  const primarySupport = rankedDrivers.find((d) => d.explanatoryDirection === "supports");
+  const primaryHeadwind = rankedDrivers.find((d) => d.explanatoryDirection === "hurts");
 
-  if (headwind) summary += ` Primary driver: ${prettifyMetricLabel(headwind.driverId)}.`;
-  if (support) summary += ` Offsetting factor: ${prettifyMetricLabel(support.driverId)}.`;
+  let summary = `${metric.metric_name} was ${formatMetricValue(
+    currentMetricValue,
+    formatType
+  )} in ${currentLabel} versus ${formatMetricValue(
+    priorMetricValue,
+    formatType
+  )} in ${priorLabel} (${formatDeltaValue(deltaMetricValue, formatType)}).`;
+
+  if (metricDirection === "up") {
+    if (primarySupport) {
+      summary += ` Primary contributing factor: ${prettifyMetricLabel(primarySupport.driverId)}.`;
+    }
+    if (primaryHeadwind) {
+      summary += ` Headwind: ${prettifyMetricLabel(primaryHeadwind.driverId)}.`;
+    }
+  } else if (metricDirection === "down") {
+    if (primaryHeadwind) {
+      summary += ` Primary driver of the decline: ${prettifyMetricLabel(primaryHeadwind.driverId)}.`;
+    }
+    if (primarySupport) {
+      summary += ` Partial offset: ${prettifyMetricLabel(primarySupport.driverId)}.`;
+    }
+  } else {
+    if (primarySupport) {
+      summary += ` Supporting factor: ${prettifyMetricLabel(primarySupport.driverId)}.`;
+    }
+    if (primaryHeadwind) {
+      summary += ` Headwind: ${prettifyMetricLabel(primaryHeadwind.driverId)}.`;
+    }
+  }
 
   return summary;
 }
