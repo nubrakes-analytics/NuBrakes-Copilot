@@ -418,6 +418,7 @@ const METRIC_DEFINITIONS_URL =
 const CACHE_TTL_MS = 5 * 60 * 1000;
 const DATASET_TTL_MS = 10 * 60 * 1000;
 const MAX_TREND_POINTS = 8;
+const BUSINESS_TIMEZONE = "America/Chicago";
 
 const memoryCache = new Map<string, { expiresAt: number; value: unknown }>();
 const inFlight = new Map<string, Promise<unknown>>();
@@ -427,7 +428,7 @@ const METRIC_FIELD_MAP: Record<string, string[]> = {
   jobs_booked: ["jobs_booked", "Jobs Booked", "booked_jobs", "jobs booked"],
   jobs_completed: ["jobs_completed", "Jobs Completed", "completed_jobs", "jobs completed"],
   canceled_jobs: ["canceled_jobs", "Canceled Jobs", "cancelled_jobs", "canceled jobs"],
-  revenue: ["revenue", "Revenue"],
+  revenue: ["revenue", "Revenue", "invoiced_customer_price", "Invoiced Customer Price"],
   impressions: ["impressions", "Impressions"],
   clicks: ["clicks", "Clicks"],
   marketing_spend: ["marketing_spend", "Marketing Spend"],
@@ -2704,7 +2705,7 @@ async function analyzeMetricTrend(
 
   const fieldCandidates = getBucketDateFieldCandidates(pointScope.time_grain);
   const bucketKeys = Array.from(new Set(filtered.map((row) => getBucketKey(row, fieldCandidates)).filter(Boolean)))
-    .sort((a, b) => Date.parse(a) - Date.parse(b))
+    .sort((a, b) => a.localeCompare(b))
     .slice(-MAX_TREND_POINTS);
 
   if (!bucketKeys.length) {
@@ -3068,7 +3069,7 @@ function parseBusinessQuestionScopeFromRows(
     const candidateYears = extractAvailableYears(rows, ["month", "Month", "day", "Day", "week", "Week"]);
     const explicitYearMatch = q.match(/\b(20\d{2})\b/);
     const explicitYear = explicitYearMatch ? Number(explicitYearMatch[1]) : undefined;
-    const year = explicitYear ?? (candidateYears.length ? Math.max(...candidateYears) : new Date().getUTCFullYear());
+    const year = explicitYear ?? (candidateYears.length ? Math.max(...candidateYears) : getCurrentChicagoYear());
     target_bucket = `${year}-${MONTH_MAP[matchedMonth]}-01`;
   }
 
@@ -3125,7 +3126,7 @@ function parsePointInTimeScopeFromRows(
           return key.startsWith(`${y}-${monthNum}-`);
         })
       );
-      yearToUse = String(yearsWithMonth.length ? Math.max(...yearsWithMonth) : new Date().getUTCFullYear());
+      yearToUse = String(yearsWithMonth.length ? Math.max(...yearsWithMonth) : getCurrentChicagoYear());
     }
 
     target_bucket = `${yearToUse}-${monthNum}-01`;
@@ -3193,14 +3194,93 @@ const MONTH_MAP: Record<string, string> = {
 
 const MONTH_NAMES = Object.keys(MONTH_MAP);
 
+/* =========================
+   America/Chicago date utils
+   ========================= */
+
+function getChicagoDateParts(value: Date | string): {
+  year: number;
+  month: number;
+  day: number;
+  weekday: number;
+} | null {
+  const d = value instanceof Date ? value : new Date(value);
+  if (!Number.isFinite(d.getTime())) return null;
+
+  const formatter = new Intl.DateTimeFormat("en-US", {
+    timeZone: BUSINESS_TIMEZONE,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    weekday: "short",
+  });
+
+  const parts = formatter.formatToParts(d);
+  const year = Number(parts.find((p) => p.type === "year")?.value);
+  const month = Number(parts.find((p) => p.type === "month")?.value);
+  const day = Number(parts.find((p) => p.type === "day")?.value);
+  const weekdayLabel = parts.find((p) => p.type === "weekday")?.value;
+
+  const weekdayMap: Record<string, number> = {
+    Sun: 0,
+    Mon: 1,
+    Tue: 2,
+    Wed: 3,
+    Thu: 4,
+    Fri: 5,
+    Sat: 6,
+  };
+
+  const weekday = weekdayMap[String(weekdayLabel || "")];
+
+  if (
+    !Number.isFinite(year) ||
+    !Number.isFinite(month) ||
+    !Number.isFinite(day) ||
+    !Number.isFinite(weekday)
+  ) {
+    return null;
+  }
+
+  return { year, month, day, weekday };
+}
+
+function chicagoDateKey(value: Date | string): string {
+  const parts = getChicagoDateParts(value);
+  if (!parts) return "";
+  return `${parts.year}-${String(parts.month).padStart(2, "0")}-${String(parts.day).padStart(2, "0")}`;
+}
+
+function chicagoDateFromParts(year: number, month: number, day: number): Date {
+  return new Date(Date.UTC(year, month - 1, day, 12, 0, 0));
+}
+
+function addDaysChicago(date: Date, days: number): Date {
+  const parts = getChicagoDateParts(date);
+  if (!parts) return date;
+  return new Date(Date.UTC(parts.year, parts.month - 1, parts.day + days, 12, 0, 0));
+}
+
+function startOfChicagoDay(d: Date): Date {
+  const parts = getChicagoDateParts(d);
+  if (!parts) return d;
+  return chicagoDateFromParts(parts.year, parts.month, parts.day);
+}
+
+function getCurrentChicagoYear(): number {
+  return getChicagoDateParts(new Date())?.year ?? new Date().getUTCFullYear();
+}
+
 function extractAvailableYears(rows: DatasetRow[], fields: string[]): number[] {
   const years = new Set<number>();
   for (const row of rows) {
     for (const field of fields) {
       const raw = row[field];
       if (!raw) continue;
-      const parsed = Date.parse(String(raw));
-      if (Number.isFinite(parsed)) years.add(new Date(parsed).getUTCFullYear());
+      const parsed = new Date(String(raw));
+      if (!Number.isFinite(parsed.getTime())) continue;
+      const parts = getChicagoDateParts(parsed);
+      if (parts) years.add(parts.year);
     }
   }
   return Array.from(years);
@@ -3316,7 +3396,7 @@ function splitRowsCurrentVsPrior(
     bucketMap.get(key)!.push(row);
   }
 
-  const sortedKeys = Array.from(bucketMap.keys()).sort((a, b) => Date.parse(a) - Date.parse(b));
+  const sortedKeys = Array.from(bucketMap.keys()).sort((a, b) => a.localeCompare(b));
 
   if (!sortedKeys.length) {
     return {
@@ -3359,7 +3439,7 @@ function filterRowsToTargetBucket(
 function getLatestBucket(rows: DatasetRow[], grain: TimeGrain): string | undefined {
   const fieldCandidates = getBucketDateFieldCandidates(grain);
   const buckets = Array.from(new Set(rows.map((row) => getBucketKey(row, fieldCandidates)).filter(Boolean)))
-    .sort((a, b) => Date.parse(a) - Date.parse(b));
+    .sort((a, b) => a.localeCompare(b));
   return buckets.length ? buckets[buckets.length - 1] : undefined;
 }
 
@@ -3369,7 +3449,7 @@ function getLatestAndPriorBucket(
 ): { latest?: string; prior?: string } {
   const fieldCandidates = getBucketDateFieldCandidates(grain);
   const buckets = Array.from(new Set(rows.map((row) => getBucketKey(row, fieldCandidates)).filter(Boolean)))
-    .sort((a, b) => Date.parse(a) - Date.parse(b));
+    .sort((a, b) => a.localeCompare(b));
 
   return {
     latest: buckets[buckets.length - 1],
@@ -3389,8 +3469,11 @@ function getBucketKey(row: DatasetRow, fieldCandidates: string[]): string {
     const value = String(raw).trim();
     if (!value) continue;
 
-    const parsed = Date.parse(value);
-    if (Number.isFinite(parsed)) return new Date(parsed).toISOString().slice(0, 10);
+    const parsed = new Date(value);
+    if (Number.isFinite(parsed.getTime())) {
+      const key = chicagoDateKey(parsed);
+      if (key) return key;
+    }
 
     const ym = value.match(/^(\d{4})[-/](\d{1,2})$/);
     if (ym) {
@@ -3555,16 +3638,16 @@ function isLatestBucketForGrain(rows: DatasetRow[], grain: TimeGrain, bucket: st
 }
 
 function startOfUtcDay(d: Date): Date {
-  return new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()));
+  return startOfChicagoDay(d);
 }
 
 function getPeriodStartDateFromBucket(bucket: string, grain: TimeGrain): Date | null {
   if (!bucket) return null;
 
   if (grain === "week") {
-    const d = new Date(bucket);
+    const d = new Date(`${bucket}T12:00:00Z`);
     if (!Number.isFinite(d.getTime())) return null;
-    return startOfUtcDay(d);
+    return startOfChicagoDay(d);
   }
 
   if (grain === "month") {
@@ -3573,7 +3656,7 @@ function getPeriodStartDateFromBucket(bucket: string, grain: TimeGrain): Date | 
     const y = Number(parts[0]);
     const m = Number(parts[1]);
     if (!Number.isFinite(y) || !Number.isFinite(m)) return null;
-    return new Date(Date.UTC(y, m - 1, 1));
+    return chicagoDateFromParts(y, m, 1);
   }
 
   return null;
@@ -3584,13 +3667,19 @@ function getPeriodEndDateFromBucket(bucket: string, grain: TimeGrain): Date | nu
   if (!start) return null;
 
   if (grain === "week") {
-    const end = new Date(start);
-    end.setUTCDate(end.getUTCDate() + 6);
-    return end;
+    return addDaysChicago(start, 6);
   }
 
   if (grain === "month") {
-    return new Date(Date.UTC(start.getUTCFullYear(), start.getUTCMonth() + 1, 0));
+    const startParts = getChicagoDateParts(start);
+    if (!startParts) return null;
+
+    const nextMonthStart =
+      startParts.month === 12
+        ? chicagoDateFromParts(startParts.year + 1, 1, 1)
+        : chicagoDateFromParts(startParts.year, startParts.month + 1, 1);
+
+    return addDaysChicago(nextMonthStart, -1);
   }
 
   return null;
@@ -3598,14 +3687,16 @@ function getPeriodEndDateFromBucket(bucket: string, grain: TimeGrain): Date | nu
 
 function countWeekdaysBetweenUtc(startDate: Date | null, endDate: Date | null): number[] {
   const counts = [0, 0, 0, 0, 0, 0, 0];
-  if (!startDate || !endDate || endDate.getTime() < startDate.getTime()) return counts;
+  if (!startDate || !endDate) return counts;
+  if (chicagoDateKey(endDate) < chicagoDateKey(startDate)) return counts;
 
-  const d = startOfUtcDay(startDate);
-  const end = startOfUtcDay(endDate);
+  let current = startOfChicagoDay(startDate);
+  const endKey = chicagoDateKey(endDate);
 
-  while (d.getTime() <= end.getTime()) {
-    counts[d.getUTCDay()] += 1;
-    d.setUTCDate(d.getUTCDate() + 1);
+  while (chicagoDateKey(current) <= endKey) {
+    const parts = getChicagoDateParts(current);
+    if (parts) counts[parts.weekday] += 1;
+    current = addDaysChicago(current, 1);
   }
 
   return counts;
@@ -3622,10 +3713,13 @@ function getMetricTotalByWeekdayForWorker(rows: DatasetRow[], metricId: string):
     const d = getRowDateForPacing(row);
     if (!d) continue;
 
+    const parts = getChicagoDateParts(d);
+    if (!parts) continue;
+
     const rowValue = computeMetricValue(metricId, [row]);
     if (rowValue === null) continue;
 
-    totals[d.getUTCDay()] += rowValue;
+    totals[parts.weekday] += rowValue;
   }
 
   return totals;
@@ -3657,7 +3751,7 @@ function calcHistoricalPacingForWorker(
     grouped.get(key)!.push(row);
   }
 
-  const keys = Array.from(grouped.keys()).sort((a, b) => Date.parse(a) - Date.parse(b));
+  const keys = Array.from(grouped.keys()).sort((a, b) => a.localeCompare(b));
   if (!keys.length) return null;
 
   const currentBucket =
