@@ -2825,20 +2825,101 @@ async function analyzeMetricTrend(
     };
   });
 
-  const first = points[0];
-  const last = points[points.length - 1];
-  const rawDelta = computeDelta(last.raw_value, first.raw_value);
+ const summary = buildClearTrendSummary(
+  points,
+  metric.metric_name,
+  formatType,
+  pointScope.time_grain
+);
 
-  const observations: string[] = [];
-  if (last.is_projected) {
-    observations.push(`Latest period ${latestBucket} uses pacing-aware projection.`);
+const observations: string[] = [];
+if (last.is_projected) {
+  observations.push(`Latest period ${latestBucket} uses pacing-aware projection.`);
+}
+observations.push(`Trend covers ${points.length} ${pointScope.time_grain} periods.`);
+if (pointScope.market) observations.push(`Scope: market = ${pointScope.market}.`);
+if (pointScope.channel) observations.push(`Scope: channel = ${pointScope.channel}.`);
+
+
+function buildClearTrendSummary(
+  points: Array<{
+    period: string;
+    value: string;
+    raw_value: number | null;
+    is_projected: boolean;
+  }>,
+  metricName: string,
+  formatType: string,
+  grain: TimeGrain
+): string {
+  const valid = points.filter(
+    (p): p is { period: string; value: string; raw_value: number; is_projected: boolean } =>
+      p.raw_value !== null
+  );
+
+  if (valid.length < 2) {
+    if (valid.length === 1) {
+      return `${metricName} is ${valid[0].value} in ${valid[0].period}.`;
+    }
+    return `Not enough data to determine the ${metricName} trend.`;
   }
-  observations.push(`Trend covers ${points.length} ${pointScope.time_grain} periods.`);
-  if (pointScope.market) observations.push(`Scope: market = ${pointScope.market}.`);
-  if (pointScope.channel) observations.push(`Scope: channel = ${pointScope.channel}.`);
 
-  const summary = `${metric.metric_name} trend over the last ${points.length} ${pointScope.time_grain} periods ends at ${last.value} in ${last.period}, versus ${first.value} in ${first.period} (${formatDeltaValue(rawDelta, formatType)}).`;
+  let up = 0;
+  let down = 0;
+  let flat = 0;
 
+  for (let i = 1; i < valid.length; i++) {
+    const delta = valid[i].raw_value - valid[i - 1].raw_value;
+    if (Math.abs(delta) < 1e-9) flat++;
+    else if (delta > 0) up++;
+    else down++;
+  }
+
+  const first = valid[0];
+  const last = valid[valid.length - 1];
+  const overallDelta = last.raw_value - first.raw_value;
+
+  const totalMoves = up + down + flat;
+  const upShare = totalMoves ? up / totalMoves : 0;
+  const downShare = totalMoves ? down / totalMoves : 0;
+
+  let shape = "mixed";
+  if (upShare >= 0.7) shape = "generally upward";
+  else if (downShare >= 0.7) shape = "generally downward";
+  else if (Math.abs(overallDelta) < 1e-9) shape = "relatively flat";
+  else shape = "volatile";
+
+  const recent = valid.slice(-3);
+  const priorRecent = valid.slice(-6, -3);
+
+  let recentText = "";
+  if (recent.length > 0 && priorRecent.length > 0) {
+    const recentAvg = recent.reduce((sum, p) => sum + p.raw_value, 0) / recent.length;
+    const priorAvg = priorRecent.reduce((sum, p) => sum + p.raw_value, 0) / priorRecent.length;
+    const recentDelta = recentAvg - priorAvg;
+
+    if (recentDelta > 0) {
+      recentText = ` Recent performance is improving versus the prior 3 ${grain}s (${formatDeltaValue(
+        recentDelta,
+        formatType
+      )}).`;
+    } else if (recentDelta < 0) {
+      recentText = ` Recent performance is softer versus the prior 3 ${grain}s (${formatDeltaValue(
+        recentDelta,
+        formatType
+      )}).`;
+    } else {
+      recentText = ` Recent performance is flat versus the prior 3 ${grain}s.`;
+    }
+  }
+
+  return `${metricName} shows a ${shape} trend over the last ${valid.length} ${grain} periods, moving from ${first.value} in ${first.period} to ${last.value} in ${last.period} (${formatDeltaValue(
+    overallDelta,
+    formatType
+  )}).${recentText}`;
+}
+
+  
   const confidence = buildConfidenceScore({
     metricMatched: true,
     metricScore: metricResult.score,
