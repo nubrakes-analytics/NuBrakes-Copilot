@@ -746,6 +746,23 @@ export default {
   },
 };
 
+export default {
+  async fetch(request: Request, env: Env): Promise<Response> {
+    try {
+      return await handleRequest(request, env);
+    } catch (error) {
+      const msg = error instanceof Error ? error.message : "Unknown error";
+      return jsonResponse(
+        {
+          error: msg,
+          stack: error instanceof Error ? error.stack : null,
+        },
+        500
+      );
+    }
+  },
+};
+
 async function handleRequest(request: Request, env: Env): Promise<Response> {
   const url = new URL(request.url);
 
@@ -789,16 +806,21 @@ async function handleRequest(request: Request, env: Env): Promise<Response> {
     );
   }
 
+  const result = await runAiQuery(userMessage, env);
+  return jsonResponse(result);
+}
+
+async function runAiQuery(userMessage: string, env: Env): Promise<AppApiResponse> {
   if (normalize(userMessage) === "ping") {
-    return jsonResponse({
+    return {
       answer: "pong",
       dataset: null,
       rows: [],
       dataset_link: null,
       dashboard_link: null,
-    });
+    };
   }
-  
+
   const normalizedMessage = normalize(userMessage);
   const messageWords = new Set(normalizedMessage.split(/\s+/).filter(Boolean));
 
@@ -839,7 +861,8 @@ async function handleRequest(request: Request, env: Env): Promise<Response> {
     hasPhrase("which markets are underperforming") ||
     hasPhrase("underperforming markets") ||
     hasPhrase("which markets underperform") ||
-    (hasWord("markets") && (hasWord("underperforming") || hasWord("underperform") || hasWord("worst")));
+    (hasWord("markets") &&
+      (hasWord("underperforming") || hasWord("underperform") || hasWord("worst")));
 
   const looksLikeMixChangeQuestion =
     hasPhrase("lead mix") ||
@@ -864,6 +887,22 @@ async function handleRequest(request: Request, env: Env): Promise<Response> {
     hasPhrase("use for") ||
     hasPhrase("best dataset");
 
+  const mentionsKnownMetric =
+    hasWord("revenue") ||
+    hasWord("aov") ||
+    hasWord("leads") ||
+    hasWord("conversion") ||
+    hasPhrase("conversion rate") ||
+    hasPhrase("booking rate") ||
+    hasPhrase("cancel rate") ||
+    hasWord("ctr") ||
+    hasWord("cpc") ||
+    hasPhrase("marketing spend") ||
+    hasPhrase("jobs completed") ||
+    hasPhrase("jobs booked") ||
+    hasPhrase("available slot") ||
+    hasPhrase("available slots");
+
   const looksLikeMetricValueQuestion =
     !looksLikeBusinessQuestion &&
     !looksLikeMarketPerformanceQuestion &&
@@ -871,257 +910,228 @@ async function handleRequest(request: Request, env: Env): Promise<Response> {
     !looksLikeTrendQuestion &&
     !looksLikeContributionQuestion &&
     !looksLikeSegmentCompareQuestion &&
-    (hasPhrase("what is") ||
-      hasPhrase("whats") ||
-      hasPhrase("what was") ||
-      hasPhrase("how much") ||
-      hasPhrase("show me") ||
-      hasPhrase("give me")) &&
-    (hasWord("revenue") ||
-      hasWord("aov") ||
-      hasWord("leads") ||
-      hasWord("conversion") ||
-      hasPhrase("conversion rate") ||
-      hasPhrase("booking rate") ||
-      hasPhrase("cancel rate") ||
-      hasWord("ctr") ||
-      hasWord("cpc") ||
-      hasPhrase("marketing spend") ||
-      hasPhrase("jobs completed") ||
-      hasPhrase("jobs booked") ||
-      hasPhrase("available slot") ||
-      hasPhrase("available slots"));
+    mentionsKnownMetric;
 
   const directDatasetMatch = await tryDirectDatasetShortcut(userMessage);
 
   if (directDatasetMatch && looksLikeDatasetLinkQuestion) {
-    return jsonResponse(
-      buildAppResponse({
-        answer: `You should use this dataset: ${directDatasetMatch.link}`,
-        dataset: directDatasetMatch.dataset || directDatasetMatch.sheet_name || "dataset_list",
-        datasetLink: directDatasetMatch.link || null,
-        rows: [directDatasetMatch],
-        data: { found: true, dataset: directDatasetMatch },
-      })
-    );
+    return buildAppResponse({
+      answer: `You should use this dataset: ${directDatasetMatch.link}`,
+      dataset: directDatasetMatch.dataset || directDatasetMatch.sheet_name || "dataset_list",
+      datasetLink: directDatasetMatch.link || null,
+      rows: [directDatasetMatch],
+      data: { found: true, dataset: directDatasetMatch },
+    });
   }
 
   if (looksLikeDatasetLinkQuestion) {
     const result = await findDatasetLink(userMessage);
-    return jsonResponse(
-      result.found
-        ? buildAppResponse({
-            answer: `You should use this dataset: ${result.dataset.link}`,
-            dataset: result.dataset.dataset || result.dataset.sheet_name || "dataset_list",
-            datasetLink: result.dataset.link || null,
-            rows: [result.dataset],
-            data: result,
-          })
-        : buildAppResponse({
-            answer: result.message,
-            dataset: null,
-            rows: [],
-            data: result,
-          })
-    );
+    return result.found
+      ? buildAppResponse({
+          answer: `You should use this dataset: ${result.dataset.link}`,
+          dataset: result.dataset.dataset || result.dataset.sheet_name || "dataset_list",
+          datasetLink: result.dataset.link || null,
+          rows: [result.dataset],
+          data: result,
+        })
+      : buildAppResponse({
+          answer: result.message,
+          dataset: null,
+          rows: [],
+          data: result,
+        });
   }
 
   if (looksLikeDashboardLinkQuestion) {
     const result = await findDashboardLink(userMessage);
-    return jsonResponse(
-      result.found
-        ? buildAppResponse({
-            answer: `You can find the dashboard here: ${result.dashboard.url}`,
-            dataset: "dashboard_links",
-            dashboardLink: result.dashboard.url || null,
-            rows: [result.dashboard],
-            data: result,
-          })
-        : buildAppResponse({
-            answer: result.message,
-            dataset: null,
-            rows: [],
-            data: result,
-          })
-    );
+    return result.found
+      ? buildAppResponse({
+          answer: `You can find the dashboard here: ${result.dashboard.url}`,
+          dataset: "dashboard_links",
+          dashboardLink: result.dashboard.url || null,
+          rows: [result.dashboard],
+          data: result,
+        })
+      : buildAppResponse({
+          answer: result.message,
+          dataset: null,
+          rows: [],
+          data: result,
+        });
   }
 
   if (looksLikeTrendQuestion) {
     const trendResult = await analyzeMetricTrend(userMessage);
-    return jsonResponse(
-      trendResult.found
-        ? buildAppResponse({
-            answer: stripMarkdownBold([trendResult.analysis.summary, ...trendResult.analysis.observations.slice(0, 6)].join("\n")),
-            dataset: trendResult.datasets_used[0]?.dataset || trendResult.metric.metric_id,
-            datasetLink: trendResult.datasets_used[0]?.link || null,
-            rows: trendResult.analysis.points.map((p) => ({
-              period: p.period,
-              value: p.value,
-              raw_value: p.raw_value,
-              is_projected: p.is_projected,
-            })),
-            data: trendResult,
-          })
-        : buildAppResponse({
-            answer: trendResult.message,
-            dataset: null,
-            rows: [],
-            data: trendResult,
-          })
-    );
+    return trendResult.found
+      ? buildAppResponse({
+          answer: stripMarkdownBold(
+            [trendResult.analysis.summary, ...trendResult.analysis.observations.slice(0, 6)].join("\n")
+          ),
+          dataset: trendResult.datasets_used[0]?.dataset || trendResult.metric.metric_id,
+          datasetLink: trendResult.datasets_used[0]?.link || null,
+          rows: trendResult.analysis.points.map((p) => ({
+            period: p.period,
+            value: p.value,
+            raw_value: p.raw_value,
+            is_projected: p.is_projected,
+          })),
+          data: trendResult,
+        })
+      : buildAppResponse({
+          answer: trendResult.message,
+          dataset: null,
+          rows: [],
+          data: trendResult,
+        });
   }
 
   if (looksLikeContributionQuestion) {
     const contributionResult = await analyzeContributionToChange(userMessage);
-    return jsonResponse(
-      contributionResult.found
-        ? buildAppResponse({
-            answer: stripMarkdownBold([contributionResult.analysis.summary, ...contributionResult.analysis.observations.slice(0, 6)].join("\n")),
-            dataset: contributionResult.datasets_used[0]?.dataset || contributionResult.metric.metric_id,
-            datasetLink: contributionResult.datasets_used[0]?.link || null,
-            rows: contributionResult.analysis.contributions.map((r) => ({
-              segment: r.segment,
-              current_value: r.current_value,
-              prior_value: r.prior_value,
-              contribution_to_change: r.contribution_to_change,
-            })),
-            data: contributionResult,
-          })
-        : buildAppResponse({
-            answer: contributionResult.message,
-            dataset: null,
-            rows: [],
-            data: contributionResult,
-          })
-    );
+    return contributionResult.found
+      ? buildAppResponse({
+          answer: stripMarkdownBold(
+            [contributionResult.analysis.summary, ...contributionResult.analysis.observations.slice(0, 6)].join("\n")
+          ),
+          dataset: contributionResult.datasets_used[0]?.dataset || contributionResult.metric.metric_id,
+          datasetLink: contributionResult.datasets_used[0]?.link || null,
+          rows: contributionResult.analysis.contributions.map((r) => ({
+            segment: r.segment,
+            current_value: r.current_value,
+            prior_value: r.prior_value,
+            contribution_to_change: r.contribution_to_change,
+          })),
+          data: contributionResult,
+        })
+      : buildAppResponse({
+          answer: contributionResult.message,
+          dataset: null,
+          rows: [],
+          data: contributionResult,
+        });
   }
 
   if (looksLikeSegmentCompareQuestion) {
     const compareResult = await compareSegments(userMessage);
     if (compareResult.found) {
-      return jsonResponse(
-        buildAppResponse({
-          answer: compareResult.comparison.summary,
-          dataset: compareResult.datasets_used[0]?.dataset || compareResult.metric.metric_id,
-          datasetLink: compareResult.datasets_used[0]?.link || null,
-          rows: [
-            {
-              segment: compareResult.comparison.segment_a.name,
-              value: compareResult.comparison.segment_a.value,
-              raw_value: compareResult.comparison.segment_a.raw_value,
-            },
-            {
-              segment: compareResult.comparison.segment_b.name,
-              value: compareResult.comparison.segment_b.value,
-              raw_value: compareResult.comparison.segment_b.raw_value,
-            },
-          ],
-          data: compareResult,
-        })
-      );
+      return buildAppResponse({
+        answer: compareResult.comparison.summary,
+        dataset: compareResult.datasets_used[0]?.dataset || compareResult.metric.metric_id,
+        datasetLink: compareResult.datasets_used[0]?.link || null,
+        rows: [
+          {
+            segment: compareResult.comparison.segment_a.name,
+            value: compareResult.comparison.segment_a.value,
+            raw_value: compareResult.comparison.segment_a.raw_value,
+          },
+          {
+            segment: compareResult.comparison.segment_b.name,
+            value: compareResult.comparison.segment_b.value,
+            raw_value: compareResult.comparison.segment_b.raw_value,
+          },
+        ],
+        data: compareResult,
+      });
     }
   }
 
   if (looksLikeMarketPerformanceQuestion) {
     const marketResult = await analyzeMarketPerformance(userMessage);
-    return jsonResponse(
-      marketResult.found
-        ? buildAppResponse({
-            answer: stripMarkdownBold([marketResult.analysis.summary, ...marketResult.analysis.observations.slice(0, 6)].join("\n")),
-            dataset: marketResult.datasets_used[0]?.dataset || marketResult.metric.metric_id,
-            datasetLink: marketResult.datasets_used[0]?.link || null,
-            rows: marketResult.analysis.underperforming_markets.map((m) => ({
-              market: m.market,
-              current_value: m.current_value,
-              prior_value: m.prior_value,
-              delta_value: m.delta_value,
-            })),
-            data: marketResult,
-          })
-        : buildAppResponse({
-            answer: stripMarkdownBold(marketResult.message),
-            dataset: null,
-            rows: [],
-            data: marketResult,
-          })
-    );
+    return marketResult.found
+      ? buildAppResponse({
+          answer: stripMarkdownBold(
+            [marketResult.analysis.summary, ...marketResult.analysis.observations.slice(0, 6)].join("\n")
+          ),
+          dataset: marketResult.datasets_used[0]?.dataset || marketResult.metric.metric_id,
+          datasetLink: marketResult.datasets_used[0]?.link || null,
+          rows: marketResult.analysis.underperforming_markets.map((m) => ({
+            market: m.market,
+            current_value: m.current_value,
+            prior_value: m.prior_value,
+            delta_value: m.delta_value,
+          })),
+          data: marketResult,
+        })
+      : buildAppResponse({
+          answer: stripMarkdownBold(marketResult.message),
+          dataset: null,
+          rows: [],
+          data: marketResult,
+        });
   }
 
   if (looksLikeMixChangeQuestion) {
     const mixResult = await analyzeMixChange(userMessage);
-    return jsonResponse(
-      mixResult.found
-        ? buildAppResponse({
-            answer: stripMarkdownBold([mixResult.analysis.summary, ...mixResult.analysis.observations.slice(0, 6)].join("\n")),
-            dataset: mixResult.datasets_used[0]?.dataset || "mix_analysis",
-            datasetLink: mixResult.datasets_used[0]?.link || null,
-            rows: mixResult.analysis.changes.map((c) => ({
-              dimension_value: c.dimension_value,
-              current_share: c.current_share,
-              prior_share: c.prior_share,
-              share_delta: c.share_delta,
-              current_value: c.current_value,
-              prior_value: c.prior_value,
-            })),
-            data: mixResult,
-          })
-        : buildAppResponse({
-            answer: stripMarkdownBold(mixResult.message),
-            dataset: null,
-            rows: [],
-            data: mixResult,
-          })
-    );
+    return mixResult.found
+      ? buildAppResponse({
+          answer: stripMarkdownBold(
+            [mixResult.analysis.summary, ...mixResult.analysis.observations.slice(0, 6)].join("\n")
+          ),
+          dataset: mixResult.datasets_used[0]?.dataset || "mix_analysis",
+          datasetLink: mixResult.datasets_used[0]?.link || null,
+          rows: mixResult.analysis.changes.map((c) => ({
+            dimension_value: c.dimension_value,
+            current_share: c.current_share,
+            prior_share: c.prior_share,
+            share_delta: c.share_delta,
+            current_value: c.current_value,
+            prior_value: c.prior_value,
+          })),
+          data: mixResult,
+        })
+      : buildAppResponse({
+          answer: stripMarkdownBold(mixResult.message),
+          dataset: null,
+          rows: [],
+          data: mixResult,
+        });
   }
 
   if (looksLikeMetricValueQuestion) {
     const valueResult = await queryMetricValue(userMessage);
-    return jsonResponse(
-      valueResult.found
-        ? buildAppResponse({
-            answer: stripMarkdownBold(valueResult.result.summary),
-            dataset: valueResult.datasets_used[0]?.dataset || valueResult.metric.metric_id,
-            datasetLink: valueResult.datasets_used[0]?.link || null,
-            rows: valueResult.datasets_used.map((d) => ({
-              dataset: d.dataset,
-              dataset_link: d.link || null,
-              row_count: d.row_count,
-            })),
-            data: valueResult,
-          })
-        : buildAppResponse({
-            answer: stripMarkdownBold(valueResult.message),
-            dataset: null,
-            rows: [],
-            data: valueResult,
-          })
-    );
+    return valueResult.found
+      ? buildAppResponse({
+          answer: stripMarkdownBold(valueResult.result.summary),
+          dataset: valueResult.datasets_used[0]?.dataset || valueResult.metric.metric_id,
+          datasetLink: valueResult.datasets_used[0]?.link || null,
+          rows: valueResult.datasets_used.map((d) => ({
+            dataset: d.dataset,
+            dataset_link: d.link || null,
+            row_count: d.row_count,
+          })),
+          data: valueResult,
+        })
+      : buildAppResponse({
+          answer: stripMarkdownBold(valueResult.message),
+          dataset: null,
+          rows: [],
+          data: valueResult,
+        });
   }
 
   if (looksLikeBusinessQuestion) {
     const directAnalysis = await analyzeBusinessQuestion(userMessage);
-    return jsonResponse(
-      directAnalysis.found
-        ? buildAppResponse({
-            answer: stripMarkdownBold([directAnalysis.analysis.summary, ...directAnalysis.analysis.observations.slice(0, 6)].join("\n")),
-            dataset: directAnalysis.datasets_used[0]?.dataset || directAnalysis.metric.metric_id,
-            datasetLink: directAnalysis.datasets_used[0]?.link || null,
-            rows: directAnalysis.datasets_used.map((d) => ({
-              dataset: d.dataset,
-              dataset_link: d.link || null,
-              row_count: d.row_count,
-              current_row_count: d.current_row_count ?? null,
-              prior_row_count: d.prior_row_count ?? null,
-            })),
-            data: directAnalysis,
-          })
-        : buildAppResponse({
-            answer: stripMarkdownBold(directAnalysis.message),
-            dataset: null,
-            rows: [],
-            data: directAnalysis,
-          })
-    );
+    return directAnalysis.found
+      ? buildAppResponse({
+          answer: stripMarkdownBold(
+            [directAnalysis.analysis.summary, ...directAnalysis.analysis.observations.slice(0, 6)].join("\n")
+          ),
+          dataset: directAnalysis.datasets_used[0]?.dataset || directAnalysis.metric.metric_id,
+          datasetLink: directAnalysis.datasets_used[0]?.link || null,
+          rows: directAnalysis.datasets_used.map((d) => ({
+            dataset: d.dataset,
+            dataset_link: d.link || null,
+            row_count: d.row_count,
+            current_row_count: d.current_row_count ?? null,
+            prior_row_count: d.prior_row_count ?? null,
+          })),
+          data: directAnalysis,
+        })
+      : buildAppResponse({
+          answer: stripMarkdownBold(directAnalysis.message),
+          dataset: null,
+          rows: [],
+          data: directAnalysis,
+        });
   }
 
   const firstResp = await callOpenAI(env.OPENAI_API_KEY, {
@@ -1227,10 +1237,28 @@ async function handleSlackCommand(request: Request, env: Env): Promise<Response>
   const form = new URLSearchParams(rawBody);
   const text = String(form.get("text") || "").trim();
 
+  if (!text) {
+    return new Response(
+      JSON.stringify({
+        response_type: "ephemeral",
+        text: "Please enter a question after /nb",
+      }),
+      {
+        status: 200,
+        headers: {
+          ...corsHeaders,
+          "Content-Type": "application/json",
+        },
+      }
+    );
+  }
+
+  const result = await runAiQuery(text, env);
+
   return new Response(
     JSON.stringify({
       response_type: "ephemeral",
-      text: text ? `You asked: ${text}` : "Please enter a question after /nb",
+      text: result.answer || "No response generated.",
     }),
     {
       status: 200,
@@ -1241,6 +1269,8 @@ async function handleSlackCommand(request: Request, env: Env): Promise<Response>
     }
   );
 }
+
+
 
 async function verifySlackSignature(
   request: Request,
