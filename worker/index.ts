@@ -1414,72 +1414,8 @@ async function loadMetricDefinitions(): Promise<MetricDefinition[]> {
   return await fetchJsonCached<MetricDefinition[]>(METRIC_DEFINITIONS_URL, CACHE_TTL_MS);
 }
 
-function normalizeWorkerRow(row: DatasetRow): DatasetRow {
-  const day =
-    row["day"] ??
-    row["Day"] ??
-    row["date"] ??
-    row["Date"] ??
-    row["week"] ??
-    row["Week"] ??
-    row["month"] ??
-    row["Month"] ??
-    "";
-
-  const week =
-    row["week"] ??
-    row["Week"] ??
-    row["day"] ??
-    row["Day"] ??
-    row["date"] ??
-    row["Date"] ??
-    row["month"] ??
-    row["Month"] ??
-    "";
-
-  const month =
-    row["month"] ??
-    row["Month"] ??
-    row["day"] ??
-    row["Day"] ??
-    row["date"] ??
-    row["Date"] ??
-    "";
-
-  const date =
-    row["date"] ??
-    row["Date"] ??
-    row["day"] ??
-    row["Day"] ??
-    row["month"] ??
-    row["Month"] ??
-    "";
-
-  return {
-    ...row,
-    day,
-    Day: day,
-    week,
-    Week: week,
-    month,
-    Month: month,
-    date,
-    Date: date,
-  };
-}
-
 async function loadJsonFromUrl<T = unknown>(url: string): Promise<T> {
-  const data = await fetchJsonCached<T>(url, DATASET_TTL_MS);
-
-  if (Array.isArray(data)) {
-    return data.map((row) =>
-      row && typeof row === "object" && !Array.isArray(row)
-        ? normalizeWorkerRow(row as DatasetRow)
-        : row
-    ) as T;
-  }
-
-  return data;
+  return await fetchJsonCached<T>(url, DATASET_TTL_MS);
 }
 
 async function loadMetricRegistry(): Promise<Map<string, MetricRegistryEntry>> {
@@ -3441,15 +3377,7 @@ function getLatestAndPriorBucket(
 }
 
 function getBucketDateFieldCandidates(grain: TimeGrain): string[] {
-  if (grain === "day") {
-    return ["day", "Day", "date", "Date"];
-  }
-
-  if (grain === "week") {
-    return ["week", "Week", "day", "Day", "date", "Date"];
-  }
-
-  return ["month", "Month", "day", "Day", "date", "Date"];
+  return grain === "day" ? ["day", "Day"] : grain === "month" ? ["month", "Month"] : ["week", "Week"];
 }
 
 function getBucketKey(row: DatasetRow, fieldCandidates: string[]): string {
@@ -3463,10 +3391,7 @@ function getBucketKey(row: DatasetRow, fieldCandidates: string[]): string {
     const canonicalField = canonicalFieldName(field);
 
     if (canonicalField === "month") {
-      if (/^\d{4}-\d{2}-\d{2}/.test(value)) {
-        return `${value.slice(0, 7)}-01`;
-      }
-
+      if (/^\d{4}-\d{2}-\d{2}/.test(value)) return `${value.slice(0, 7)}-01`;
       const ym = value.match(/^(\d{4})[-/](\d{1,2})$/);
       if (ym) {
         const y = ym[1];
@@ -3475,26 +3400,8 @@ function getBucketKey(row: DatasetRow, fieldCandidates: string[]): string {
       }
     }
 
-    if (canonicalField === "week") {
-      if (/^\d{4}-\d{2}-\d{2}/.test(value)) {
-        const parsed = new Date(`${value.slice(0, 10)}T12:00:00`);
-        if (!Number.isNaN(parsed.getTime())) {
-          const day = parsed.getDay();
-          const diffToMonday = day === 0 ? -6 : 1 - day;
-          parsed.setDate(parsed.getDate() + diffToMonday);
-
-          const y = parsed.getFullYear();
-          const m = String(parsed.getMonth() + 1).padStart(2, "0");
-          const d = String(parsed.getDate()).padStart(2, "0");
-          return `${y}-${m}-${d}`;
-        }
-      }
-    }
-
-    if (canonicalField === "day" || canonicalField === "date") {
-      if (/^\d{4}-\d{2}-\d{2}/.test(value)) {
-        return value.slice(0, 10);
-      }
+    if (canonicalField === "week" || canonicalField === "day") {
+      if (/^\d{4}-\d{2}-\d{2}/.test(value)) return value.slice(0, 10);
     }
 
     const parsed = new Date(value);
@@ -3502,22 +3409,7 @@ function getBucketKey(row: DatasetRow, fieldCandidates: string[]): string {
       const y = parsed.getFullYear();
       const m = String(parsed.getMonth() + 1).padStart(2, "0");
       const d = String(parsed.getDate()).padStart(2, "0");
-
-      if (canonicalField === "month") return `${y}-${m}-01`;
-
-      if (canonicalField === "week") {
-        const weekStart = new Date(parsed);
-        const day = weekStart.getDay();
-        const diffToMonday = day === 0 ? -6 : 1 - day;
-        weekStart.setDate(weekStart.getDate() + diffToMonday);
-
-        const wy = weekStart.getFullYear();
-        const wm = String(weekStart.getMonth() + 1).padStart(2, "0");
-        const wd = String(weekStart.getDate()).padStart(2, "0");
-        return `${wy}-${wm}-${wd}`;
-      }
-
-      return `${y}-${m}-${d}`;
+      return canonicalField === "month" ? `${y}-${m}-01` : `${y}-${m}-${d}`;
     }
   }
 
@@ -3655,13 +3547,13 @@ function isAdditiveMetric(metricId: string): boolean {
 
 function getRowDateForPacing(row: DatasetRow): Date | null {
   const raw =
-    row["day"] ??
-    row["Day"] ??
-    row["date"] ??
-    row["Date"] ??
-    row["week"] ??
-    row["Week"] ??
-    row["month"] ??
+    row["day"] ||
+    row["Day"] ||
+    row["date"] ||
+    row["Date"] ||
+    row["week"] ||
+    row["Week"] ||
+    row["month"] ||
     row["Month"];
 
   if (!raw) return null;
@@ -3669,14 +3561,13 @@ function getRowDateForPacing(row: DatasetRow): Date | null {
   const value = String(raw).trim();
   if (!value) return null;
 
-  if (/^\d{4}-\d{2}-\d{2}$/.test(value)) {
-    const d = new Date(`${value}T12:00:00`);
-    return Number.isFinite(d.getTime()) ? d : null;
-  }
+  const d = /^\d{4}-\d{2}-\d{2}$/.test(value)
+    ? new Date(`${value}T12:00:00`)
+    : new Date(value);
 
-  const d = new Date(value);
   return Number.isFinite(d.getTime()) ? d : null;
 }
+
 function isLatestBucketForGrain(rows: DatasetRow[], grain: TimeGrain, bucket: string | undefined): boolean {
   if (!bucket) return false;
   const latest = getLatestBucket(rows, grain);
@@ -3702,7 +3593,7 @@ function getPeriodStartDateFromBucket(bucket: string, grain: TimeGrain): Date | 
     const y = Number(parts[0]);
     const m = Number(parts[1]);
     if (!Number.isFinite(y) || !Number.isFinite(m)) return null;
-    return new Date(y, m - 1, 1, 12, 0, 0, 0);
+    return new Date(y, m - 1, 1);
   }
 
   return null;
@@ -3719,7 +3610,7 @@ function getPeriodEndDateFromBucket(bucket: string, grain: TimeGrain): Date | nu
   }
 
   if (grain === "month") {
-    return new Date(start.getFullYear(), start.getMonth() + 1, 0, 12, 0, 0, 0);
+    return new Date(start.getFullYear(), start.getMonth() + 1, 0);
   }
 
   return null;
@@ -3764,8 +3655,7 @@ function calcHistoricalPacingForWorker(
   grain: TimeGrain,
   rows: DatasetRow[],
   metricId: string,
-  targetBucket?: string,
-  lookbackDays = 90
+  targetBucket?: string
 ): {
   projected: number;
   actual: number;
@@ -3773,14 +3663,6 @@ function calcHistoricalPacingForWorker(
   method: "historical" | "fallback";
   sampleSize: number;
 } | null {
-  console.log("=== pacing debug start ===", {
-    grain,
-    metricId,
-    targetBucket,
-    lookbackDays,
-    rowCount: rows.length
-  });
-
   if (!rows.length) return null;
   if (grain !== "week" && grain !== "month") return null;
   if (!isAdditiveMetric(metricId)) return null;
@@ -3807,37 +3689,17 @@ function calcHistoricalPacingForWorker(
   const currentActual = computeMetricValue(metricId, currentRows);
   if (currentActual === null) return null;
 
-  let currentMaxDate: Date | null = null;
-  for (const row of currentRows) {
-    const d = getRowDateForPacing(row);
-    if (!d) continue;
-    if (!currentMaxDate || d.getTime() > currentMaxDate.getTime()) {
-      currentMaxDate = d;
-    }
-  }
+  const currentMaxDate = currentRows
+    .map(getRowDateForPacing)
+    .filter((d): d is Date => d !== null)
+    .sort((a, b) => a.getTime() - b.getTime())
+    .slice(-1)[0];
+
   if (!currentMaxDate) return null;
 
   const currentPeriodStart = getPeriodStartDateFromBucket(currentBucket, grain);
   const currentPeriodEnd = getPeriodEndDateFromBucket(currentBucket, grain);
   if (!currentPeriodStart || !currentPeriodEnd) return null;
-
-  const lookbackStart = new Date(currentMaxDate);
-  lookbackStart.setDate(lookbackStart.getDate() - lookbackDays);
-  const lookbackStartDay = startOfLocalDay(lookbackStart);
-
-  let historicalKeys: string[];
-
-  if (grain === "month") {
-    const currentIdx = keys.indexOf(currentBucket);
-    historicalKeys = currentIdx > 0 ? keys.slice(Math.max(0, currentIdx - 3), currentIdx) : [];
-  } else {
-    historicalKeys = keys.filter((k) => {
-      if (k === currentBucket) return false;
-      const bucketStart = getPeriodStartDateFromBucket(k, grain);
-      if (!bucketStart) return false;
-      return bucketStart.getTime() >= lookbackStartDay.getTime();
-    });
-  }
 
   const currentElapsedWeekdayCounts = countWeekdaysBetweenLocal(
     currentPeriodStart,
@@ -3852,91 +3714,62 @@ function calcHistoricalPacingForWorker(
   const elapsedDays = sumNumberArray(currentElapsedWeekdayCounts);
   const totalDays = sumNumberArray(fullCurrentPeriodWeekdayCounts);
 
-  const shares: number[] = [];
+  const historicalKeys = keys.filter((k) => k !== currentBucket);
 
-  for (const bucket of historicalKeys) {
-    const bucketRows = grouped.get(bucket) || [];
-    if (!bucketRows.length) continue;
+  const shares = historicalKeys
+    .map((bucket) => {
+      const bucketRows = grouped.get(bucket) || [];
+      if (!bucketRows.length) return null;
 
-    const bucketStart = getPeriodStartDateFromBucket(bucket, grain);
-    const bucketEnd = getPeriodEndDateFromBucket(bucket, grain);
-    if (!bucketStart || !bucketEnd) continue;
+      const bucketStart = getPeriodStartDateFromBucket(bucket, grain);
+      const bucketEnd = getPeriodEndDateFromBucket(bucket, grain);
+      if (!bucketStart || !bucketEnd) return null;
 
-    const fullWeekdayCounts = countWeekdaysBetweenLocal(bucketStart, bucketEnd);
-    const weekdayTotals = getMetricTotalByWeekdayForWorker(bucketRows, metricId);
-    const total = weekdayTotals.reduce((a, b) => a + b, 0);
-    if (!total) continue;
+      const fullWeekdayCounts = countWeekdaysBetweenLocal(bucketStart, bucketEnd);
+      const weekdayTotals = getMetricTotalByWeekdayForWorker(bucketRows, metricId);
+      const total = weekdayTotals.reduce((a, b) => a + b, 0);
 
-    let expectedElapsed = 0;
-    for (let i = 0; i < 7; i++) {
-      const fullCount = fullWeekdayCounts[i] || 0;
-      const elapsedCount = currentElapsedWeekdayCounts[i] || 0;
-      if (!fullCount || !elapsedCount) continue;
+      if (!total) return null;
 
-      const avgPerOccurrence = (weekdayTotals[i] || 0) / fullCount;
-      expectedElapsed += avgPerOccurrence * elapsedCount;
-    }
+      let expectedElapsed = 0;
 
-    const share = expectedElapsed / total;
-    if (share && share > 0 && share <= 1.25) {
-      shares.push(share);
-    }
-  }
+      for (let i = 0; i < 7; i++) {
+        const fullCount = fullWeekdayCounts[i] || 0;
+        const elapsedCount = currentElapsedWeekdayCounts[i] || 0;
+        if (!fullCount || !elapsedCount) continue;
 
-  console.log("pacing summary", {
-    currentBucket,
-    currentActual,
-    currentMaxDate: currentMaxDate.toISOString(),
-    currentPeriodStart: currentPeriodStart.toISOString(),
-    currentPeriodEnd: currentPeriodEnd.toISOString(),
-    currentElapsedWeekdayCounts,
-    fullCurrentPeriodWeekdayCounts,
-    elapsedDays,
-    totalDays,
-    historicalKeys,
-    historicalBucketCount: historicalKeys.length,
-    validShareCount: shares.length,
-    sharesPreview: shares.slice(0, 10),
-    latestWorkerRows: currentRows.slice(-10).map((row) => ({
-      month: row["month"] ?? row["Month"] ?? null,
-      day: row["day"] ?? row["Day"] ?? null,
-      date: row["date"] ?? row["Date"] ?? null,
-      parsed: getRowDateForPacing(row)?.toISOString?.() ?? null,
-      metricValue: computeMetricValue(metricId, [row]),
-    })),
-  });
+        const avgPerOccurrence = (weekdayTotals[i] || 0) / fullCount;
+        expectedElapsed += avgPerOccurrence * elapsedCount;
+      }
+
+      const share = expectedElapsed / total;
+      if (!share || share <= 0 || share > 1.25) return null;
+
+      return share;
+    })
+    .filter((v): v is number => v !== null);
 
   if (!shares.length) {
     const fallbackPct = totalDays > 0 ? elapsedDays / totalDays : 0;
 
-    const result = {
+    return {
       actual: currentActual,
       projected: fallbackPct > 0 ? currentActual / fallbackPct : currentActual,
       pct: fallbackPct,
-      method: "fallback" as const,
+      method: "fallback",
       sampleSize: 0,
     };
-
-    console.log("pacing final", result);
-    return result;
   }
 
   const historicalPct = shares.reduce((a, b) => a + b, 0) / shares.length;
 
-  const result = {
+  return {
     actual: currentActual,
     projected: historicalPct > 0 ? currentActual / historicalPct : currentActual,
     pct: historicalPct,
-    method: "historical" as const,
+    method: "historical",
     sampleSize: shares.length,
   };
-
-  console.log("pacing final", {
-    ...result,
-    historicalPct
-  });
-
-  return result;
 }
 
 function maybeProjectMetricValue(args: {
