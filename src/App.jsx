@@ -10,13 +10,13 @@ import {
 } from "lucide-react";
 
 const EXAMPLES = [
-  "What does average order value mean?",
+  "What changed in lead mix this week?",
   "Where can I find the ops dashboard?",
+  "What was the referral revenue in February 2026?",
+  "Compare GBL and Referral Leads this month?",
   "Which dataset should I use for supply and demand by market?",
   "Why is conversion rate down this March?",
-  "What was the referral revenue in February 2026?",
   "Why are completed jobs down?",
-  "What changed in lead mix this week?",
 ];
 
 const DATASET_LIST_URL =
