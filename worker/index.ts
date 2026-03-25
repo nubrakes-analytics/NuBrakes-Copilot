@@ -2825,6 +2825,9 @@ async function analyzeMetricTrend(
     };
   });
 
+  const last = points[points.length - 1];
+
+  
  const summary = buildClearTrendSummary(
   points,
   metric.metric_name,
