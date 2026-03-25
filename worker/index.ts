@@ -746,23 +746,6 @@ export default {
   },
 };
 
-export default {
-  async fetch(request: Request, env: Env): Promise<Response> {
-    try {
-      return await handleRequest(request, env);
-    } catch (error) {
-      const msg = error instanceof Error ? error.message : "Unknown error";
-      return jsonResponse(
-        {
-          error: msg,
-          stack: error instanceof Error ? error.stack : null,
-        },
-        500
-      );
-    }
-  },
-};
-
 async function handleRequest(request: Request, env: Env): Promise<Response> {
   const url = new URL(request.url);
 
