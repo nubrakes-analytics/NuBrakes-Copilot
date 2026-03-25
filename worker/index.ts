@@ -409,13 +409,13 @@ const corsHeaders = {
 };
 
 const DASHBOARD_LINKS_URL =
-  "https://cdn.jsdelivr.net/gh/nubrakes-analytics/NuBrakes-Copilot@main/data/dashboard_links.json";
+  "https://raw.githubusercontent.com/nubrakes-analytics/NuBrakes-Copilot/main/data/dashboard_links.json";
 
 const DATASET_LIST_URL =
-  "https://cdn.jsdelivr.net/gh/nubrakes-analytics/NuBrakes-Copilot@main/data/dataset_list.json";
+  "https://raw.githubusercontent.com/nubrakes-analytics/NuBrakes-Copilot/main/data/dataset_list.json";
 
 const METRIC_DEFINITIONS_URL =
-  "https://cdn.jsdelivr.net/gh/nubrakes-analytics/NuBrakes-Copilot@main/data/metric_definitions.json";
+  "https://raw.githubusercontent.com/nubrakes-analytics/NuBrakes-Copilot/main/data/metric_definitions.json";
 
 const CACHE_TTL_MS = 5 * 60 * 1000;
 const DATASET_TTL_MS = 10 * 60 * 1000;
