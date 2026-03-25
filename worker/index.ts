@@ -3655,7 +3655,8 @@ function calcHistoricalPacingForWorker(
   grain: TimeGrain,
   rows: DatasetRow[],
   metricId: string,
-  targetBucket?: string
+  targetBucket?: string,
+  lookbackDays = 90
 ): {
   projected: number;
   actual: number;
@@ -3701,6 +3702,10 @@ function calcHistoricalPacingForWorker(
   const currentPeriodEnd = getPeriodEndDateFromBucket(currentBucket, grain);
   if (!currentPeriodStart || !currentPeriodEnd) return null;
 
+  const lookbackStart = new Date(currentMaxDate);
+  lookbackStart.setDate(lookbackStart.getDate() - lookbackDays);
+  const lookbackStartDay = startOfLocalDay(lookbackStart);
+
   const currentElapsedWeekdayCounts = countWeekdaysBetweenLocal(
     currentPeriodStart,
     currentMaxDate
@@ -3714,7 +3719,12 @@ function calcHistoricalPacingForWorker(
   const elapsedDays = sumNumberArray(currentElapsedWeekdayCounts);
   const totalDays = sumNumberArray(fullCurrentPeriodWeekdayCounts);
 
-  const historicalKeys = keys.filter((k) => k !== currentBucket);
+  const historicalKeys = keys.filter((k) => {
+    if (k === currentBucket) return false;
+    const bucketStart = getPeriodStartDateFromBucket(k, grain);
+    if (!bucketStart) return false;
+    return bucketStart.getTime() >= lookbackStartDay.getTime();
+  });
 
   const shares = historicalKeys
     .map((bucket) => {
