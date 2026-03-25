@@ -754,11 +754,19 @@ async function handleRequest(request: Request, env: Env): Promise<Response> {
   }
 
   if (url.pathname === "/slack/command") {
-    if (request.method !== "POST") {
-      return jsonResponse({ error: "Method not allowed. Use POST." }, 405);
+  return new Response(
+    JSON.stringify({
+      response_type: "ephemeral",
+      text: "Slack connected successfully ✅",
+    }),
+    {
+      status: 200,
+      headers: {
+        "Content-Type": "application/json",
+      },
     }
-    return await handleSlackCommand(request, env);
-  }
+  );
+}
 
   if (url.pathname !== "/api/ai") {
     return new Response("Not found", {
