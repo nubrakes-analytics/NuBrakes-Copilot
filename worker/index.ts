@@ -704,7 +704,7 @@ const TOOLS = [
       properties: {
         business_question: {
           type: "string",
-          description: "A question such as 'Which markets drove the revenue decline this month?'",
+          description: "A question such as 'Which markets/channel drove the revenue decline this month?'",
         },
       },
       required: ["business_question"],
