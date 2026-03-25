@@ -754,18 +754,10 @@ async function handleRequest(request: Request, env: Env): Promise<Response> {
   }
 
   if (url.pathname === "/slack/command") {
-  return new Response(
-    JSON.stringify({
-      response_type: "ephemeral",
-      text: "Slack connected successfully ✅",
-    }),
-    {
-      status: 200,
-      headers: {
-        "Content-Type": "application/json",
-      },
-    }
-  );
+  if (request.method !== "POST") {
+    return jsonResponse({ error: "Method not allowed. Use POST." }, 405);
+  }
+  return await handleSlackCommand(request, env);
 }
 
   if (url.pathname !== "/api/ai") {
@@ -786,7 +778,7 @@ async function handleRequest(request: Request, env: Env): Promise<Response> {
     input?: string;
   };
 
-  async function handleSlackCommand(request: Request, env: Env): Promise<Response> {
+ async function handleSlackCommand(request: Request, env: Env): Promise<Response> {
   const rawBody = await request.text();
 
   const isValid = await verifySlackSignature(request, rawBody, env.SLACK_SIGNING_SECRET);
@@ -796,6 +788,24 @@ async function handleRequest(request: Request, env: Env): Promise<Response> {
       headers: corsHeaders,
     });
   }
+
+  const form = new URLSearchParams(rawBody);
+  const text = String(form.get("text") || "").trim();
+
+  return new Response(
+    JSON.stringify({
+      response_type: "ephemeral",
+      text: text ? `You asked: ${text}` : "Please enter a question after /nb",
+    }),
+    {
+      status: 200,
+      headers: {
+        ...corsHeaders,
+        "Content-Type": "application/json",
+      },
+    }
+  );
+}
 
   const form = new URLSearchParams(rawBody);
   const userMessage = String(form.get("text") || "").trim();
