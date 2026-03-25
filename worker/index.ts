@@ -2547,14 +2547,7 @@ async function analyzeMixChange(
           ).trim()
       : (row: DatasetRow) => String(row["market"] || row["Market"] || "").trim();
 
-  const currentTotal =
-    maybeProjectMetricValue({
-      metricId: baseMetric,
-      grain: scope.time_grain,
-      allDatasetRows: filtered,
-      scopedBucketRows: scoped.current,
-      targetBucket: scoped.current_label,
-    }) ?? 0;
+  const currentTotal = computeMetricValue(baseMetric, scoped.current) ?? 0;
 
   const priorTotal = computeMetricValue(baseMetric, scoped.prior);
 
@@ -2569,14 +2562,7 @@ async function analyzeMixChange(
       const currentRows = scoped.current.filter((r) => normalize(dimAccessor(r)) === normalize(value));
       const priorRows = scoped.prior.filter((r) => normalize(dimAccessor(r)) === normalize(value));
 
-      const currentValue =
-        maybeProjectMetricValue({
-          metricId: baseMetric,
-          grain: scope.time_grain,
-          allDatasetRows: filtered,
-          scopedBucketRows: currentRows,
-          targetBucket: scoped.current_label,
-        }) ?? 0;
+      const currentValue = computeMetricValue(baseMetric, currentRows) ?? 0;
 
       const priorValue = computeMetricValue(baseMetric, priorRows) ?? 0;
       const currentShare = currentTotal > 0 ? currentValue / currentTotal : 0;
