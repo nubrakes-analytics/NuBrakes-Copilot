@@ -3651,7 +3651,7 @@ function getMetricTotalByWeekdayForWorker(rows: DatasetRow[], metricId: string):
   return totals;
 }
 
-function calcHistoricalPacingForWorker(
+function calcHistoricalPacingForWorker_DEBUG(
   grain: TimeGrain,
   rows: DatasetRow[],
   metricId: string,
@@ -3664,11 +3664,31 @@ function calcHistoricalPacingForWorker(
   method: "historical" | "fallback";
   sampleSize: number;
 } | null {
-  if (!rows.length) return null;
-  if (grain !== "week" && grain !== "month") return null;
-  if (!isAdditiveMetric(metricId)) return null;
+  console.log("=== calcHistoricalPacingForWorker_DEBUG START ===");
+  console.log({
+    grain,
+    metricId,
+    targetBucket,
+    lookbackDays,
+    rowCount: rows.length
+  });
+
+  if (!rows.length) {
+    console.log("EXIT: no rows");
+    return null;
+  }
+  if (grain !== "week" && grain !== "month") {
+    console.log("EXIT: invalid grain");
+    return null;
+  }
+  if (!isAdditiveMetric(metricId)) {
+    console.log("EXIT: metric not additive");
+    return null;
+  }
 
   const fieldCandidates = getBucketDateFieldCandidates(grain);
+  console.log("fieldCandidates", fieldCandidates);
+
   const grouped = new Map<string, DatasetRow[]>();
 
   for (const row of rows) {
@@ -3679,32 +3699,70 @@ function calcHistoricalPacingForWorker(
   }
 
   const keys = Array.from(grouped.keys()).sort((a, b) => Date.parse(a) - Date.parse(b));
-  if (!keys.length) return null;
+
+  console.log("keys", keys);
+  console.log(
+    "groupedCounts",
+    Object.fromEntries(keys.map(k => [k, (grouped.get(k) || []).length]))
+  );
+
+  if (!keys.length) {
+    console.log("EXIT: no keys");
+    return null;
+  }
 
   const currentBucket =
     targetBucket && grouped.has(targetBucket) ? targetBucket : keys[keys.length - 1];
 
+  console.log("currentBucket", currentBucket);
+
   const currentRows = grouped.get(currentBucket) || [];
-  if (!currentRows.length) return null;
+  console.log("currentRows.length", currentRows.length);
+
+  if (!currentRows.length) {
+    console.log("EXIT: no currentRows");
+    return null;
+  }
 
   const currentActual = computeMetricValue(metricId, currentRows);
-  if (currentActual === null) return null;
+  console.log("currentActual", currentActual);
 
-  const currentMaxDate = currentRows
+  if (currentActual === null) {
+    console.log("EXIT: currentActual is null");
+    return null;
+  }
+
+  const currentDates = currentRows
     .map(getRowDateForPacing)
     .filter((d): d is Date => d !== null)
-    .sort((a, b) => a.getTime() - b.getTime())
-    .slice(-1)[0];
+    .sort((a, b) => a.getTime() - b.getTime());
 
-  if (!currentMaxDate) return null;
+  console.log("currentDates", currentDates.map(d => d.toISOString()));
+
+  const currentMaxDate = currentDates.slice(-1)[0];
+  console.log("currentMaxDate", currentMaxDate?.toISOString?.());
+
+  if (!currentMaxDate) {
+    console.log("EXIT: no currentMaxDate");
+    return null;
+  }
 
   const currentPeriodStart = getPeriodStartDateFromBucket(currentBucket, grain);
   const currentPeriodEnd = getPeriodEndDateFromBucket(currentBucket, grain);
-  if (!currentPeriodStart || !currentPeriodEnd) return null;
+
+  console.log("currentPeriodStart", currentPeriodStart?.toISOString?.());
+  console.log("currentPeriodEnd", currentPeriodEnd?.toISOString?.());
+
+  if (!currentPeriodStart || !currentPeriodEnd) {
+    console.log("EXIT: invalid current period bounds");
+    return null;
+  }
 
   const lookbackStart = new Date(currentMaxDate);
   lookbackStart.setDate(lookbackStart.getDate() - lookbackDays);
   const lookbackStartDay = startOfLocalDay(lookbackStart);
+
+  console.log("lookbackStartDay", lookbackStartDay?.toISOString?.());
 
   const currentElapsedWeekdayCounts = countWeekdaysBetweenLocal(
     currentPeriodStart,
@@ -3716,8 +3774,13 @@ function calcHistoricalPacingForWorker(
     currentPeriodEnd
   );
 
+  console.log("currentElapsedWeekdayCounts", currentElapsedWeekdayCounts);
+  console.log("fullCurrentPeriodWeekdayCounts", fullCurrentPeriodWeekdayCounts);
+
   const elapsedDays = sumNumberArray(currentElapsedWeekdayCounts);
   const totalDays = sumNumberArray(fullCurrentPeriodWeekdayCounts);
+
+  console.log({ elapsedDays, totalDays });
 
   const historicalKeys = keys.filter((k) => {
     if (k === currentBucket) return false;
@@ -3726,60 +3789,119 @@ function calcHistoricalPacingForWorker(
     return bucketStart.getTime() >= lookbackStartDay.getTime();
   });
 
-  const shares = historicalKeys
-    .map((bucket) => {
-      const bucketRows = grouped.get(bucket) || [];
-      if (!bucketRows.length) return null;
+  console.log("historicalKeys", historicalKeys);
 
-      const bucketStart = getPeriodStartDateFromBucket(bucket, grain);
-      const bucketEnd = getPeriodEndDateFromBucket(bucket, grain);
-      if (!bucketStart || !bucketEnd) return null;
+  const shareDetails = historicalKeys.map((bucket) => {
+    const bucketRows = grouped.get(bucket) || [];
+    if (!bucketRows.length) {
+      return { bucket, skipped: "no rows" };
+    }
 
-      const fullWeekdayCounts = countWeekdaysBetweenLocal(bucketStart, bucketEnd);
-      const weekdayTotals = getMetricTotalByWeekdayForWorker(bucketRows, metricId);
-      const total = weekdayTotals.reduce((a, b) => a + b, 0);
+    const bucketStart = getPeriodStartDateFromBucket(bucket, grain);
+    const bucketEnd = getPeriodEndDateFromBucket(bucket, grain);
+    if (!bucketStart || !bucketEnd) {
+      return { bucket, skipped: "invalid period bounds" };
+    }
 
-      if (!total) return null;
+    const fullWeekdayCounts = countWeekdaysBetweenLocal(bucketStart, bucketEnd);
+    const weekdayTotals = getMetricTotalByWeekdayForWorker(bucketRows, metricId);
+    const total = weekdayTotals.reduce((a, b) => a + b, 0);
 
-      let expectedElapsed = 0;
+    if (!total) {
+      return {
+        bucket,
+        fullWeekdayCounts,
+        weekdayTotals,
+        total,
+        skipped: "total is zero"
+      };
+    }
 
-      for (let i = 0; i < 7; i++) {
-        const fullCount = fullWeekdayCounts[i] || 0;
-        const elapsedCount = currentElapsedWeekdayCounts[i] || 0;
-        if (!fullCount || !elapsedCount) continue;
+    let expectedElapsed = 0;
+    const contributionByWeekday = [];
 
-        const avgPerOccurrence = (weekdayTotals[i] || 0) / fullCount;
-        expectedElapsed += avgPerOccurrence * elapsedCount;
+    for (let i = 0; i < 7; i++) {
+      const fullCount = fullWeekdayCounts[i] || 0;
+      const elapsedCount = currentElapsedWeekdayCounts[i] || 0;
+
+      if (!fullCount || !elapsedCount) {
+        contributionByWeekday.push({
+          weekday: i,
+          fullCount,
+          elapsedCount,
+          avgPerOccurrence: 0,
+          contribution: 0
+        });
+        continue;
       }
 
-      const share = expectedElapsed / total;
-      if (!share || share <= 0 || share > 1.25) return null;
+      const avgPerOccurrence = (weekdayTotals[i] || 0) / fullCount;
+      const contribution = avgPerOccurrence * elapsedCount;
+      expectedElapsed += contribution;
 
-      return share;
-    })
-    .filter((v): v is number => v !== null);
+      contributionByWeekday.push({
+        weekday: i,
+        fullCount,
+        elapsedCount,
+        avgPerOccurrence,
+        contribution
+      });
+    }
+
+    const share = expectedElapsed / total;
+
+    return {
+      bucket,
+      bucketStart: bucketStart?.toISOString?.(),
+      bucketEnd: bucketEnd?.toISOString?.(),
+      fullWeekdayCounts,
+      weekdayTotals,
+      total,
+      expectedElapsed,
+      share,
+      valid: !!share && share > 0 && share <= 1.25,
+      contributionByWeekday
+    };
+  });
+
+  console.log("shareDetails", shareDetails);
+
+  const shares = shareDetails
+    .filter((d): d is (typeof d & { share: number; valid: true }) => !!d.valid)
+    .map((d) => d.share);
+
+  console.log("validShares", shares);
 
   if (!shares.length) {
     const fallbackPct = totalDays > 0 ? elapsedDays / totalDays : 0;
 
-    return {
+    const result = {
       actual: currentActual,
       projected: fallbackPct > 0 ? currentActual / fallbackPct : currentActual,
       pct: fallbackPct,
-      method: "fallback",
+      method: "fallback" as const,
       sampleSize: 0,
     };
+
+    console.log("FINAL RESULT", result);
+    console.log("=== calcHistoricalPacingForWorker_DEBUG END ===");
+    return result;
   }
 
   const historicalPct = shares.reduce((a, b) => a + b, 0) / shares.length;
 
-  return {
+  const result = {
     actual: currentActual,
     projected: historicalPct > 0 ? currentActual / historicalPct : currentActual,
     pct: historicalPct,
-    method: "historical",
+    method: "historical" as const,
     sampleSize: shares.length,
   };
+
+  console.log("historicalPct", historicalPct);
+  console.log("FINAL RESULT", result);
+  console.log("=== calcHistoricalPacingForWorker_DEBUG END ===");
+  return result;
 }
 
 function maybeProjectMetricValue(args: {
