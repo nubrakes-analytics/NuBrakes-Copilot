@@ -17,6 +17,7 @@ const EXAMPLES = [
   "Which dataset should I use for supply and demand by market?",
   "Why is conversion rate down this March?",
   "Why are completed jobs down?",
+  "What does average order value mean?",
 ];
 
 const DATASET_LIST_URL =
@@ -487,7 +488,7 @@ export default function NubrakesAICopilotFrontend() {
                     key={example}
                     onClick={() => handleAsk(example)}
                     disabled={loading}
-                    className="shrink-0 rounded-full bg-white px-3 py-2 text-sm text-[#0E2468] ring-1 ring-[#CDB7B7] transition hover:bg-[#CDB7B7]/40 disabled:cursor-not-allowed disabled:opacity-50"
+                    className="shrink-0 rounded-full bg-white px-3 py-2 text-xs text-[#0E2468] ring-1 ring-[#CDB7B7] transition hover:bg-[#CDB7B7]/40 disabled:cursor-not-allowed disabled:opacity-50"
                   >
                     {example}
                   </button>
