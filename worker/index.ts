@@ -830,12 +830,15 @@ async function runAiQuery(userMessage: string, env: Env): Promise<AppApiResponse
     hasPhrase("weekly trend");
 
   const looksLikeContributionQuestion =
-    hasPhrase("contribution to change") ||
-    hasPhrase("contributed most") ||
-    hasPhrase("drove the decline") ||
-    hasPhrase("drove the increase") ||
-    hasPhrase("which market drove") ||
-    hasPhrase("which channel drove");
+  hasPhrase("contribution to change") ||
+  hasPhrase("contributed most") ||
+  (hasWord("drove") && hasWord("decline")) ||
+  (hasWord("drove") && hasWord("increase")) ||
+  (hasWord("drive") && hasWord("decline")) ||
+  (hasWord("drive") && hasWord("increase")) ||
+  ((hasWord("market") || hasWord("markets")) && (hasWord("drove") || hasWord("drive"))) ||
+  ((hasWord("channel") || hasWord("channels")) && (hasWord("drove") || hasWord("drive"))) ||
+  (hasWord("contribution") && (hasWord("market") || hasWord("channel") || hasWord("markets") || hasWord("channels")));
 
   const looksLikeSegmentCompareQuestion =
     hasWord("compare") || hasWord("versus") || hasWord("vs");
