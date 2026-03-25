@@ -3972,7 +3972,9 @@ function maybeProjectMetricValue(args: {
   if (!isLatestBucketForGrain(allDatasetRows, grain, targetBucket)) return rawValue;
 
   const pacing = calcHistoricalPacingForWorker(grain, allDatasetRows, metricId, targetBucket);
-  return pacing?.projected ?? rawValue;
+  if (!pacing || !pacing.pct || pacing.pct <= 0) return rawValue;
+
+  return rawValue / pacing.pct;
 }
 
 function computeDelta(currentValue: number | null, priorValue: number | null): number | null {
