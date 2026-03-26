@@ -1227,7 +1227,7 @@ async function handleSlackCommand(request: Request, env: Env): Promise<Response>
     return new Response(
       JSON.stringify({
         response_type: "ephemeral",
-        text: "Please enter a question after /nb",
+        text: "Request: \nResponse: Please enter a question after /nb",
       }),
       {
         status: 200,
@@ -1244,7 +1244,7 @@ async function handleSlackCommand(request: Request, env: Env): Promise<Response>
   return new Response(
     JSON.stringify({
       response_type: "ephemeral",
-      text: result.answer || "No response generated.",
+      text: `Request: ${text}\nResponse: ${result.answer || "No response generated."}`,
     }),
     {
       status: 200,
@@ -1255,7 +1255,6 @@ async function handleSlackCommand(request: Request, env: Env): Promise<Response>
     }
   );
 }
-
 
 
 async function verifySlackSignature(
