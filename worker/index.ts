@@ -3829,11 +3829,12 @@ function calcHistoricalPacingForWorker(
   rows: DatasetRow[],
   metricId: string,
   targetBucket?: string,
-  lookbackDays = 90
+  lookbackDays = 30
 ): {
   projected: number;
   actual: number;
   pct: number;
+  historicalPctRaw?: number | null;
   method: "historical" | "fallback";
   sampleSize: number;
 } | null {
@@ -3918,7 +3919,9 @@ function calcHistoricalPacingForWorker(
 
       for (let i = 0; i < 7; i++) {
         const fullCount = fullWeekdayCounts[i] || 0;
-        const elapsedCount = currentElapsedWeekdayCounts[i] || 0;
+        const elapsedCountRaw = currentElapsedWeekdayCounts[i] || 0;
+        const elapsedCount = Math.min(elapsedCountRaw, fullCount);
+
         if (!fullCount || !elapsedCount) continue;
 
         const avgPerOccurrence = (weekdayTotals[i] || 0) / fullCount;
@@ -3934,15 +3937,33 @@ function calcHistoricalPacingForWorker(
 
   if (!shares.length) {
     const fallbackPct = totalDays > 0 ? elapsedDays / totalDays : 0;
+    const projectedRaw = fallbackPct > 0 ? currentActual / fallbackPct : currentActual;
+    const projected = Math.max(currentActual, projectedRaw);
 
     return {
       actual: currentActual,
-      projected: fallbackPct > 0 ? currentActual / fallbackPct : currentActual,
+      projected,
       pct: fallbackPct,
+      historicalPctRaw: null,
       method: "fallback",
       sampleSize: 0,
     };
   }
+
+  const historicalPctRaw = shares.reduce((a, b) => a + b, 0) / shares.length;
+  const historicalPct = Math.max(0, Math.min(historicalPctRaw, 1));
+  const projectedRaw = historicalPct > 0 ? currentActual / historicalPct : currentActual;
+  const projected = Math.max(currentActual, projectedRaw);
+
+  return {
+    actual: currentActual,
+    projected,
+    pct: historicalPct,
+    historicalPctRaw,
+    method: "historical",
+    sampleSize: shares.length,
+  };
+}
 
   const historicalPct = shares.reduce((a, b) => a + b, 0) / shares.length;
 
