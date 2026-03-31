@@ -332,7 +332,7 @@
     "leads": 28,
     "jobs_booked": 12,
     "canceled_jobs": 0,
-    "Revenue": 3419.49,
+    "Revenue": 3419.4900000000002,
     "jobs_completed": 9
   },
   {
@@ -800,7 +800,7 @@
     "leads": 58,
     "jobs_booked": 16,
     "canceled_jobs": 1,
-    "Revenue": 5905.289999999999,
+    "Revenue": 5905.290000000001,
     "jobs_completed": 12
   },
   {
@@ -992,7 +992,7 @@
     "leads": 63,
     "jobs_booked": 12,
     "canceled_jobs": 1,
-    "Revenue": 3593.8299999999995,
+    "Revenue": 3593.83,
     "jobs_completed": 9
   },
   {
@@ -1100,7 +1100,7 @@
     "leads": 44,
     "jobs_booked": 19,
     "canceled_jobs": 1,
-    "Revenue": 5836.32,
+    "Revenue": 5836.320000000001,
     "jobs_completed": 10
   },
   {
@@ -1256,7 +1256,7 @@
     "leads": 57,
     "jobs_booked": 15,
     "canceled_jobs": 3,
-    "Revenue": 5251.97,
+    "Revenue": 5251.969999999999,
     "jobs_completed": 9
   },
   {
@@ -1400,7 +1400,7 @@
     "leads": 62,
     "jobs_booked": 12,
     "canceled_jobs": 2,
-    "Revenue": 3056.05,
+    "Revenue": 3056.0499999999997,
     "jobs_completed": 9
   },
   {
@@ -1532,7 +1532,7 @@
     "leads": 23,
     "jobs_booked": 6,
     "canceled_jobs": 1,
-    "Revenue": 1946.43,
+    "Revenue": 1946.4299999999998,
     "jobs_completed": 5
   },
   {
@@ -1724,7 +1724,7 @@
     "leads": 30,
     "jobs_booked": 15,
     "canceled_jobs": 1,
-    "Revenue": 6446.64,
+    "Revenue": 6446.639999999999,
     "jobs_completed": 17
   },
   {
@@ -1772,7 +1772,7 @@
     "leads": 62,
     "jobs_booked": 16,
     "canceled_jobs": 2,
-    "Revenue": 2950.03,
+    "Revenue": 2950.0299999999997,
     "jobs_completed": 5
   },
   {
@@ -1928,7 +1928,7 @@
     "leads": 24,
     "jobs_booked": 5,
     "canceled_jobs": 0,
-    "Revenue": 1614.68,
+    "Revenue": 1614.6799999999998,
     "jobs_completed": 4
   },
   {
@@ -2144,7 +2144,7 @@
     "leads": 27,
     "jobs_booked": 8,
     "canceled_jobs": 2,
-    "Revenue": 2978.8399999999997,
+    "Revenue": 2978.84,
     "jobs_completed": 6
   },
   {
@@ -2828,7 +2828,7 @@
     "leads": 49,
     "jobs_booked": 12,
     "canceled_jobs": 7,
-    "Revenue": 4871.74,
+    "Revenue": 4871.740000000001,
     "jobs_completed": 10
   },
   {
@@ -2876,7 +2876,7 @@
     "leads": 82,
     "jobs_booked": 21,
     "canceled_jobs": 3,
-    "Revenue": 6447.81,
+    "Revenue": 6447.8099999999995,
     "jobs_completed": 16
   },
   {
@@ -2912,7 +2912,7 @@
     "leads": 40,
     "jobs_booked": 12,
     "canceled_jobs": 7,
-    "Revenue": 3410.32,
+    "Revenue": 3410.3199999999997,
     "jobs_completed": 9
   },
   {
@@ -3488,7 +3488,7 @@
     "leads": 10,
     "jobs_booked": 3,
     "canceled_jobs": 2,
-    "Revenue": 1539.19,
+    "Revenue": 1539.1899999999998,
     "jobs_completed": 4
   },
   {
@@ -3668,7 +3668,7 @@
     "leads": 41,
     "jobs_booked": 14,
     "canceled_jobs": 1,
-    "Revenue": 6512.06,
+    "Revenue": 6512.0599999999995,
     "jobs_completed": 14
   },
   {
@@ -3812,7 +3812,7 @@
     "leads": 36,
     "jobs_booked": 12,
     "canceled_jobs": 2,
-    "Revenue": 6192.820000000001,
+    "Revenue": 6192.82,
     "jobs_completed": 15
   },
   {
@@ -4100,7 +4100,7 @@
     "leads": 43,
     "jobs_booked": 10,
     "canceled_jobs": 0,
-    "Revenue": 3626.9500000000003,
+    "Revenue": 3626.95,
     "jobs_completed": 10
   },
   {
@@ -4316,7 +4316,7 @@
     "leads": 38,
     "jobs_booked": 6,
     "canceled_jobs": 0,
-    "Revenue": 5549.469999999999,
+    "Revenue": 5549.47,
     "jobs_completed": 14
   },
   {
@@ -4448,7 +4448,7 @@
     "leads": 74,
     "jobs_booked": 12,
     "canceled_jobs": 2,
-    "Revenue": 7012.070000000001,
+    "Revenue": 7012.07,
     "jobs_completed": 17
   },
   {
@@ -4592,7 +4592,7 @@
     "leads": 39,
     "jobs_booked": 14,
     "canceled_jobs": 1,
-    "Revenue": 4375.450000000001,
+    "Revenue": 4375.45,
     "jobs_completed": 12
   },
   {
@@ -4604,7 +4604,7 @@
     "leads": 71,
     "jobs_booked": 17,
     "canceled_jobs": 3,
-    "Revenue": 6677.92,
+    "Revenue": 6677.920000000001,
     "jobs_completed": 14
   },
   {
@@ -4724,7 +4724,7 @@
     "leads": 47,
     "jobs_booked": 13,
     "canceled_jobs": 1,
-    "Revenue": 5147.299999999999,
+    "Revenue": 5147.3,
     "jobs_completed": 13
   },
   {
@@ -4844,7 +4844,7 @@
     "leads": 19,
     "jobs_booked": 5,
     "canceled_jobs": 1,
-    "Revenue": 1726.47,
+    "Revenue": 1726.4699999999998,
     "jobs_completed": 5
   },
   {
@@ -4856,7 +4856,7 @@
     "leads": 15,
     "jobs_booked": 2,
     "canceled_jobs": 1,
-    "Revenue": 2086.0299999999997,
+    "Revenue": 2086.03,
     "jobs_completed": 5
   },
   {
@@ -5204,7 +5204,7 @@
     "leads": 20,
     "jobs_booked": 7,
     "canceled_jobs": 1,
-    "Revenue": 4189.030000000001,
+    "Revenue": 4189.03,
     "jobs_completed": 8
   },
   {
@@ -5336,7 +5336,7 @@
     "leads": 39,
     "jobs_booked": 7,
     "canceled_jobs": 2,
-    "Revenue": 3215.82,
+    "Revenue": 3215.8199999999997,
     "jobs_completed": 9
   },
   {
@@ -5660,7 +5660,7 @@
     "leads": 41,
     "jobs_booked": 15,
     "canceled_jobs": 5,
-    "Revenue": 6355.88,
+    "Revenue": 6355.879999999999,
     "jobs_completed": 15
   },
   {
@@ -5828,7 +5828,7 @@
     "leads": 34,
     "jobs_booked": 13,
     "canceled_jobs": 2,
-    "Revenue": 5782.030000000001,
+    "Revenue": 5782.03,
     "jobs_completed": 10
   },
   {
@@ -5876,7 +5876,7 @@
     "leads": 40,
     "jobs_booked": 11,
     "canceled_jobs": 1,
-    "Revenue": 3818.7200000000003,
+    "Revenue": 3818.72,
     "jobs_completed": 7
   },
   {
@@ -5984,7 +5984,7 @@
     "leads": 69,
     "jobs_booked": 18,
     "canceled_jobs": 2,
-    "Revenue": 6817.820000000001,
+    "Revenue": 6817.82,
     "jobs_completed": 16
   },
   {
@@ -6176,7 +6176,7 @@
     "leads": 35,
     "jobs_booked": 6,
     "canceled_jobs": 1,
-    "Revenue": 4553.22,
+    "Revenue": 4553.219999999999,
     "jobs_completed": 10
   },
   {
@@ -6236,7 +6236,7 @@
     "leads": 31,
     "jobs_booked": 5,
     "canceled_jobs": 2,
-    "Revenue": 3130.1000000000004,
+    "Revenue": 3130.1,
     "jobs_completed": 7
   },
   {
@@ -6560,7 +6560,7 @@
     "leads": 18,
     "jobs_booked": 7,
     "canceled_jobs": 0,
-    "Revenue": 2340.52,
+    "Revenue": 2340.5200000000004,
     "jobs_completed": 5
   },
   {
@@ -6596,7 +6596,7 @@
     "leads": 36,
     "jobs_booked": 9,
     "canceled_jobs": 1,
-    "Revenue": 3874.86,
+    "Revenue": 3874.8599999999997,
     "jobs_completed": 8
   },
   {
@@ -6836,7 +6836,7 @@
     "leads": 20,
     "jobs_booked": 6,
     "canceled_jobs": 1,
-    "Revenue": 2993.9799999999996,
+    "Revenue": 2993.98,
     "jobs_completed": 6
   },
   {
@@ -7328,7 +7328,7 @@
     "leads": 21,
     "jobs_booked": 7,
     "canceled_jobs": 0,
-    "Revenue": 3271.82,
+    "Revenue": 3271.8199999999997,
     "jobs_completed": 6
   },
   {
@@ -7748,7 +7748,7 @@
     "leads": 18,
     "jobs_booked": 6,
     "canceled_jobs": 1,
-    "Revenue": 1910.26,
+    "Revenue": 1910.2600000000002,
     "jobs_completed": 5
   },
   {
@@ -7832,7 +7832,7 @@
     "leads": 39,
     "jobs_booked": 14,
     "canceled_jobs": 2,
-    "Revenue": 9121.85,
+    "Revenue": 9121.850000000002,
     "jobs_completed": 12
   },
   {
@@ -7880,7 +7880,7 @@
     "leads": 56,
     "jobs_booked": 14,
     "canceled_jobs": 3,
-    "Revenue": 4642.32,
+    "Revenue": 4642.320000000001,
     "jobs_completed": 10
   },
   {
@@ -8000,7 +8000,7 @@
     "leads": 70,
     "jobs_booked": 19,
     "canceled_jobs": 6,
-    "Revenue": 6375.52,
+    "Revenue": 6375.5199999999995,
     "jobs_completed": 15
   },
   {
@@ -8144,7 +8144,7 @@
     "leads": 39,
     "jobs_booked": 9,
     "canceled_jobs": 1,
-    "Revenue": 6088.760000000001,
+    "Revenue": 6088.759999999999,
     "jobs_completed": 14
   },
   {
@@ -8288,7 +8288,7 @@
     "leads": 42,
     "jobs_booked": 11,
     "canceled_jobs": 2,
-    "Revenue": 3528.9200000000005,
+    "Revenue": 3528.92,
     "jobs_completed": 8
   },
   {
@@ -8312,7 +8312,7 @@
     "leads": 63,
     "jobs_booked": 18,
     "canceled_jobs": 6,
-    "Revenue": 5194.1,
+    "Revenue": 5194.099999999999,
     "jobs_completed": 10
   },
   {
@@ -8612,7 +8612,7 @@
     "leads": 30,
     "jobs_booked": 13,
     "canceled_jobs": 1,
-    "Revenue": 4853.08,
+    "Revenue": 4853.080000000001,
     "jobs_completed": 9
   },
   {
@@ -8744,7 +8744,7 @@
     "leads": 47,
     "jobs_booked": 14,
     "canceled_jobs": 5,
-    "Revenue": 6135.04,
+    "Revenue": 6135.040000000001,
     "jobs_completed": 12
   },
   {
@@ -8756,7 +8756,7 @@
     "leads": 35,
     "jobs_booked": 15,
     "canceled_jobs": 1,
-    "Revenue": 4973.589999999999,
+    "Revenue": 4973.59,
     "jobs_completed": 14
   },
   {
@@ -8804,7 +8804,7 @@
     "leads": 45,
     "jobs_booked": 9,
     "canceled_jobs": 1,
-    "Revenue": 2969.31,
+    "Revenue": 2969.3100000000004,
     "jobs_completed": 8
   },
   {
@@ -8888,7 +8888,7 @@
     "leads": 14,
     "jobs_booked": 3,
     "canceled_jobs": 1,
-    "Revenue": 1741.3799999999999,
+    "Revenue": 1741.38,
     "jobs_completed": 3
   },
   {
@@ -8948,7 +8948,7 @@
     "leads": 33,
     "jobs_booked": 7,
     "canceled_jobs": 1,
-    "Revenue": 3036.08,
+    "Revenue": 3036.0800000000004,
     "jobs_completed": 6
   },
   {
@@ -9344,7 +9344,7 @@
     "leads": 35,
     "jobs_booked": 8,
     "canceled_jobs": 1,
-    "Revenue": 4403.7300000000005,
+    "Revenue": 4403.73,
     "jobs_completed": 10
   },
   {
@@ -9512,7 +9512,7 @@
     "leads": 27,
     "jobs_booked": 11,
     "canceled_jobs": 1,
-    "Revenue": 3433.85,
+    "Revenue": 3433.8500000000004,
     "jobs_completed": 6
   },
   {
@@ -9644,7 +9644,7 @@
     "leads": 56,
     "jobs_booked": 18,
     "canceled_jobs": 0,
-    "Revenue": 3808.49,
+    "Revenue": 3808.4900000000002,
     "jobs_completed": 6
   },
   {
@@ -9692,7 +9692,7 @@
     "leads": 62,
     "jobs_booked": 19,
     "canceled_jobs": 4,
-    "Revenue": 4448.570000000001,
+    "Revenue": 4448.57,
     "jobs_completed": 11
   },
   {
@@ -9800,7 +9800,7 @@
     "leads": 38,
     "jobs_booked": 14,
     "canceled_jobs": 1,
-    "Revenue": 6661.86,
+    "Revenue": 6661.860000000001,
     "jobs_completed": 16
   },
   {
@@ -9932,7 +9932,7 @@
     "leads": 47,
     "jobs_booked": 9,
     "canceled_jobs": 4,
-    "Revenue": 5043.93,
+    "Revenue": 5043.930000000001,
     "jobs_completed": 14
   },
   {
@@ -9980,7 +9980,7 @@
     "leads": 34,
     "jobs_booked": 10,
     "canceled_jobs": 0,
-    "Revenue": 2643.6099999999997,
+    "Revenue": 2643.61,
     "jobs_completed": 8
   },
   {
@@ -10064,7 +10064,7 @@
     "leads": 60,
     "jobs_booked": 25,
     "canceled_jobs": 3,
-    "Revenue": 3723.1499999999996,
+    "Revenue": 3723.15,
     "jobs_completed": 9
   },
   {
@@ -10088,7 +10088,7 @@
     "leads": 70,
     "jobs_booked": 21,
     "canceled_jobs": 2,
-    "Revenue": 6180.410000000001,
+    "Revenue": 6180.41,
     "jobs_completed": 10
   },
   {
@@ -10136,7 +10136,7 @@
     "leads": 22,
     "jobs_booked": 5,
     "canceled_jobs": 1,
-    "Revenue": 1910.46,
+    "Revenue": 1910.4600000000003,
     "jobs_completed": 4
   },
   {
@@ -10196,7 +10196,7 @@
     "leads": 19,
     "jobs_booked": 7,
     "canceled_jobs": 1,
-    "Revenue": 1421.72,
+    "Revenue": 1421.7199999999998,
     "jobs_completed": 4
   },
   {
@@ -10376,7 +10376,7 @@
     "leads": 27,
     "jobs_booked": 9,
     "canceled_jobs": 1,
-    "Revenue": 8252.96,
+    "Revenue": 8252.960000000001,
     "jobs_completed": 17
   },
   {
@@ -10496,7 +10496,7 @@
     "leads": 10,
     "jobs_booked": 3,
     "canceled_jobs": 2,
-    "Revenue": 2668.55,
+    "Revenue": 2668.5499999999997,
     "jobs_completed": 7
   },
   {
@@ -10520,7 +10520,7 @@
     "leads": 38,
     "jobs_booked": 6,
     "canceled_jobs": 0,
-    "Revenue": 3334.2099999999996,
+    "Revenue": 3334.21,
     "jobs_completed": 9
   },
   {
@@ -10928,7 +10928,7 @@
     "leads": 20,
     "jobs_booked": 9,
     "canceled_jobs": 2,
-    "Revenue": 1886.6699999999998,
+    "Revenue": 1886.67,
     "jobs_completed": 4
   },
   {
@@ -10988,7 +10988,7 @@
     "leads": 46,
     "jobs_booked": 10,
     "canceled_jobs": 2,
-    "Revenue": 4665.7,
+    "Revenue": 4665.700000000001,
     "jobs_completed": 11
   },
   {
@@ -11300,7 +11300,7 @@
     "leads": 67,
     "jobs_booked": 14,
     "canceled_jobs": 0,
-    "Revenue": 6624.679999999999,
+    "Revenue": 6624.68,
     "jobs_completed": 19
   },
   {
@@ -11324,7 +11324,7 @@
     "leads": 38,
     "jobs_booked": 14,
     "canceled_jobs": 1,
-    "Revenue": 4322.47,
+    "Revenue": 4322.469999999999,
     "jobs_completed": 10
   },
   {
@@ -11420,7 +11420,7 @@
     "leads": 38,
     "jobs_booked": 15,
     "canceled_jobs": 2,
-    "Revenue": 3423.7500000000005,
+    "Revenue": 3423.75,
     "jobs_completed": 8
   },
   {
@@ -11996,7 +11996,7 @@
     "leads": 20,
     "jobs_booked": 8,
     "canceled_jobs": 3,
-    "Revenue": 1816.12,
+    "Revenue": 1816.1200000000001,
     "jobs_completed": 5
   },
   {
@@ -12044,7 +12044,7 @@
     "leads": 35,
     "jobs_booked": 12,
     "canceled_jobs": 1,
-    "Revenue": 4636.4400000000005,
+    "Revenue": 4636.44,
     "jobs_completed": 8
   },
   {
@@ -12056,7 +12056,7 @@
     "leads": 69,
     "jobs_booked": 24,
     "canceled_jobs": 4,
-    "Revenue": 8292.730000000001,
+    "Revenue": 8292.73,
     "jobs_completed": 15
   },
   {
@@ -12296,7 +12296,7 @@
     "leads": 25,
     "jobs_booked": 6,
     "canceled_jobs": 0,
-    "Revenue": 3942.56,
+    "Revenue": 3942.5599999999995,
     "jobs_completed": 7
   },
   {
@@ -12344,7 +12344,7 @@
     "leads": 27,
     "jobs_booked": 13,
     "canceled_jobs": 0,
-    "Revenue": 6663.150000000001,
+    "Revenue": 6663.15,
     "jobs_completed": 11
   },
   {
@@ -12392,7 +12392,7 @@
     "leads": 37,
     "jobs_booked": 8,
     "canceled_jobs": 4,
-    "Revenue": 4820.88,
+    "Revenue": 4820.879999999999,
     "jobs_completed": 13
   },
   {
@@ -13208,7 +13208,7 @@
     "leads": 38,
     "jobs_booked": 10,
     "canceled_jobs": 0,
-    "Revenue": 3308.37,
+    "Revenue": 3308.3700000000003,
     "jobs_completed": 6
   },
   {
@@ -13232,7 +13232,7 @@
     "leads": 54,
     "jobs_booked": 13,
     "canceled_jobs": 0,
-    "Revenue": 3610.99,
+    "Revenue": 3610.9900000000002,
     "jobs_completed": 9
   },
   {
@@ -13268,7 +13268,7 @@
     "leads": 35,
     "jobs_booked": 10,
     "canceled_jobs": 0,
-    "Revenue": 3758.86,
+    "Revenue": 3758.8599999999997,
     "jobs_completed": 10
   },
   {
@@ -13340,7 +13340,7 @@
     "leads": 15,
     "jobs_booked": 5,
     "canceled_jobs": 1,
-    "Revenue": 2384.5800000000004,
+    "Revenue": 2384.58,
     "jobs_completed": 6
   },
   {
@@ -13424,7 +13424,7 @@
     "leads": 49,
     "jobs_booked": 11,
     "canceled_jobs": 1,
-    "Revenue": 5242.929999999999,
+    "Revenue": 5242.93,
     "jobs_completed": 11
   },
   {
@@ -13496,7 +13496,7 @@
     "leads": 14,
     "jobs_booked": 3,
     "canceled_jobs": 1,
-    "Revenue": 2414.8599999999997,
+    "Revenue": 2414.86,
     "jobs_completed": 4
   },
   {
@@ -13532,7 +13532,7 @@
     "leads": 27,
     "jobs_booked": 8,
     "canceled_jobs": 1,
-    "Revenue": 7323.95,
+    "Revenue": 7323.949999999999,
     "jobs_completed": 14
   },
   {
@@ -13676,7 +13676,7 @@
     "leads": 20,
     "jobs_booked": 9,
     "canceled_jobs": 1,
-    "Revenue": 2596.0499999999997,
+    "Revenue": 2596.05,
     "jobs_completed": 5
   },
   {
@@ -13820,7 +13820,7 @@
     "leads": 54,
     "jobs_booked": 9,
     "canceled_jobs": 1,
-    "Revenue": 3622.0399999999995,
+    "Revenue": 3622.04,
     "jobs_completed": 9
   },
   {
@@ -13988,7 +13988,7 @@
     "leads": 43,
     "jobs_booked": 11,
     "canceled_jobs": 1,
-    "Revenue": 6001.909999999999,
+    "Revenue": 6001.91,
     "jobs_completed": 15
   },
   {
@@ -14372,7 +14372,7 @@
     "leads": 22,
     "jobs_booked": 5,
     "canceled_jobs": 2,
-    "Revenue": 1806.45,
+    "Revenue": 1806.4499999999998,
     "jobs_completed": 4
   },
   {
@@ -14420,7 +14420,7 @@
     "leads": 35,
     "jobs_booked": 4,
     "canceled_jobs": 0,
-    "Revenue": 2149.8500000000004,
+    "Revenue": 2149.85,
     "jobs_completed": 5
   },
   {
@@ -14576,7 +14576,7 @@
     "leads": 51,
     "jobs_booked": 10,
     "canceled_jobs": 3,
-    "Revenue": 2526.3399999999997,
+    "Revenue": 2526.34,
     "jobs_completed": 8
   },
   {
@@ -14720,7 +14720,7 @@
     "leads": 31,
     "jobs_booked": 8,
     "canceled_jobs": 1,
-    "Revenue": 4940.13,
+    "Revenue": 4940.129999999999,
     "jobs_completed": 11
   },
   {
@@ -15308,7 +15308,7 @@
     "leads": 15,
     "jobs_booked": 4,
     "canceled_jobs": 0,
-    "Revenue": 4084.2700000000004,
+    "Revenue": 4084.27,
     "jobs_completed": 5
   },
   {
@@ -16028,7 +16028,7 @@
     "leads": 17,
     "jobs_booked": 5,
     "canceled_jobs": 3,
-    "Revenue": 1933.5900000000001,
+    "Revenue": 1933.59,
     "jobs_completed": 5
   },
   {
@@ -16280,7 +16280,7 @@
     "leads": 31,
     "jobs_booked": 4,
     "canceled_jobs": 0,
-    "Revenue": 2254.6899999999996,
+    "Revenue": 2254.69,
     "jobs_completed": 6
   },
   {
@@ -16292,7 +16292,7 @@
     "leads": 13,
     "jobs_booked": 3,
     "canceled_jobs": 0,
-    "Revenue": 2292.2200000000003,
+    "Revenue": 2292.22,
     "jobs_completed": 4
   },
   {
@@ -16556,7 +16556,7 @@
     "leads": 35,
     "jobs_booked": 14,
     "canceled_jobs": 0,
-    "Revenue": 4537.52,
+    "Revenue": 4537.5199999999995,
     "jobs_completed": 8
   },
   {
@@ -16568,7 +16568,7 @@
     "leads": 59,
     "jobs_booked": 13,
     "canceled_jobs": 2,
-    "Revenue": 6570.4800000000005,
+    "Revenue": 6570.48,
     "jobs_completed": 12
   },
   {
@@ -16604,7 +16604,7 @@
     "leads": 40,
     "jobs_booked": 11,
     "canceled_jobs": 1,
-    "Revenue": 1308.2499999999998,
+    "Revenue": 1308.25,
     "jobs_completed": 5
   },
   {
@@ -16748,7 +16748,7 @@
     "leads": 38,
     "jobs_booked": 6,
     "canceled_jobs": 1,
-    "Revenue": 4679.860000000001,
+    "Revenue": 4679.86,
     "jobs_completed": 12
   },
   {
@@ -16856,7 +16856,7 @@
     "leads": 26,
     "jobs_booked": 5,
     "canceled_jobs": 1,
-    "Revenue": 2877.5699999999997,
+    "Revenue": 2877.57,
     "jobs_completed": 6
   },
   {
@@ -17132,7 +17132,7 @@
     "leads": 32,
     "jobs_booked": 10,
     "canceled_jobs": 1,
-    "Revenue": 4132.870000000001,
+    "Revenue": 4132.87,
     "jobs_completed": 8
   },
   {
@@ -17324,7 +17324,7 @@
     "leads": 58,
     "jobs_booked": 19,
     "canceled_jobs": 0,
-    "Revenue": 6070.05,
+    "Revenue": 6070.049999999999,
     "jobs_completed": 17
   },
   {
@@ -17624,7 +17624,7 @@
     "leads": 27,
     "jobs_booked": 8,
     "canceled_jobs": 1,
-    "Revenue": 2202.18,
+    "Revenue": 2202.1800000000003,
     "jobs_completed": 5
   },
   {
@@ -17636,7 +17636,7 @@
     "leads": 61,
     "jobs_booked": 14,
     "canceled_jobs": 1,
-    "Revenue": 7451.27,
+    "Revenue": 7451.2699999999995,
     "jobs_completed": 15
   },
   {
@@ -17732,7 +17732,7 @@
     "leads": 20,
     "jobs_booked": 4,
     "canceled_jobs": 1,
-    "Revenue": 1746.34,
+    "Revenue": 1746.3400000000001,
     "jobs_completed": 4
   },
   {
@@ -17924,7 +17924,7 @@
     "leads": 36,
     "jobs_booked": 6,
     "canceled_jobs": 2,
-    "Revenue": 2852.3,
+    "Revenue": 2852.2999999999997,
     "jobs_completed": 7
   },
   {
@@ -17936,7 +17936,7 @@
     "leads": 21,
     "jobs_booked": 4,
     "canceled_jobs": 0,
-    "Revenue": 1356.1499999999999,
+    "Revenue": 1356.15,
     "jobs_completed": 3
   },
   {
@@ -18212,7 +18212,7 @@
     "leads": 43,
     "jobs_booked": 13,
     "canceled_jobs": 1,
-    "Revenue": 3316.6600000000003,
+    "Revenue": 3316.66,
     "jobs_completed": 9
   },
   {
@@ -18224,7 +18224,7 @@
     "leads": 30,
     "jobs_booked": 14,
     "canceled_jobs": 0,
-    "Revenue": 5585.449999999999,
+    "Revenue": 5585.450000000001,
     "jobs_completed": 11
   },
   {
@@ -18236,7 +18236,7 @@
     "leads": 70,
     "jobs_booked": 18,
     "canceled_jobs": 1,
-    "Revenue": 4512.280000000001,
+    "Revenue": 4512.28,
     "jobs_completed": 11
   },
   {
@@ -18824,7 +18824,7 @@
     "leads": 24,
     "jobs_booked": 9,
     "canceled_jobs": 1,
-    "Revenue": 6807.040000000001,
+    "Revenue": 6807.04,
     "jobs_completed": 10
   },
   {
@@ -18860,7 +18860,7 @@
     "leads": 49,
     "jobs_booked": 11,
     "canceled_jobs": 4,
-    "Revenue": 4870.3,
+    "Revenue": 4870.299999999999,
     "jobs_completed": 13
   },
   {
@@ -19028,7 +19028,7 @@
     "leads": 15,
     "jobs_booked": 5,
     "canceled_jobs": 2,
-    "Revenue": 1094.6599999999999,
+    "Revenue": 1094.66,
     "jobs_completed": 3
   },
   {
@@ -19040,7 +19040,7 @@
     "leads": 19,
     "jobs_booked": 6,
     "canceled_jobs": 3,
-    "Revenue": 2539.1400000000003,
+    "Revenue": 2539.14,
     "jobs_completed": 10
   },
   {
@@ -19124,7 +19124,7 @@
     "leads": 40,
     "jobs_booked": 20,
     "canceled_jobs": 3,
-    "Revenue": 7390.87,
+    "Revenue": 7390.870000000001,
     "jobs_completed": 12
   },
   {
@@ -19136,7 +19136,7 @@
     "leads": 60,
     "jobs_booked": 13,
     "canceled_jobs": 0,
-    "Revenue": 8326.980000000001,
+    "Revenue": 8326.98,
     "jobs_completed": 20
   },
   {
@@ -19172,7 +19172,7 @@
     "leads": 52,
     "jobs_booked": 13,
     "canceled_jobs": 2,
-    "Revenue": 5295.97,
+    "Revenue": 5295.969999999999,
     "jobs_completed": 13
   },
   {
@@ -19268,7 +19268,7 @@
     "leads": 47,
     "jobs_booked": 9,
     "canceled_jobs": 0,
-    "Revenue": 3490.35,
+    "Revenue": 3490.3499999999995,
     "jobs_completed": 10
   },
   {
@@ -19424,7 +19424,7 @@
     "leads": 50,
     "jobs_booked": 15,
     "canceled_jobs": 0,
-    "Revenue": 5121.2300000000005,
+    "Revenue": 5121.23,
     "jobs_completed": 10
   },
   {
@@ -19508,7 +19508,7 @@
     "leads": 17,
     "jobs_booked": 7,
     "canceled_jobs": 0,
-    "Revenue": 2659.9100000000003,
+    "Revenue": 2659.91,
     "jobs_completed": 7
   },
   {
@@ -19640,7 +19640,7 @@
     "leads": 51,
     "jobs_booked": 15,
     "canceled_jobs": 2,
-    "Revenue": 1761.33,
+    "Revenue": 1761.3300000000002,
     "jobs_completed": 4
   },
   {
@@ -19796,7 +19796,7 @@
     "leads": 39,
     "jobs_booked": 15,
     "canceled_jobs": 2,
-    "Revenue": 5365.349999999999,
+    "Revenue": 5365.35,
     "jobs_completed": 16
   },
   {
@@ -20228,7 +20228,7 @@
     "leads": 60,
     "jobs_booked": 16,
     "canceled_jobs": 0,
-    "Revenue": 8072.14,
+    "Revenue": 8072.139999999999,
     "jobs_completed": 15
   },
   {
@@ -20252,7 +20252,7 @@
     "leads": 53,
     "jobs_booked": 17,
     "canceled_jobs": 3,
-    "Revenue": 4832.099999999999,
+    "Revenue": 4832.1,
     "jobs_completed": 10
   },
   {
@@ -20348,7 +20348,7 @@
     "leads": 36,
     "jobs_booked": 10,
     "canceled_jobs": 0,
-    "Revenue": 3884.2400000000002,
+    "Revenue": 3884.24,
     "jobs_completed": 9
   },
   {
@@ -20408,7 +20408,7 @@
     "leads": 34,
     "jobs_booked": 8,
     "canceled_jobs": 1,
-    "Revenue": 4376.2,
+    "Revenue": 4376.200000000001,
     "jobs_completed": 10
   },
   {
@@ -20504,7 +20504,7 @@
     "leads": 28,
     "jobs_booked": 13,
     "canceled_jobs": 1,
-    "Revenue": 5360.429999999999,
+    "Revenue": 5360.43,
     "jobs_completed": 10
   },
   {
@@ -20708,7 +20708,7 @@
     "leads": 21,
     "jobs_booked": 5,
     "canceled_jobs": 2,
-    "Revenue": 1851.5700000000002,
+    "Revenue": 1851.57,
     "jobs_completed": 5
   },
   {
@@ -20804,7 +20804,7 @@
     "leads": 63,
     "jobs_booked": 21,
     "canceled_jobs": 3,
-    "Revenue": 6085.93,
+    "Revenue": 6085.930000000001,
     "jobs_completed": 16
   },
   {
@@ -21056,7 +21056,7 @@
     "leads": 17,
     "jobs_booked": 3,
     "canceled_jobs": 0,
-    "Revenue": 4465.2,
+    "Revenue": 4465.200000000001,
     "jobs_completed": 6
   },
   {
@@ -21212,7 +21212,7 @@
     "leads": 63,
     "jobs_booked": 13,
     "canceled_jobs": 0,
-    "Revenue": 3849.9700000000003,
+    "Revenue": 3849.97,
     "jobs_completed": 10
   },
   {
@@ -21236,7 +21236,7 @@
     "leads": 69,
     "jobs_booked": 15,
     "canceled_jobs": 3,
-    "Revenue": 6072.89,
+    "Revenue": 6072.889999999999,
     "jobs_completed": 14
   },
   {
@@ -21260,7 +21260,7 @@
     "leads": 35,
     "jobs_booked": 4,
     "canceled_jobs": 1,
-    "Revenue": 4507.610000000001,
+    "Revenue": 4507.61,
     "jobs_completed": 9
   },
   {
@@ -21560,7 +21560,7 @@
     "leads": 17,
     "jobs_booked": 6,
     "canceled_jobs": 1,
-    "Revenue": 1658.68,
+    "Revenue": 1658.6799999999998,
     "jobs_completed": 5
   },
   {
@@ -21620,7 +21620,7 @@
     "leads": 18,
     "jobs_booked": 5,
     "canceled_jobs": 0,
-    "Revenue": 2807.2899999999995,
+    "Revenue": 2807.29,
     "jobs_completed": 5
   },
   {
@@ -22436,7 +22436,7 @@
     "leads": 43,
     "jobs_booked": 15,
     "canceled_jobs": 4,
-    "Revenue": 3815.9500000000003,
+    "Revenue": 3815.95,
     "jobs_completed": 9
   },
   {
@@ -22580,7 +22580,7 @@
     "leads": 47,
     "jobs_booked": 17,
     "canceled_jobs": 4,
-    "Revenue": 3378.2599999999998,
+    "Revenue": 3378.26,
     "jobs_completed": 8
   },
   {
@@ -22592,7 +22592,7 @@
     "leads": 21,
     "jobs_booked": 9,
     "canceled_jobs": 0,
-    "Revenue": 7151.47,
+    "Revenue": 7151.469999999999,
     "jobs_completed": 12
   },
   {
@@ -22628,7 +22628,7 @@
     "leads": 57,
     "jobs_booked": 16,
     "canceled_jobs": 3,
-    "Revenue": 5627.19,
+    "Revenue": 5627.1900000000005,
     "jobs_completed": 12
   },
   {
@@ -22736,7 +22736,7 @@
     "leads": 34,
     "jobs_booked": 15,
     "canceled_jobs": 0,
-    "Revenue": 5898.0999999999985,
+    "Revenue": 5898.1,
     "jobs_completed": 13
   },
   {
@@ -22880,7 +22880,7 @@
     "leads": 30,
     "jobs_booked": 18,
     "canceled_jobs": 5,
-    "Revenue": 3667.4,
+    "Revenue": 3667.3999999999996,
     "jobs_completed": 9
   },
   {
@@ -23060,7 +23060,7 @@
     "leads": 46,
     "jobs_booked": 23,
     "canceled_jobs": 6,
-    "Revenue": 4282.77,
+    "Revenue": 4282.7699999999995,
     "jobs_completed": 9
   },
   {
@@ -23156,7 +23156,7 @@
     "leads": 21,
     "jobs_booked": 6,
     "canceled_jobs": 0,
-    "Revenue": 4056.0099999999998,
+    "Revenue": 4056.01,
     "jobs_completed": 8
   },
   {
@@ -23396,7 +23396,7 @@
     "leads": 47,
     "jobs_booked": 9,
     "canceled_jobs": 0,
-    "Revenue": 4927.28,
+    "Revenue": 4927.280000000001,
     "jobs_completed": 12
   },
   {
@@ -23564,7 +23564,7 @@
     "leads": 32,
     "jobs_booked": 9,
     "canceled_jobs": 0,
-    "Revenue": 4528.179999999999,
+    "Revenue": 4528.18,
     "jobs_completed": 9
   },
   {
@@ -23660,7 +23660,7 @@
     "leads": 47,
     "jobs_booked": 14,
     "canceled_jobs": 4,
-    "Revenue": 8234.78,
+    "Revenue": 8234.779999999999,
     "jobs_completed": 14
   },
   {
@@ -23816,7 +23816,7 @@
     "leads": 44,
     "jobs_booked": 9,
     "canceled_jobs": 2,
-    "Revenue": 5496.11,
+    "Revenue": 5496.110000000001,
     "jobs_completed": 13
   },
   {
@@ -23948,7 +23948,7 @@
     "leads": 53,
     "jobs_booked": 4,
     "canceled_jobs": 0,
-    "Revenue": 5788.390000000001,
+    "Revenue": 5788.389999999999,
     "jobs_completed": 12
   },
   {
@@ -24020,7 +24020,7 @@
     "leads": 17,
     "jobs_booked": 3,
     "canceled_jobs": 1,
-    "Revenue": 2536.19,
+    "Revenue": 2536.1900000000005,
     "jobs_completed": 6
   },
   {
@@ -24224,7 +24224,7 @@
     "leads": 27,
     "jobs_booked": 5,
     "canceled_jobs": 0,
-    "Revenue": 5510.49,
+    "Revenue": 5510.490000000001,
     "jobs_completed": 8
   },
   {
@@ -24296,7 +24296,7 @@
     "leads": 40,
     "jobs_booked": 11,
     "canceled_jobs": 1,
-    "Revenue": 1698.2200000000003,
+    "Revenue": 1698.22,
     "jobs_completed": 5
   },
   {
@@ -24404,7 +24404,7 @@
     "leads": 42,
     "jobs_booked": 20,
     "canceled_jobs": 5,
-    "Revenue": 6619.070000000001,
+    "Revenue": 6619.07,
     "jobs_completed": 14
   },
   {
@@ -24656,7 +24656,7 @@
     "leads": 25,
     "jobs_booked": 5,
     "canceled_jobs": 0,
-    "Revenue": 1765.07,
+    "Revenue": 1765.0700000000002,
     "jobs_completed": 5
   },
   {
@@ -24692,7 +24692,7 @@
     "leads": 46,
     "jobs_booked": 10,
     "canceled_jobs": 3,
-    "Revenue": 3709.43,
+    "Revenue": 3709.4300000000003,
     "jobs_completed": 7
   },
   {
@@ -24764,7 +24764,7 @@
     "leads": 43,
     "jobs_booked": 17,
     "canceled_jobs": 1,
-    "Revenue": 3911.03,
+    "Revenue": 3911.0299999999997,
     "jobs_completed": 9
   },
   {
@@ -25172,7 +25172,7 @@
     "leads": 24,
     "jobs_booked": 8,
     "canceled_jobs": 1,
-    "Revenue": 2184.1499999999996,
+    "Revenue": 2184.15,
     "jobs_completed": 4
   },
   {
@@ -25208,7 +25208,7 @@
     "leads": 29,
     "jobs_booked": 8,
     "canceled_jobs": 3,
-    "Revenue": 8811.449999999999,
+    "Revenue": 8811.45,
     "jobs_completed": 16
   },
   {
@@ -25376,7 +25376,7 @@
     "leads": 60,
     "jobs_booked": 9,
     "canceled_jobs": 0,
-    "Revenue": 3702.33,
+    "Revenue": 3702.3300000000004,
     "jobs_completed": 9
   },
   {
@@ -25640,7 +25640,7 @@
     "leads": 18,
     "jobs_booked": 6,
     "canceled_jobs": 0,
-    "Revenue": 1735.2200000000003,
+    "Revenue": 1735.2199999999998,
     "jobs_completed": 5
   },
   {
@@ -25736,7 +25736,7 @@
     "leads": 52,
     "jobs_booked": 15,
     "canceled_jobs": 0,
-    "Revenue": 6076.51,
+    "Revenue": 6076.509999999999,
     "jobs_completed": 13
   },
   {
@@ -25796,7 +25796,7 @@
     "leads": 31,
     "jobs_booked": 6,
     "canceled_jobs": 1,
-    "Revenue": 3596.52,
+    "Revenue": 3596.5199999999995,
     "jobs_completed": 7
   },
   {
@@ -25916,7 +25916,7 @@
     "leads": 6,
     "jobs_booked": 4,
     "canceled_jobs": 2,
-    "Revenue": 2500.23,
+    "Revenue": 2500.2300000000005,
     "jobs_completed": 4
   },
   {
@@ -26120,7 +26120,7 @@
     "leads": 25,
     "jobs_booked": 4,
     "canceled_jobs": 2,
-    "Revenue": 2390.9500000000003,
+    "Revenue": 2390.95,
     "jobs_completed": 6
   },
   {
@@ -26312,7 +26312,7 @@
     "leads": 35,
     "jobs_booked": 9,
     "canceled_jobs": 0,
-    "Revenue": 7508.33,
+    "Revenue": 7508.329999999999,
     "jobs_completed": 14
   },
   {
@@ -26348,7 +26348,7 @@
     "leads": 39,
     "jobs_booked": 8,
     "canceled_jobs": 1,
-    "Revenue": 7299.970000000001,
+    "Revenue": 7299.97,
     "jobs_completed": 13
   },
   {
@@ -26564,7 +26564,7 @@
     "leads": 19,
     "jobs_booked": 2,
     "canceled_jobs": 0,
-    "Revenue": 3402.3099999999995,
+    "Revenue": 3402.31,
     "jobs_completed": 8
   },
   {
@@ -26612,7 +26612,7 @@
     "leads": 55,
     "jobs_booked": 19,
     "canceled_jobs": 2,
-    "Revenue": 6789.01,
+    "Revenue": 6789.009999999999,
     "jobs_completed": 12
   },
   {
@@ -26648,7 +26648,7 @@
     "leads": 66,
     "jobs_booked": 14,
     "canceled_jobs": 4,
-    "Revenue": 3822.1099999999997,
+    "Revenue": 3822.11,
     "jobs_completed": 9
   },
   {
@@ -26744,7 +26744,7 @@
     "leads": 42,
     "jobs_booked": 9,
     "canceled_jobs": 0,
-    "Revenue": 4638.969999999999,
+    "Revenue": 4638.97,
     "jobs_completed": 10
   },
   {
@@ -26936,7 +26936,7 @@
     "leads": 64,
     "jobs_booked": 33,
     "canceled_jobs": 7,
-    "Revenue": 6302.74,
+    "Revenue": 6302.740000000001,
     "jobs_completed": 12
   },
   {
@@ -26960,7 +26960,7 @@
     "leads": 37,
     "jobs_booked": 6,
     "canceled_jobs": 2,
-    "Revenue": 4246.629999999999,
+    "Revenue": 4246.63,
     "jobs_completed": 11
   },
   {
@@ -27032,7 +27032,7 @@
     "leads": 24,
     "jobs_booked": 5,
     "canceled_jobs": 2,
-    "Revenue": 1600.4499999999998,
+    "Revenue": 1600.45,
     "jobs_completed": 5
   },
   {
@@ -27056,7 +27056,7 @@
     "leads": 42,
     "jobs_booked": 14,
     "canceled_jobs": 3,
-    "Revenue": 3256.4500000000003,
+    "Revenue": 3256.45,
     "jobs_completed": 9
   },
   {
@@ -27524,7 +27524,7 @@
     "leads": 20,
     "jobs_booked": 4,
     "canceled_jobs": 1,
-    "Revenue": 3983.0299999999997,
+    "Revenue": 3983.03,
     "jobs_completed": 6
   },
   {
@@ -27668,7 +27668,7 @@
     "leads": 45,
     "jobs_booked": 17,
     "canceled_jobs": 1,
-    "Revenue": 6398.949999999999,
+    "Revenue": 6398.950000000001,
     "jobs_completed": 9
   },
   {
@@ -27788,7 +27788,7 @@
     "leads": 28,
     "jobs_booked": 10,
     "canceled_jobs": 0,
-    "Revenue": 1700.0900000000001,
+    "Revenue": 1700.09,
     "jobs_completed": 4
   },
   {
@@ -27812,7 +27812,7 @@
     "leads": 51,
     "jobs_booked": 14,
     "canceled_jobs": 0,
-    "Revenue": 5957.21,
+    "Revenue": 5957.210000000001,
     "jobs_completed": 14
   },
   {
@@ -27980,7 +27980,7 @@
     "leads": 66,
     "jobs_booked": 16,
     "canceled_jobs": 5,
-    "Revenue": 6964.6900000000005,
+    "Revenue": 6964.69,
     "jobs_completed": 15
   },
   {
@@ -28088,7 +28088,7 @@
     "leads": 15,
     "jobs_booked": 6,
     "canceled_jobs": 1,
-    "Revenue": 1764.98,
+    "Revenue": 1764.9799999999998,
     "jobs_completed": 4
   },
   {
@@ -28220,7 +28220,7 @@
     "leads": 16,
     "jobs_booked": 5,
     "canceled_jobs": 1,
-    "Revenue": 2098.4700000000003,
+    "Revenue": 2098.47,
     "jobs_completed": 5
   },
   {
@@ -28256,7 +28256,7 @@
     "leads": 35,
     "jobs_booked": 12,
     "canceled_jobs": 1,
-    "Revenue": 7916.969999999999,
+    "Revenue": 7916.97,
     "jobs_completed": 15
   },
   {
@@ -28292,7 +28292,7 @@
     "leads": 54,
     "jobs_booked": 12,
     "canceled_jobs": 3,
-    "Revenue": 5719.3,
+    "Revenue": 5719.299999999999,
     "jobs_completed": 12
   },
   {
@@ -28388,7 +28388,7 @@
     "leads": 47,
     "jobs_booked": 14,
     "canceled_jobs": 2,
-    "Revenue": 6008.830000000001,
+    "Revenue": 6008.83,
     "jobs_completed": 13
   },
   {
@@ -28460,7 +28460,7 @@
     "leads": 20,
     "jobs_booked": 5,
     "canceled_jobs": 0,
-    "Revenue": 2919.4999999999995,
+    "Revenue": 2919.5,
     "jobs_completed": 6
   },
   {
@@ -28484,7 +28484,7 @@
     "leads": 22,
     "jobs_booked": 4,
     "canceled_jobs": 1,
-    "Revenue": 3322.71,
+    "Revenue": 3322.7099999999996,
     "jobs_completed": 7
   },
   {
@@ -28496,7 +28496,7 @@
     "leads": 16,
     "jobs_booked": 9,
     "canceled_jobs": 1,
-    "Revenue": 4540.629999999999,
+    "Revenue": 4540.63,
     "jobs_completed": 9
   },
   {
@@ -28676,7 +28676,7 @@
     "leads": 47,
     "jobs_booked": 8,
     "canceled_jobs": 0,
-    "Revenue": 2744.73,
+    "Revenue": 2744.7299999999996,
     "jobs_completed": 7
   },
   {
@@ -28712,7 +28712,7 @@
     "leads": 65,
     "jobs_booked": 16,
     "canceled_jobs": 2,
-    "Revenue": 4525.9800000000005,
+    "Revenue": 4525.98,
     "jobs_completed": 11
   },
   {
@@ -29156,7 +29156,7 @@
     "leads": 51,
     "jobs_booked": 7,
     "canceled_jobs": 1,
-    "Revenue": 3316.9900000000002,
+    "Revenue": 3316.99,
     "jobs_completed": 9
   },
   {
@@ -29276,7 +29276,7 @@
     "leads": 64,
     "jobs_booked": 6,
     "canceled_jobs": 1,
-    "Revenue": 9685.769999999999,
+    "Revenue": 9685.77,
     "jobs_completed": 20
   },
   {
@@ -29324,7 +29324,7 @@
     "leads": 10,
     "jobs_booked": 7,
     "canceled_jobs": 0,
-    "Revenue": 2022.36,
+    "Revenue": 2022.3600000000001,
     "jobs_completed": 5
   },
   {
@@ -30032,7 +30032,7 @@
     "leads": 26,
     "jobs_booked": 6,
     "canceled_jobs": 2,
-    "Revenue": 2006.4099999999999,
+    "Revenue": 2006.4100000000003,
     "jobs_completed": 5
   },
   {
@@ -30272,7 +30272,7 @@
     "leads": 73,
     "jobs_booked": 13,
     "canceled_jobs": 2,
-    "Revenue": 8670.390000000001,
+    "Revenue": 8670.39,
     "jobs_completed": 15
   },
   {
@@ -30380,7 +30380,7 @@
     "leads": 34,
     "jobs_booked": 8,
     "canceled_jobs": 2,
-    "Revenue": 3374.94,
+    "Revenue": 3374.9399999999996,
     "jobs_completed": 6
   },
   {
@@ -30392,7 +30392,7 @@
     "leads": 29,
     "jobs_booked": 6,
     "canceled_jobs": 1,
-    "Revenue": 3064.4900000000002,
+    "Revenue": 3064.49,
     "jobs_completed": 5
   },
   {
@@ -30596,7 +30596,7 @@
     "leads": 33,
     "jobs_booked": 7,
     "canceled_jobs": 2,
-    "Revenue": 3899.6899999999996,
+    "Revenue": 3899.69,
     "jobs_completed": 7
   },
   {
@@ -30644,7 +30644,7 @@
     "leads": 6,
     "jobs_booked": 3,
     "canceled_jobs": 0,
-    "Revenue": 1884.01,
+    "Revenue": 1884.0100000000002,
     "jobs_completed": 5
   },
   {
@@ -30872,7 +30872,7 @@
     "leads": 73,
     "jobs_booked": 20,
     "canceled_jobs": 5,
-    "Revenue": 6069.37,
+    "Revenue": 6069.369999999999,
     "jobs_completed": 15
   },
   {
@@ -31016,7 +31016,7 @@
     "leads": 46,
     "jobs_booked": 15,
     "canceled_jobs": 1,
-    "Revenue": 3191.5299999999997,
+    "Revenue": 3191.53,
     "jobs_completed": 8
   },
   {
@@ -31028,7 +31028,7 @@
     "leads": 38,
     "jobs_booked": 10,
     "canceled_jobs": 0,
-    "Revenue": 7691.76,
+    "Revenue": 7691.759999999999,
     "jobs_completed": 16
   },
   {
@@ -31040,7 +31040,7 @@
     "leads": 46,
     "jobs_booked": 9,
     "canceled_jobs": 3,
-    "Revenue": 9209.03,
+    "Revenue": 9209.029999999999,
     "jobs_completed": 20
   },
   {
@@ -31064,7 +31064,7 @@
     "leads": 49,
     "jobs_booked": 11,
     "canceled_jobs": 3,
-    "Revenue": 1576.26,
+    "Revenue": 1576.2599999999998,
     "jobs_completed": 4
   },
   {
@@ -31172,7 +31172,7 @@
     "leads": 34,
     "jobs_booked": 10,
     "canceled_jobs": 1,
-    "Revenue": 11108.07,
+    "Revenue": 11108.070000000002,
     "jobs_completed": 16
   },
   {
@@ -31292,7 +31292,7 @@
     "leads": 16,
     "jobs_booked": 4,
     "canceled_jobs": 0,
-    "Revenue": 2573.3399999999997,
+    "Revenue": 2573.34,
     "jobs_completed": 5
   },
   {
@@ -31316,7 +31316,7 @@
     "leads": 39,
     "jobs_booked": 6,
     "canceled_jobs": 2,
-    "Revenue": 4256.929999999999,
+    "Revenue": 4256.93,
     "jobs_completed": 7
   },
   {
@@ -31340,7 +31340,7 @@
     "leads": 55,
     "jobs_booked": 17,
     "canceled_jobs": 2,
-    "Revenue": 3720.09,
+    "Revenue": 3720.0899999999992,
     "jobs_completed": 10
   },
   {
@@ -31424,7 +31424,7 @@
     "leads": 38,
     "jobs_booked": 7,
     "canceled_jobs": 1,
-    "Revenue": 2131.0899999999997,
+    "Revenue": 2131.09,
     "jobs_completed": 7
   },
   {
@@ -31460,7 +31460,7 @@
     "leads": 42,
     "jobs_booked": 11,
     "canceled_jobs": 4,
-    "Revenue": 3740.18,
+    "Revenue": 3740.1800000000003,
     "jobs_completed": 7
   },
   {
@@ -31472,7 +31472,7 @@
     "leads": 35,
     "jobs_booked": 11,
     "canceled_jobs": 0,
-    "Revenue": 4385.72,
+    "Revenue": 4385.719999999999,
     "jobs_completed": 9
   },
   {
@@ -31484,7 +31484,7 @@
     "leads": 53,
     "jobs_booked": 17,
     "canceled_jobs": 2,
-    "Revenue": 6883.150000000001,
+    "Revenue": 6883.15,
     "jobs_completed": 15
   },
   {
@@ -31520,7 +31520,7 @@
     "leads": 29,
     "jobs_booked": 11,
     "canceled_jobs": 4,
-    "Revenue": 4101.9800000000005,
+    "Revenue": 4101.98,
     "jobs_completed": 9
   },
   {
@@ -31664,7 +31664,7 @@
     "leads": 51,
     "jobs_booked": 16,
     "canceled_jobs": 0,
-    "Revenue": 4303.070000000001,
+    "Revenue": 4303.07,
     "jobs_completed": 10
   },
   {
@@ -31868,7 +31868,7 @@
     "leads": 13,
     "jobs_booked": 4,
     "canceled_jobs": 1,
-    "Revenue": 1641.8600000000001,
+    "Revenue": 1641.86,
     "jobs_completed": 5
   },
   {
@@ -31940,7 +31940,7 @@
     "leads": 51,
     "jobs_booked": 8,
     "canceled_jobs": 2,
-    "Revenue": 5110.200000000001,
+    "Revenue": 5110.2,
     "jobs_completed": 8
   },
   {
@@ -32252,7 +32252,7 @@
     "leads": 50,
     "jobs_booked": 16,
     "canceled_jobs": 3,
-    "Revenue": 7169.88,
+    "Revenue": 7169.879999999999,
     "jobs_completed": 13
   },
   {
@@ -32312,7 +32312,7 @@
     "leads": 16,
     "jobs_booked": 3,
     "canceled_jobs": 0,
-    "Revenue": 2748.1800000000003,
+    "Revenue": 2748.18,
     "jobs_completed": 4
   },
   {
@@ -32528,7 +32528,7 @@
     "leads": 35,
     "jobs_booked": 5,
     "canceled_jobs": 1,
-    "Revenue": 2906.8599999999997,
+    "Revenue": 2906.86,
     "jobs_completed": 8
   },
   {
@@ -32588,7 +32588,7 @@
     "leads": 61,
     "jobs_booked": 9,
     "canceled_jobs": 0,
-    "Revenue": 5029.360000000001,
+    "Revenue": 5029.36,
     "jobs_completed": 12
   },
   {
@@ -32648,7 +32648,7 @@
     "leads": 21,
     "jobs_booked": 4,
     "canceled_jobs": 2,
-    "Revenue": 1519.11,
+    "Revenue": 1519.1100000000001,
     "jobs_completed": 4
   },
   {
@@ -32744,7 +32744,7 @@
     "leads": 51,
     "jobs_booked": 7,
     "canceled_jobs": 1,
-    "Revenue": 2744.8700000000003,
+    "Revenue": 2744.87,
     "jobs_completed": 6
   },
   {
@@ -32888,7 +32888,7 @@
     "leads": 24,
     "jobs_booked": 4,
     "canceled_jobs": 1,
-    "Revenue": 4215.879999999999,
+    "Revenue": 4215.88,
     "jobs_completed": 8
   },
   {
@@ -33200,7 +33200,7 @@
     "leads": 35,
     "jobs_booked": 5,
     "canceled_jobs": 0,
-    "Revenue": 2889.0099999999998,
+    "Revenue": 2889.01,
     "jobs_completed": 6
   },
   {
@@ -33344,7 +33344,7 @@
     "leads": 31,
     "jobs_booked": 12,
     "canceled_jobs": 1,
-    "Revenue": 1749.8200000000002,
+    "Revenue": 1749.82,
     "jobs_completed": 5
   },
   {
@@ -33356,7 +33356,7 @@
     "leads": 43,
     "jobs_booked": 18,
     "canceled_jobs": 1,
-    "Revenue": 7560.900000000001,
+    "Revenue": 7560.9,
     "jobs_completed": 12
   },
   {
@@ -33368,7 +33368,7 @@
     "leads": 62,
     "jobs_booked": 14,
     "canceled_jobs": 3,
-    "Revenue": 7256.33,
+    "Revenue": 7256.329999999999,
     "jobs_completed": 18
   },
   {
@@ -33416,7 +33416,7 @@
     "leads": 13,
     "jobs_booked": 5,
     "canceled_jobs": 0,
-    "Revenue": 3170.9199999999996,
+    "Revenue": 3170.92,
     "jobs_completed": 3
   },
   {
@@ -33428,7 +33428,7 @@
     "leads": 18,
     "jobs_booked": 5,
     "canceled_jobs": 1,
-    "Revenue": 2370.84,
+    "Revenue": 2370.8399999999997,
     "jobs_completed": 7
   },
   {
@@ -33488,7 +33488,7 @@
     "leads": 17,
     "jobs_booked": 0,
     "canceled_jobs": 0,
-    "Revenue": 1852.61,
+    "Revenue": 1852.6100000000001,
     "jobs_completed": 4
   },
   {
@@ -33512,7 +33512,7 @@
     "leads": 38,
     "jobs_booked": 10,
     "canceled_jobs": 0,
-    "Revenue": 4358.110000000001,
+    "Revenue": 4358.11,
     "jobs_completed": 9
   },
   {
@@ -33536,7 +33536,7 @@
     "leads": 65,
     "jobs_booked": 19,
     "canceled_jobs": 2,
-    "Revenue": 2861.49,
+    "Revenue": 2861.4900000000002,
     "jobs_completed": 8
   },
   {
@@ -33572,7 +33572,7 @@
     "leads": 39,
     "jobs_booked": 7,
     "canceled_jobs": 1,
-    "Revenue": 5387.160000000001,
+    "Revenue": 5387.16,
     "jobs_completed": 12
   },
   {
@@ -33848,7 +33848,7 @@
     "leads": 25,
     "jobs_booked": 13,
     "canceled_jobs": 4,
-    "Revenue": 7377.620000000001,
+    "Revenue": 7377.62,
     "jobs_completed": 14
   },
   {
@@ -34160,7 +34160,7 @@
     "leads": 62,
     "jobs_booked": 24,
     "canceled_jobs": 3,
-    "Revenue": 5135.1,
+    "Revenue": 5135.099999999999,
     "jobs_completed": 13
   },
   {
@@ -34520,7 +34520,7 @@
     "leads": 58,
     "jobs_booked": 8,
     "canceled_jobs": 1,
-    "Revenue": 3785.6299999999997,
+    "Revenue": 3785.63,
     "jobs_completed": 5
   },
   {
@@ -34628,7 +34628,7 @@
     "leads": 31,
     "jobs_booked": 13,
     "canceled_jobs": 2,
-    "Revenue": 3869.48,
+    "Revenue": 3869.4799999999996,
     "jobs_completed": 9
   },
   {
@@ -34952,7 +34952,7 @@
     "leads": 69,
     "jobs_booked": 14,
     "canceled_jobs": 4,
-    "Revenue": 8699.710000000001,
+    "Revenue": 8699.71,
     "jobs_completed": 17
   },
   {
@@ -35144,7 +35144,7 @@
     "leads": 17,
     "jobs_booked": 7,
     "canceled_jobs": 2,
-    "Revenue": 1132.66,
+    "Revenue": 1132.6599999999999,
     "jobs_completed": 3
   },
   {
@@ -35240,7 +35240,7 @@
     "leads": 52,
     "jobs_booked": 17,
     "canceled_jobs": 2,
-    "Revenue": 5151.05,
+    "Revenue": 5151.049999999999,
     "jobs_completed": 12
   },
   {
@@ -35324,7 +35324,7 @@
     "leads": 31,
     "jobs_booked": 7,
     "canceled_jobs": 0,
-    "Revenue": 1878.82,
+    "Revenue": 1878.8200000000002,
     "jobs_completed": 4
   },
   {
@@ -35360,7 +35360,7 @@
     "leads": 39,
     "jobs_booked": 13,
     "canceled_jobs": 3,
-    "Revenue": 6675.12,
+    "Revenue": 6675.119999999999,
     "jobs_completed": 12
   },
   {
@@ -35528,7 +35528,7 @@
     "leads": 54,
     "jobs_booked": 17,
     "canceled_jobs": 0,
-    "Revenue": 10143.840000000002,
+    "Revenue": 10143.84,
     "jobs_completed": 15
   },
   {
@@ -35828,7 +35828,7 @@
     "leads": 52,
     "jobs_booked": 16,
     "canceled_jobs": 2,
-    "Revenue": 3650.1600000000003,
+    "Revenue": 3650.16,
     "jobs_completed": 9
   },
   {
@@ -36008,7 +36008,7 @@
     "leads": 35,
     "jobs_booked": 14,
     "canceled_jobs": 2,
-    "Revenue": 5998.26,
+    "Revenue": 5998.259999999999,
     "jobs_completed": 16
   },
   {
@@ -36020,7 +36020,7 @@
     "leads": 34,
     "jobs_booked": 9,
     "canceled_jobs": 0,
-    "Revenue": 10859.989999999998,
+    "Revenue": 10859.99,
     "jobs_completed": 16
   },
   {
@@ -36284,7 +36284,7 @@
     "leads": 29,
     "jobs_booked": 10,
     "canceled_jobs": 1,
-    "Revenue": 5620.4800000000005,
+    "Revenue": 5620.48,
     "jobs_completed": 14
   },
   {
@@ -36632,7 +36632,7 @@
     "leads": 33,
     "jobs_booked": 12,
     "canceled_jobs": 1,
-    "Revenue": 3495.09,
+    "Revenue": 3495.0899999999997,
     "jobs_completed": 8
   },
   {
@@ -36704,7 +36704,7 @@
     "leads": 26,
     "jobs_booked": 6,
     "canceled_jobs": 2,
-    "Revenue": 1984.1800000000003,
+    "Revenue": 1984.18,
     "jobs_completed": 4
   },
   {
@@ -36728,7 +36728,7 @@
     "leads": 34,
     "jobs_booked": 10,
     "canceled_jobs": 0,
-    "Revenue": 6092.03,
+    "Revenue": 6092.029999999999,
     "jobs_completed": 9
   },
   {
@@ -36764,7 +36764,7 @@
     "leads": 62,
     "jobs_booked": 11,
     "canceled_jobs": 2,
-    "Revenue": 6328.61,
+    "Revenue": 6328.610000000001,
     "jobs_completed": 13
   },
   {
@@ -36908,7 +36908,7 @@
     "leads": 45,
     "jobs_booked": 18,
     "canceled_jobs": 2,
-    "Revenue": 5715.110000000001,
+    "Revenue": 5715.11,
     "jobs_completed": 11
   },
   {
@@ -36968,7 +36968,7 @@
     "leads": 23,
     "jobs_booked": 1,
     "canceled_jobs": 0,
-    "Revenue": 1417.58,
+    "Revenue": 1417.5800000000002,
     "jobs_completed": 4
   },
   {
@@ -37052,7 +37052,7 @@
     "leads": 41,
     "jobs_booked": 13,
     "canceled_jobs": 2,
-    "Revenue": 5687.16,
+    "Revenue": 5687.160000000001,
     "jobs_completed": 13
   },
   {
@@ -37088,7 +37088,7 @@
     "leads": 51,
     "jobs_booked": 17,
     "canceled_jobs": 3,
-    "Revenue": 7400.429999999999,
+    "Revenue": 7400.43,
     "jobs_completed": 15
   },
   {
@@ -37196,7 +37196,7 @@
     "leads": 21,
     "jobs_booked": 4,
     "canceled_jobs": 0,
-    "Revenue": 4950.999999999999,
+    "Revenue": 4951,
     "jobs_completed": 10
   },
   {
@@ -37496,7 +37496,7 @@
     "leads": 29,
     "jobs_booked": 8,
     "canceled_jobs": 3,
-    "Revenue": 2223.03,
+    "Revenue": 2223.0299999999997,
     "jobs_completed": 5
   },
   {
@@ -37520,7 +37520,7 @@
     "leads": 43,
     "jobs_booked": 10,
     "canceled_jobs": 0,
-    "Revenue": 6704.669999999999,
+    "Revenue": 6704.67,
     "jobs_completed": 12
   },
   {
@@ -37832,7 +37832,7 @@
     "leads": 43,
     "jobs_booked": 11,
     "canceled_jobs": 0,
-    "Revenue": 4017.7699999999995,
+    "Revenue": 4017.77,
     "jobs_completed": 10
   },
   {
@@ -37844,7 +37844,7 @@
     "leads": 44,
     "jobs_booked": 17,
     "canceled_jobs": 3,
-    "Revenue": 4711.650000000001,
+    "Revenue": 4711.65,
     "jobs_completed": 10
   },
   {
@@ -37892,7 +37892,7 @@
     "leads": 11,
     "jobs_booked": 4,
     "canceled_jobs": 0,
-    "Revenue": 2160.81,
+    "Revenue": 2160.8100000000004,
     "jobs_completed": 4
   },
   {
@@ -38120,7 +38120,7 @@
     "leads": 24,
     "jobs_booked": 12,
     "canceled_jobs": 2,
-    "Revenue": 5953.610000000001,
+    "Revenue": 5953.61,
     "jobs_completed": 12
   },
   {
@@ -38144,7 +38144,7 @@
     "leads": 64,
     "jobs_booked": 13,
     "canceled_jobs": 1,
-    "Revenue": 4006.64,
+    "Revenue": 4006.6400000000003,
     "jobs_completed": 8
   },
   {
@@ -38192,7 +38192,7 @@
     "leads": 1,
     "jobs_booked": 1,
     "canceled_jobs": 0,
-    "Revenue": 1918.75,
+    "Revenue": 1918.7500000000002,
     "jobs_completed": 5
   },
   {
@@ -38420,7 +38420,7 @@
     "leads": 44,
     "jobs_booked": 12,
     "canceled_jobs": 1,
-    "Revenue": 6318.790000000001,
+    "Revenue": 6318.79,
     "jobs_completed": 15
   },
   {
@@ -38636,7 +38636,7 @@
     "leads": 45,
     "jobs_booked": 8,
     "canceled_jobs": 1,
-    "Revenue": 3374.9300000000003,
+    "Revenue": 3374.93,
     "jobs_completed": 8
   },
   {
@@ -38744,7 +38744,7 @@
     "leads": 33,
     "jobs_booked": 7,
     "canceled_jobs": 0,
-    "Revenue": 7542.6500000000015,
+    "Revenue": 7542.650000000001,
     "jobs_completed": 12
   },
   {
@@ -38792,7 +38792,7 @@
     "leads": 16,
     "jobs_booked": 5,
     "canceled_jobs": 1,
-    "Revenue": 3615.07,
+    "Revenue": 3615.0699999999997,
     "jobs_completed": 3
   },
   {
@@ -38804,7 +38804,7 @@
     "leads": 16,
     "jobs_booked": 8,
     "canceled_jobs": 1,
-    "Revenue": 1901.22,
+    "Revenue": 1901.2200000000003,
     "jobs_completed": 4
   },
   {
@@ -38900,7 +38900,7 @@
     "leads": 31,
     "jobs_booked": 12,
     "canceled_jobs": 4,
-    "Revenue": 4167.9800000000005,
+    "Revenue": 4167.98,
     "jobs_completed": 9
   },
   {
@@ -38912,7 +38912,7 @@
     "leads": 50,
     "jobs_booked": 15,
     "canceled_jobs": 1,
-    "Revenue": 7831.279999999999,
+    "Revenue": 7831.280000000001,
     "jobs_completed": 15
   },
   {
@@ -39044,7 +39044,7 @@
     "leads": 41,
     "jobs_booked": 15,
     "canceled_jobs": 2,
-    "Revenue": 6736.539999999999,
+    "Revenue": 6736.54,
     "jobs_completed": 10
   },
   {
@@ -39260,7 +39260,7 @@
     "leads": 8,
     "jobs_booked": 3,
     "canceled_jobs": 1,
-    "Revenue": 3149.9500000000003,
+    "Revenue": 3149.95,
     "jobs_completed": 6
   },
   {
@@ -39536,7 +39536,7 @@
     "leads": 37,
     "jobs_booked": 11,
     "canceled_jobs": 1,
-    "Revenue": 2355.57,
+    "Revenue": 2355.5699999999997,
     "jobs_completed": 6
   },
   {
@@ -39644,7 +39644,7 @@
     "leads": 58,
     "jobs_booked": 10,
     "canceled_jobs": 4,
-    "Revenue": 5004.249999999999,
+    "Revenue": 5004.25,
     "jobs_completed": 14
   },
   {
@@ -39728,7 +39728,7 @@
     "leads": 18,
     "jobs_booked": 7,
     "canceled_jobs": 2,
-    "Revenue": 2476.59,
+    "Revenue": 2476.5899999999997,
     "jobs_completed": 5
   },
   {
@@ -39824,7 +39824,7 @@
     "leads": 72,
     "jobs_booked": 19,
     "canceled_jobs": 3,
-    "Revenue": 8032.709999999999,
+    "Revenue": 8032.71,
     "jobs_completed": 18
   },
   {
@@ -40292,7 +40292,7 @@
     "leads": 33,
     "jobs_booked": 9,
     "canceled_jobs": 0,
-    "Revenue": 3389.2799999999997,
+    "Revenue": 3389.28,
     "jobs_completed": 10
   },
   {
@@ -40328,7 +40328,7 @@
     "leads": 56,
     "jobs_booked": 20,
     "canceled_jobs": 3,
-    "Revenue": 7935.57,
+    "Revenue": 7935.569999999999,
     "jobs_completed": 16
   },
   {
@@ -40424,7 +40424,7 @@
     "leads": 16,
     "jobs_booked": 5,
     "canceled_jobs": 1,
-    "Revenue": 2190.84,
+    "Revenue": 2190.8399999999997,
     "jobs_completed": 8
   },
   {
@@ -40508,7 +40508,7 @@
     "leads": 24,
     "jobs_booked": 3,
     "canceled_jobs": 0,
-    "Revenue": 3841.85,
+    "Revenue": 3841.8500000000004,
     "jobs_completed": 8
   },
   {
@@ -40580,7 +40580,7 @@
     "leads": 22,
     "jobs_booked": 3,
     "canceled_jobs": 1,
-    "Revenue": 1863.7,
+    "Revenue": 1863.6999999999998,
     "jobs_completed": 4
   },
   {
@@ -40604,7 +40604,7 @@
     "leads": 56,
     "jobs_booked": 17,
     "canceled_jobs": 3,
-    "Revenue": 4455.799999999999,
+    "Revenue": 4455.8,
     "jobs_completed": 9
   },
   {
@@ -40616,7 +40616,7 @@
     "leads": 44,
     "jobs_booked": 16,
     "canceled_jobs": 2,
-    "Revenue": 5635.45,
+    "Revenue": 5635.450000000001,
     "jobs_completed": 10
   },
   {
@@ -40760,7 +40760,7 @@
     "leads": 72,
     "jobs_booked": 21,
     "canceled_jobs": 5,
-    "Revenue": 6494.88,
+    "Revenue": 6494.879999999999,
     "jobs_completed": 12
   },
   {
@@ -40772,7 +40772,7 @@
     "leads": 39,
     "jobs_booked": 18,
     "canceled_jobs": 4,
-    "Revenue": 5972.889999999999,
+    "Revenue": 5972.89,
     "jobs_completed": 10
   },
   {
@@ -40784,7 +40784,7 @@
     "leads": 68,
     "jobs_booked": 24,
     "canceled_jobs": 4,
-    "Revenue": 10897.24,
+    "Revenue": 10897.239999999998,
     "jobs_completed": 21
   },
   {
@@ -40844,7 +40844,7 @@
     "leads": 25,
     "jobs_booked": 8,
     "canceled_jobs": 0,
-    "Revenue": 3222.19,
+    "Revenue": 3222.1899999999996,
     "jobs_completed": 9
   },
   {
@@ -41168,7 +41168,7 @@
     "leads": 47,
     "jobs_booked": 15,
     "canceled_jobs": 2,
-    "Revenue": 4342.29,
+    "Revenue": 4342.290000000001,
     "jobs_completed": 11
   },
   {
@@ -41276,7 +41276,7 @@
     "leads": 35,
     "jobs_booked": 15,
     "canceled_jobs": 2,
-    "Revenue": 8826.85,
+    "Revenue": 8826.849999999999,
     "jobs_completed": 14
   },
   {
@@ -41312,7 +41312,7 @@
     "leads": 53,
     "jobs_booked": 15,
     "canceled_jobs": 4,
-    "Revenue": 4823.299999999999,
+    "Revenue": 4823.3,
     "jobs_completed": 11
   },
   {
@@ -41384,7 +41384,7 @@
     "leads": 26,
     "jobs_booked": 12,
     "canceled_jobs": 3,
-    "Revenue": 2217.36,
+    "Revenue": 2217.3599999999997,
     "jobs_completed": 5
   },
   {
@@ -41588,7 +41588,7 @@
     "leads": 52,
     "jobs_booked": 8,
     "canceled_jobs": 1,
-    "Revenue": 5761.29,
+    "Revenue": 5761.289999999999,
     "jobs_completed": 12
   },
   {
@@ -41708,7 +41708,7 @@
     "leads": 40,
     "jobs_booked": 16,
     "canceled_jobs": 2,
-    "Revenue": 7163.3099999999995,
+    "Revenue": 7163.31,
     "jobs_completed": 14
   },
   {
@@ -41720,7 +41720,7 @@
     "leads": 33,
     "jobs_booked": 17,
     "canceled_jobs": 3,
-    "Revenue": 5755.5199999999995,
+    "Revenue": 5755.52,
     "jobs_completed": 9
   },
   {
@@ -41768,7 +41768,7 @@
     "leads": 58,
     "jobs_booked": 11,
     "canceled_jobs": 0,
-    "Revenue": 4886.23,
+    "Revenue": 4886.2300000000005,
     "jobs_completed": 11
   },
   {
@@ -41840,7 +41840,7 @@
     "leads": 22,
     "jobs_booked": 6,
     "canceled_jobs": 1,
-    "Revenue": 2675.07,
+    "Revenue": 2675.0699999999997,
     "jobs_completed": 5
   },
   {
@@ -42056,7 +42056,7 @@
     "leads": 36,
     "jobs_booked": 8,
     "canceled_jobs": 1,
-    "Revenue": 5252.87,
+    "Revenue": 5252.870000000001,
     "jobs_completed": 13
   },
   {
@@ -42176,7 +42176,7 @@
     "leads": 54,
     "jobs_booked": 17,
     "canceled_jobs": 4,
-    "Revenue": 10550.400000000001,
+    "Revenue": 10550.4,
     "jobs_completed": 21
   },
   {
@@ -42596,7 +42596,7 @@
     "leads": 48,
     "jobs_booked": 12,
     "canceled_jobs": 3,
-    "Revenue": 2611.4900000000002,
+    "Revenue": 2611.49,
     "jobs_completed": 7
   },
   {
@@ -42884,7 +42884,7 @@
     "leads": 10,
     "jobs_booked": 3,
     "canceled_jobs": 1,
-    "Revenue": 1503.95,
+    "Revenue": 1503.9499999999998,
     "jobs_completed": 3
   },
   {
@@ -42968,7 +42968,7 @@
     "leads": 37,
     "jobs_booked": 13,
     "canceled_jobs": 2,
-    "Revenue": 3982.0199999999995,
+    "Revenue": 3982.02,
     "jobs_completed": 9
   },
   {
@@ -43016,7 +43016,7 @@
     "leads": 19,
     "jobs_booked": 7,
     "canceled_jobs": 0,
-    "Revenue": 2647.33,
+    "Revenue": 2647.3300000000004,
     "jobs_completed": 6
   },
   {
@@ -43064,7 +43064,7 @@
     "leads": 63,
     "jobs_booked": 29,
     "canceled_jobs": 2,
-    "Revenue": 8600.05,
+    "Revenue": 8600.050000000001,
     "jobs_completed": 19
   },
   {
@@ -43196,7 +43196,7 @@
     "leads": 58,
     "jobs_booked": 17,
     "canceled_jobs": 2,
-    "Revenue": 5748.27,
+    "Revenue": 5748.2699999999995,
     "jobs_completed": 12
   },
   {
@@ -43232,7 +43232,7 @@
     "leads": 55,
     "jobs_booked": 17,
     "canceled_jobs": 1,
-    "Revenue": 8060.699999999999,
+    "Revenue": 8060.7,
     "jobs_completed": 18
   },
   {
@@ -43280,7 +43280,7 @@
     "leads": 15,
     "jobs_booked": 1,
     "canceled_jobs": 0,
-    "Revenue": 1484.74,
+    "Revenue": 1484.7400000000002,
     "jobs_completed": 3
   },
   {
@@ -43616,7 +43616,7 @@
     "leads": 29,
     "jobs_booked": 10,
     "canceled_jobs": 3,
-    "Revenue": 5801.25,
+    "Revenue": 5801.250000000001,
     "jobs_completed": 12
   },
   {
@@ -43808,7 +43808,7 @@
     "leads": 44,
     "jobs_booked": 12,
     "canceled_jobs": 2,
-    "Revenue": 6609.35,
+    "Revenue": 6609.350000000001,
     "jobs_completed": 13
   },
   {
@@ -43832,7 +43832,7 @@
     "leads": 53,
     "jobs_booked": 13,
     "canceled_jobs": 4,
-    "Revenue": 7180.139999999999,
+    "Revenue": 7180.14,
     "jobs_completed": 14
   },
   {
@@ -43868,7 +43868,7 @@
     "leads": 49,
     "jobs_booked": 12,
     "canceled_jobs": 3,
-    "Revenue": 4073.54,
+    "Revenue": 4073.5400000000004,
     "jobs_completed": 8
   },
   {
@@ -44420,7 +44420,7 @@
     "leads": 64,
     "jobs_booked": 18,
     "canceled_jobs": 3,
-    "Revenue": 5506.210000000001,
+    "Revenue": 5506.21,
     "jobs_completed": 12
   },
   {
@@ -44564,7 +44564,7 @@
     "leads": 46,
     "jobs_booked": 12,
     "canceled_jobs": 2,
-    "Revenue": 5490.759999999999,
+    "Revenue": 5490.76,
     "jobs_completed": 14
   },
   {
@@ -44684,7 +44684,7 @@
     "leads": 40,
     "jobs_booked": 10,
     "canceled_jobs": 0,
-    "Revenue": 3833.3199999999997,
+    "Revenue": 3833.32,
     "jobs_completed": 9
   },
   {
@@ -44840,7 +44840,7 @@
     "leads": 18,
     "jobs_booked": 3,
     "canceled_jobs": 2,
-    "Revenue": 2793.91,
+    "Revenue": 2793.9100000000003,
     "jobs_completed": 6
   },
   {
@@ -44864,7 +44864,7 @@
     "leads": 48,
     "jobs_booked": 19,
     "canceled_jobs": 4,
-    "Revenue": 3629.5300000000007,
+    "Revenue": 3629.53,
     "jobs_completed": 9
   },
   {
@@ -45164,7 +45164,7 @@
     "leads": 22,
     "jobs_booked": 3,
     "canceled_jobs": 0,
-    "Revenue": 2699.85,
+    "Revenue": 2699.8500000000004,
     "jobs_completed": 6
   },
   {
@@ -45248,7 +45248,7 @@
     "leads": 50,
     "jobs_booked": 17,
     "canceled_jobs": 0,
-    "Revenue": 5067.200000000001,
+    "Revenue": 5067.2,
     "jobs_completed": 11
   },
   {
@@ -45344,7 +45344,7 @@
     "leads": 41,
     "jobs_booked": 14,
     "canceled_jobs": 1,
-    "Revenue": 4779.74,
+    "Revenue": 4779.740000000001,
     "jobs_completed": 12
   },
   {
@@ -45368,7 +45368,7 @@
     "leads": 73,
     "jobs_booked": 22,
     "canceled_jobs": 3,
-    "Revenue": 6340.599999999999,
+    "Revenue": 6340.6,
     "jobs_completed": 14
   },
   {
@@ -45584,7 +45584,7 @@
     "leads": 21,
     "jobs_booked": 9,
     "canceled_jobs": 0,
-    "Revenue": 2949.7000000000003,
+    "Revenue": 2949.7,
     "jobs_completed": 7
   },
   {
@@ -45632,7 +45632,7 @@
     "leads": 21,
     "jobs_booked": 7,
     "canceled_jobs": 2,
-    "Revenue": 3740.3599999999997,
+    "Revenue": 3740.36,
     "jobs_completed": 8
   },
   {
@@ -45716,7 +45716,7 @@
     "leads": 44,
     "jobs_booked": 4,
     "canceled_jobs": 1,
-    "Revenue": 4614.120000000001,
+    "Revenue": 4614.12,
     "jobs_completed": 11
   },
   {
@@ -45788,7 +45788,7 @@
     "leads": 9,
     "jobs_booked": 6,
     "canceled_jobs": 2,
-    "Revenue": 3856.07,
+    "Revenue": 3856.0699999999997,
     "jobs_completed": 7
   },
   {
@@ -46232,7 +46232,7 @@
     "leads": 24,
     "jobs_booked": 4,
     "canceled_jobs": 1,
-    "Revenue": 3334.7200000000003,
+    "Revenue": 3334.72,
     "jobs_completed": 8
   },
   {
@@ -46292,7 +46292,7 @@
     "leads": 79,
     "jobs_booked": 24,
     "canceled_jobs": 6,
-    "Revenue": 9410.449999999999,
+    "Revenue": 9410.45,
     "jobs_completed": 18
   },
   {
@@ -46412,7 +46412,7 @@
     "leads": 44,
     "jobs_booked": 9,
     "canceled_jobs": 1,
-    "Revenue": 5185.91,
+    "Revenue": 5185.910000000001,
     "jobs_completed": 11
   },
   {
@@ -46424,7 +46424,7 @@
     "leads": 35,
     "jobs_booked": 5,
     "canceled_jobs": 2,
-    "Revenue": 7146.32,
+    "Revenue": 7146.320000000001,
     "jobs_completed": 13
   },
   {
@@ -46436,7 +46436,7 @@
     "leads": 71,
     "jobs_booked": 20,
     "canceled_jobs": 1,
-    "Revenue": 8920.119999999999,
+    "Revenue": 8920.12,
     "jobs_completed": 21
   },
   {
@@ -46868,7 +46868,7 @@
     "leads": 26,
     "jobs_booked": 2,
     "canceled_jobs": 0,
-    "Revenue": 2499.13,
+    "Revenue": 2499.1299999999997,
     "jobs_completed": 7
   },
   {
@@ -47060,7 +47060,7 @@
     "leads": 56,
     "jobs_booked": 20,
     "canceled_jobs": 0,
-    "Revenue": 9299.239999999998,
+    "Revenue": 9299.24,
     "jobs_completed": 18
   },
   {
@@ -47096,7 +47096,7 @@
     "leads": 36,
     "jobs_booked": 10,
     "canceled_jobs": 0,
-    "Revenue": 3127.62,
+    "Revenue": 3127.6200000000003,
     "jobs_completed": 7
   },
   {
@@ -47396,7 +47396,7 @@
     "leads": 41,
     "jobs_booked": 14,
     "canceled_jobs": 4,
-    "Revenue": 4339.110000000001,
+    "Revenue": 4339.11,
     "jobs_completed": 12
   },
   {
@@ -47516,7 +47516,7 @@
     "leads": 69,
     "jobs_booked": 17,
     "canceled_jobs": 3,
-    "Revenue": 6249.57,
+    "Revenue": 6249.570000000001,
     "jobs_completed": 16
   },
   {
@@ -47624,7 +47624,7 @@
     "leads": 44,
     "jobs_booked": 8,
     "canceled_jobs": 1,
-    "Revenue": 3835.0499999999997,
+    "Revenue": 3835.05,
     "jobs_completed": 7
   },
   {
@@ -47744,7 +47744,7 @@
     "leads": 37,
     "jobs_booked": 8,
     "canceled_jobs": 2,
-    "Revenue": 693.3100000000001,
+    "Revenue": 693.31,
     "jobs_completed": 3
   },
   {
@@ -47924,7 +47924,7 @@
     "leads": 31,
     "jobs_booked": 6,
     "canceled_jobs": 4,
-    "Revenue": 4132.0199999999995,
+    "Revenue": 4132.02,
     "jobs_completed": 8
   },
   {
@@ -48116,7 +48116,7 @@
     "leads": 50,
     "jobs_booked": 13,
     "canceled_jobs": 2,
-    "Revenue": 2199.61,
+    "Revenue": 2199.6099999999997,
     "jobs_completed": 5
   },
   {
@@ -48236,7 +48236,7 @@
     "leads": 58,
     "jobs_booked": 17,
     "canceled_jobs": 3,
-    "Revenue": 7748.9400000000005,
+    "Revenue": 7748.94,
     "jobs_completed": 15
   },
   {
@@ -48356,7 +48356,7 @@
     "leads": 38,
     "jobs_booked": 11,
     "canceled_jobs": 1,
-    "Revenue": 5078.7300000000005,
+    "Revenue": 5078.73,
     "jobs_completed": 12
   },
   {
@@ -48548,7 +48548,7 @@
     "leads": 42,
     "jobs_booked": 9,
     "canceled_jobs": 2,
-    "Revenue": 6474.1900000000005,
+    "Revenue": 6474.19,
     "jobs_completed": 15
   },
   {
@@ -48608,7 +48608,7 @@
     "leads": 37,
     "jobs_booked": 16,
     "canceled_jobs": 4,
-    "Revenue": 1540.6799999999998,
+    "Revenue": 1540.68,
     "jobs_completed": 4
   },
   {
@@ -48680,7 +48680,7 @@
     "leads": 80,
     "jobs_booked": 21,
     "canceled_jobs": 7,
-    "Revenue": 6002.079999999999,
+    "Revenue": 6002.08,
     "jobs_completed": 12
   },
   {
@@ -48776,7 +48776,7 @@
     "leads": 33,
     "jobs_booked": 8,
     "canceled_jobs": 2,
-    "Revenue": 2827.51,
+    "Revenue": 2827.5099999999998,
     "jobs_completed": 7
   },
   {
@@ -48812,7 +48812,7 @@
     "leads": 59,
     "jobs_booked": 13,
     "canceled_jobs": 3,
-    "Revenue": 5653.880000000001,
+    "Revenue": 5653.88,
     "jobs_completed": 11
   },
   {
@@ -48968,7 +48968,7 @@
     "leads": 27,
     "jobs_booked": 8,
     "canceled_jobs": 0,
-    "Revenue": 9143.300000000001,
+    "Revenue": 9143.3,
     "jobs_completed": 14
   },
   {
@@ -49076,7 +49076,7 @@
     "leads": 23,
     "jobs_booked": 3,
     "canceled_jobs": 0,
-    "Revenue": 2446.4399999999996,
+    "Revenue": 2446.44,
     "jobs_completed": 7
   },
   {
@@ -49088,7 +49088,7 @@
     "leads": 17,
     "jobs_booked": 1,
     "canceled_jobs": 1,
-    "Revenue": 1681.8899999999999,
+    "Revenue": 1681.89,
     "jobs_completed": 4
   },
   {
@@ -49112,7 +49112,7 @@
     "leads": 49,
     "jobs_booked": 14,
     "canceled_jobs": 2,
-    "Revenue": 4074.51,
+    "Revenue": 4074.5099999999998,
     "jobs_completed": 11
   },
   {
@@ -49316,7 +49316,7 @@
     "leads": 45,
     "jobs_booked": 12,
     "canceled_jobs": 2,
-    "Revenue": 4003.9399999999996,
+    "Revenue": 4003.94,
     "jobs_completed": 8
   },
   {
@@ -49796,7 +49796,7 @@
     "leads": 12,
     "jobs_booked": 2,
     "canceled_jobs": 1,
-    "Revenue": 1095.4599999999998,
+    "Revenue": 1095.46,
     "jobs_completed": 4
   },
   {
@@ -49808,7 +49808,7 @@
     "leads": 50,
     "jobs_booked": 15,
     "canceled_jobs": 2,
-    "Revenue": 5939.609999999999,
+    "Revenue": 5939.61,
     "jobs_completed": 15
   },
   {
@@ -49832,7 +49832,7 @@
     "leads": 55,
     "jobs_booked": 18,
     "canceled_jobs": 3,
-    "Revenue": 8478.140000000001,
+    "Revenue": 8478.14,
     "jobs_completed": 13
   },
   {
@@ -49940,7 +49940,7 @@
     "leads": 14,
     "jobs_booked": 4,
     "canceled_jobs": 0,
-    "Revenue": 2718.5299999999997,
+    "Revenue": 2718.53,
     "jobs_completed": 6
   },
   {
@@ -50000,7 +50000,7 @@
     "leads": 33,
     "jobs_booked": 6,
     "canceled_jobs": 0,
-    "Revenue": 2095.24,
+    "Revenue": 2095.2400000000002,
     "jobs_completed": 7
   },
   {
@@ -50324,7 +50324,7 @@
     "leads": 32,
     "jobs_booked": 7,
     "canceled_jobs": 1,
-    "Revenue": 3911.1,
+    "Revenue": 3911.1000000000004,
     "jobs_completed": 6
   },
   {
@@ -50372,7 +50372,7 @@
     "leads": 27,
     "jobs_booked": 12,
     "canceled_jobs": 0,
-    "Revenue": 4946.370000000001,
+    "Revenue": 4946.37,
     "jobs_completed": 9
   },
   {
@@ -50684,7 +50684,7 @@
     "leads": 76,
     "jobs_booked": 22,
     "canceled_jobs": 2,
-    "Revenue": 10789.11,
+    "Revenue": 10789.109999999999,
     "jobs_completed": 19
   },
   {
@@ -50948,7 +50948,7 @@
     "leads": 29,
     "jobs_booked": 7,
     "canceled_jobs": 1,
-    "Revenue": 2733.3500000000004,
+    "Revenue": 2733.35,
     "jobs_completed": 8
   },
   {
@@ -51236,7 +51236,7 @@
     "leads": 35,
     "jobs_booked": 12,
     "canceled_jobs": 2,
-    "Revenue": 5211.469999999999,
+    "Revenue": 5211.47,
     "jobs_completed": 14
   },
   {
@@ -51248,7 +51248,7 @@
     "leads": 57,
     "jobs_booked": 17,
     "canceled_jobs": 2,
-    "Revenue": 9493.6,
+    "Revenue": 9493.599999999999,
     "jobs_completed": 19
   },
   {
@@ -51536,7 +51536,7 @@
     "leads": 46,
     "jobs_booked": 14,
     "canceled_jobs": 2,
-    "Revenue": 4844.22,
+    "Revenue": 4844.219999999999,
     "jobs_completed": 12
   },
   {
@@ -51548,7 +51548,7 @@
     "leads": 44,
     "jobs_booked": 18,
     "canceled_jobs": 3,
-    "Revenue": 5399.45,
+    "Revenue": 5399.450000000001,
     "jobs_completed": 9
   },
   {
@@ -51692,7 +51692,7 @@
     "leads": 29,
     "jobs_booked": 6,
     "canceled_jobs": 0,
-    "Revenue": 8105.209999999999,
+    "Revenue": 8105.21,
     "jobs_completed": 11
   },
   {
@@ -51764,7 +51764,7 @@
     "leads": 18,
     "jobs_booked": 5,
     "canceled_jobs": 1,
-    "Revenue": 3204.95,
+    "Revenue": 3204.9500000000003,
     "jobs_completed": 6
   },
   {
@@ -51920,7 +51920,7 @@
     "leads": 28,
     "jobs_booked": 6,
     "canceled_jobs": 0,
-    "Revenue": 3355.3300000000004,
+    "Revenue": 3355.33,
     "jobs_completed": 11
   },
   {
@@ -52628,7 +52628,7 @@
     "leads": 52,
     "jobs_booked": 15,
     "canceled_jobs": 2,
-    "Revenue": 4313.219999999999,
+    "Revenue": 4313.22,
     "jobs_completed": 13
   },
   {
@@ -52640,7 +52640,7 @@
     "leads": 26,
     "jobs_booked": 12,
     "canceled_jobs": 4,
-    "Revenue": 6279.4,
+    "Revenue": 6279.400000000001,
     "jobs_completed": 9
   },
   {
@@ -52736,7 +52736,7 @@
     "leads": 17,
     "jobs_booked": 1,
     "canceled_jobs": 0,
-    "Revenue": 4766.400000000001,
+    "Revenue": 4766.4,
     "jobs_completed": 9
   },
   {
@@ -52796,7 +52796,7 @@
     "leads": 45,
     "jobs_booked": 7,
     "canceled_jobs": 1,
-    "Revenue": 8095.570000000001,
+    "Revenue": 8095.57,
     "jobs_completed": 18
   },
   {
@@ -53012,7 +53012,7 @@
     "leads": 38,
     "jobs_booked": 10,
     "canceled_jobs": 2,
-    "Revenue": 3892.8599999999997,
+    "Revenue": 3892.86,
     "jobs_completed": 9
   },
   {
@@ -53312,7 +53312,7 @@
     "leads": 21,
     "jobs_booked": 6,
     "canceled_jobs": 2,
-    "Revenue": 3296.51,
+    "Revenue": 3296.5099999999998,
     "jobs_completed": 5
   },
   {
@@ -53396,7 +53396,7 @@
     "leads": 77,
     "jobs_booked": 21,
     "canceled_jobs": 4,
-    "Revenue": 5305.509999999999,
+    "Revenue": 5305.51,
     "jobs_completed": 11
   },
   {
@@ -53528,7 +53528,7 @@
     "leads": 65,
     "jobs_booked": 17,
     "canceled_jobs": 2,
-    "Revenue": 8339.210000000001,
+    "Revenue": 8339.21,
     "jobs_completed": 17
   },
   {
@@ -53612,7 +53612,7 @@
     "leads": 38,
     "jobs_booked": 8,
     "canceled_jobs": 1,
-    "Revenue": 2766.31,
+    "Revenue": 2766.3100000000004,
     "jobs_completed": 5
   },
   {
@@ -53624,7 +53624,7 @@
     "leads": 22,
     "jobs_booked": 7,
     "canceled_jobs": 1,
-    "Revenue": 2375.7000000000003,
+    "Revenue": 2375.7,
     "jobs_completed": 6
   },
   {
@@ -53708,7 +53708,7 @@
     "leads": 44,
     "jobs_booked": 11,
     "canceled_jobs": 1,
-    "Revenue": 5897.810000000001,
+    "Revenue": 5897.81,
     "jobs_completed": 13
   },
   {
@@ -53864,7 +53864,7 @@
     "leads": 35,
     "jobs_booked": 7,
     "canceled_jobs": 2,
-    "Revenue": 4609.070000000001,
+    "Revenue": 4609.07,
     "jobs_completed": 9
   },
   {
@@ -53948,7 +53948,7 @@
     "leads": 36,
     "jobs_booked": 10,
     "canceled_jobs": 1,
-    "Revenue": 3641.1500000000005,
+    "Revenue": 3641.15,
     "jobs_completed": 8
   },
   {
@@ -54116,7 +54116,7 @@
     "leads": 27,
     "jobs_booked": 12,
     "canceled_jobs": 2,
-    "Revenue": 6381.53,
+    "Revenue": 6381.530000000001,
     "jobs_completed": 9
   },
   {
@@ -54128,7 +54128,7 @@
     "leads": 62,
     "jobs_booked": 18,
     "canceled_jobs": 2,
-    "Revenue": 3803.68,
+    "Revenue": 3803.6800000000003,
     "jobs_completed": 9
   },
   {
@@ -54260,7 +54260,7 @@
     "leads": 35,
     "jobs_booked": 11,
     "canceled_jobs": 0,
-    "Revenue": 7655.259999999999,
+    "Revenue": 7655.260000000001,
     "jobs_completed": 12
   },
   {
@@ -54296,7 +54296,7 @@
     "leads": 40,
     "jobs_booked": 15,
     "canceled_jobs": 2,
-    "Revenue": 4977.73,
+    "Revenue": 4977.7300000000005,
     "jobs_completed": 10
   },
   {
@@ -54404,7 +54404,7 @@
     "leads": 74,
     "jobs_booked": 20,
     "canceled_jobs": 2,
-    "Revenue": 6213.17,
+    "Revenue": 6213.170000000001,
     "jobs_completed": 17
   },
   {
@@ -54536,7 +54536,7 @@
     "leads": 80,
     "jobs_booked": 20,
     "canceled_jobs": 3,
-    "Revenue": 7444.129999999999,
+    "Revenue": 7444.13,
     "jobs_completed": 12
   },
   {
@@ -54668,7 +54668,7 @@
     "leads": 32,
     "jobs_booked": 12,
     "canceled_jobs": 5,
-    "Revenue": 4196.79,
+    "Revenue": 4196.790000000001,
     "jobs_completed": 9
   },
   {
@@ -54680,7 +54680,7 @@
     "leads": 72,
     "jobs_booked": 19,
     "canceled_jobs": 3,
-    "Revenue": 11400.300000000001,
+    "Revenue": 11400.3,
     "jobs_completed": 21
   },
   {
@@ -54884,7 +54884,7 @@
     "leads": 25,
     "jobs_booked": 5,
     "canceled_jobs": 3,
-    "Revenue": 4918.1,
+    "Revenue": 4918.099999999999,
     "jobs_completed": 10
   },
   {
@@ -54896,7 +54896,7 @@
     "leads": 26,
     "jobs_booked": 8,
     "canceled_jobs": 4,
-    "Revenue": 3551.44,
+    "Revenue": 3551.4399999999996,
     "jobs_completed": 9
   },
   {
@@ -54920,7 +54920,7 @@
     "leads": 15,
     "jobs_booked": 4,
     "canceled_jobs": 0,
-    "Revenue": 2319.07,
+    "Revenue": 2319.0699999999997,
     "jobs_completed": 5
   },
   {
@@ -55040,7 +55040,7 @@
     "leads": 15,
     "jobs_booked": 4,
     "canceled_jobs": 2,
-    "Revenue": 2485.92,
+    "Revenue": 2485.9199999999996,
     "jobs_completed": 7
   },
   {
@@ -55124,7 +55124,7 @@
     "leads": 54,
     "jobs_booked": 15,
     "canceled_jobs": 1,
-    "Revenue": 3831.8199999999997,
+    "Revenue": 3831.82,
     "jobs_completed": 8
   },
   {
@@ -55196,7 +55196,7 @@
     "leads": 33,
     "jobs_booked": 8,
     "canceled_jobs": 1,
-    "Revenue": 2253.9,
+    "Revenue": 2253.8999999999996,
     "jobs_completed": 5
   },
   {
@@ -55220,7 +55220,7 @@
     "leads": 43,
     "jobs_booked": 9,
     "canceled_jobs": 1,
-    "Revenue": 4867.849999999999,
+    "Revenue": 4867.85,
     "jobs_completed": 12
   },
   {
@@ -55268,7 +55268,7 @@
     "leads": 53,
     "jobs_booked": 5,
     "canceled_jobs": 1,
-    "Revenue": 5026.049999999999,
+    "Revenue": 5026.05,
     "jobs_completed": 12
   },
   {
@@ -55328,7 +55328,7 @@
     "leads": 32,
     "jobs_booked": 7,
     "canceled_jobs": 0,
-    "Revenue": 2981.48,
+    "Revenue": 2981.4800000000005,
     "jobs_completed": 8
   },
   {
@@ -55388,7 +55388,7 @@
     "leads": 69,
     "jobs_booked": 16,
     "canceled_jobs": 2,
-    "Revenue": 8363.42,
+    "Revenue": 8363.419999999998,
     "jobs_completed": 16
   },
   {
@@ -55688,7 +55688,7 @@
     "leads": 34,
     "jobs_booked": 9,
     "canceled_jobs": 0,
-    "Revenue": 8297.369999999999,
+    "Revenue": 8297.37,
     "jobs_completed": 12
   },
   {
@@ -55784,7 +55784,7 @@
     "leads": 31,
     "jobs_booked": 7,
     "canceled_jobs": 0,
-    "Revenue": 3697.1,
+    "Revenue": 3697.1000000000004,
     "jobs_completed": 8
   },
   {
@@ -55940,7 +55940,7 @@
     "leads": 23,
     "jobs_booked": 6,
     "canceled_jobs": 0,
-    "Revenue": 2537.2400000000002,
+    "Revenue": 2537.24,
     "jobs_completed": 7
   },
   {
@@ -55976,7 +55976,7 @@
     "leads": 38,
     "jobs_booked": 5,
     "canceled_jobs": 1,
-    "Revenue": 4520.95,
+    "Revenue": 4520.950000000001,
     "jobs_completed": 10
   },
   {
@@ -55988,7 +55988,7 @@
     "leads": 17,
     "jobs_booked": 6,
     "canceled_jobs": 0,
-    "Revenue": 3555.83,
+    "Revenue": 3555.8300000000004,
     "jobs_completed": 6
   },
   {
@@ -56216,7 +56216,7 @@
     "leads": 26,
     "jobs_booked": 8,
     "canceled_jobs": 2,
-    "Revenue": 1558.18,
+    "Revenue": 1558.1799999999998,
     "jobs_completed": 4
   },
   {
@@ -56600,7 +56600,7 @@
     "leads": 62,
     "jobs_booked": 12,
     "canceled_jobs": 2,
-    "Revenue": 9944.359999999999,
+    "Revenue": 9944.36,
     "jobs_completed": 19
   },
   {
@@ -56696,7 +56696,7 @@
     "leads": 25,
     "jobs_booked": 6,
     "canceled_jobs": 1,
-    "Revenue": 4179.82,
+    "Revenue": 4179.820000000001,
     "jobs_completed": 8
   },
   {
@@ -56720,7 +56720,7 @@
     "leads": 36,
     "jobs_booked": 10,
     "canceled_jobs": 2,
-    "Revenue": 5101.48,
+    "Revenue": 5101.4800000000005,
     "jobs_completed": 13
   },
   {
@@ -56732,7 +56732,7 @@
     "leads": 29,
     "jobs_booked": 11,
     "canceled_jobs": 1,
-    "Revenue": 7281.079999999999,
+    "Revenue": 7281.08,
     "jobs_completed": 13
   },
   {
@@ -56876,7 +56876,7 @@
     "leads": 45,
     "jobs_booked": 14,
     "canceled_jobs": 0,
-    "Revenue": 5648.45,
+    "Revenue": 5648.449999999999,
     "jobs_completed": 9
   },
   {
@@ -56972,7 +56972,7 @@
     "leads": 30,
     "jobs_booked": 7,
     "canceled_jobs": 2,
-    "Revenue": 7363.66,
+    "Revenue": 7363.659999999999,
     "jobs_completed": 17
   },
   {
@@ -57140,7 +57140,7 @@
     "leads": 55,
     "jobs_booked": 14,
     "canceled_jobs": 4,
-    "Revenue": 5790.46,
+    "Revenue": 5790.459999999999,
     "jobs_completed": 13
   },
   {
@@ -57296,7 +57296,7 @@
     "leads": 27,
     "jobs_booked": 12,
     "canceled_jobs": 0,
-    "Revenue": 9970.03,
+    "Revenue": 9970.029999999999,
     "jobs_completed": 15
   },
   {
@@ -57428,7 +57428,7 @@
     "leads": 42,
     "jobs_booked": 11,
     "canceled_jobs": 2,
-    "Revenue": 3957.2300000000005,
+    "Revenue": 3957.23,
     "jobs_completed": 8
   },
   {
@@ -57716,7 +57716,7 @@
     "leads": 50,
     "jobs_booked": 13,
     "canceled_jobs": 3,
-    "Revenue": 5487.04,
+    "Revenue": 5487.040000000001,
     "jobs_completed": 13
   },
   {
@@ -57752,7 +57752,7 @@
     "leads": 66,
     "jobs_booked": 20,
     "canceled_jobs": 2,
-    "Revenue": 7939.069999999999,
+    "Revenue": 7939.07,
     "jobs_completed": 17
   },
   {
@@ -58412,7 +58412,7 @@
     "leads": 54,
     "jobs_booked": 12,
     "canceled_jobs": 3,
-    "Revenue": 3696.3800000000006,
+    "Revenue": 3696.38,
     "jobs_completed": 8
   },
   {
@@ -58472,7 +58472,7 @@
     "leads": 36,
     "jobs_booked": 12,
     "canceled_jobs": 4,
-    "Revenue": 4079.1,
+    "Revenue": 4079.1000000000004,
     "jobs_completed": 10
   },
   {
@@ -58496,7 +58496,7 @@
     "leads": 21,
     "jobs_booked": 2,
     "canceled_jobs": 1,
-    "Revenue": 2683.2299999999996,
+    "Revenue": 2683.23,
     "jobs_completed": 5
   },
   {
@@ -58556,7 +58556,7 @@
     "leads": 39,
     "jobs_booked": 9,
     "canceled_jobs": 0,
-    "Revenue": 2793.6099999999997,
+    "Revenue": 2793.61,
     "jobs_completed": 6
   },
   {
@@ -58760,7 +58760,7 @@
     "leads": 37,
     "jobs_booked": 10,
     "canceled_jobs": 3,
-    "Revenue": 3530.1899999999996,
+    "Revenue": 3530.19,
     "jobs_completed": 8
   },
   {
@@ -59144,7 +59144,7 @@
     "leads": 41,
     "jobs_booked": 15,
     "canceled_jobs": 0,
-    "Revenue": 8212.140000000001,
+    "Revenue": 8212.14,
     "jobs_completed": 16
   },
   {
@@ -59168,7 +59168,7 @@
     "leads": 73,
     "jobs_booked": 15,
     "canceled_jobs": 2,
-    "Revenue": 7070.84,
+    "Revenue": 7070.840000000001,
     "jobs_completed": 15
   },
   {
@@ -59396,7 +59396,7 @@
     "leads": 13,
     "jobs_booked": 6,
     "canceled_jobs": 0,
-    "Revenue": 2118.73,
+    "Revenue": 2118.7300000000005,
     "jobs_completed": 3
   },
   {
@@ -59648,7 +59648,7 @@
     "leads": 34,
     "jobs_booked": 7,
     "canceled_jobs": 2,
-    "Revenue": 3160.4,
+    "Revenue": 3160.4000000000005,
     "jobs_completed": 8
   },
   {
@@ -59816,7 +59816,7 @@
     "leads": 36,
     "jobs_booked": 8,
     "canceled_jobs": 0,
-    "Revenue": 3443.53,
+    "Revenue": 3443.5299999999997,
     "jobs_completed": 7
   },
   {
@@ -59852,7 +59852,7 @@
     "leads": 56,
     "jobs_booked": 15,
     "canceled_jobs": 4,
-    "Revenue": 5744.94,
+    "Revenue": 5744.9400000000005,
     "jobs_completed": 12
   },
   {
@@ -59984,7 +59984,7 @@
     "leads": 28,
     "jobs_booked": 9,
     "canceled_jobs": 1,
-    "Revenue": 5519.430000000001,
+    "Revenue": 5519.43,
     "jobs_completed": 13
   },
   {
@@ -60152,7 +60152,7 @@
     "leads": 13,
     "jobs_booked": 3,
     "canceled_jobs": 2,
-    "Revenue": 3299.3599999999997,
+    "Revenue": 3299.36,
     "jobs_completed": 7
   },
   {
@@ -60332,7 +60332,7 @@
     "leads": 75,
     "jobs_booked": 29,
     "canceled_jobs": 7,
-    "Revenue": 6378.41,
+    "Revenue": 6378.409999999999,
     "jobs_completed": 13
   },
   {
@@ -60524,7 +60524,7 @@
     "leads": 28,
     "jobs_booked": 9,
     "canceled_jobs": 1,
-    "Revenue": 6090.96,
+    "Revenue": 6090.960000000001,
     "jobs_completed": 14
   },
   {
@@ -60740,7 +60740,7 @@
     "leads": 15,
     "jobs_booked": 4,
     "canceled_jobs": 0,
-    "Revenue": 2261.74,
+    "Revenue": 2261.7400000000002,
     "jobs_completed": 7
   },
   {
@@ -60836,7 +60836,7 @@
     "leads": 54,
     "jobs_booked": 14,
     "canceled_jobs": 0,
-    "Revenue": 8210.140000000001,
+    "Revenue": 8210.14,
     "jobs_completed": 16
   },
   {
@@ -61400,7 +61400,7 @@
     "leads": 24,
     "jobs_booked": 6,
     "canceled_jobs": 0,
-    "Revenue": 2203.6400000000003,
+    "Revenue": 2203.64,
     "jobs_completed": 5
   },
   {
@@ -61460,7 +61460,7 @@
     "leads": 38,
     "jobs_booked": 6,
     "canceled_jobs": 1,
-    "Revenue": 4427.969999999999,
+    "Revenue": 4427.97,
     "jobs_completed": 7
   },
   {
@@ -61712,7 +61712,7 @@
     "leads": 19,
     "jobs_booked": 4,
     "canceled_jobs": 0,
-    "Revenue": 3237.36,
+    "Revenue": 3237.3599999999997,
     "jobs_completed": 7
   },
   {
@@ -62672,7 +62672,7 @@
     "leads": 23,
     "jobs_booked": 8,
     "canceled_jobs": 2,
-    "Revenue": 4610.860000000001,
+    "Revenue": 4610.86,
     "jobs_completed": 11
   },
   {
@@ -62936,7 +62936,7 @@
     "leads": 81,
     "jobs_booked": 17,
     "canceled_jobs": 2,
-    "Revenue": 7508.799999999999,
+    "Revenue": 7508.8,
     "jobs_completed": 11
   },
   {
@@ -63128,7 +63128,7 @@
     "leads": 89,
     "jobs_booked": 22,
     "canceled_jobs": 3,
-    "Revenue": 5422.179999999999,
+    "Revenue": 5422.18,
     "jobs_completed": 12
   },
   {
@@ -63164,7 +63164,7 @@
     "leads": 42,
     "jobs_booked": 13,
     "canceled_jobs": 1,
-    "Revenue": 3737.12,
+    "Revenue": 3737.120000000001,
     "jobs_completed": 10
   },
   {
@@ -63272,7 +63272,7 @@
     "leads": 48,
     "jobs_booked": 13,
     "canceled_jobs": 1,
-    "Revenue": 4471.13,
+    "Revenue": 4471.129999999999,
     "jobs_completed": 8
   },
   {
@@ -63320,7 +63320,7 @@
     "leads": 59,
     "jobs_booked": 19,
     "canceled_jobs": 3,
-    "Revenue": 9351.150000000001,
+    "Revenue": 9351.15,
     "jobs_completed": 19
   },
   {
@@ -63368,7 +63368,7 @@
     "leads": 42,
     "jobs_booked": 13,
     "canceled_jobs": 4,
-    "Revenue": 6497.960000000001,
+    "Revenue": 6497.96,
     "jobs_completed": 12
   },
   {
@@ -63584,7 +63584,7 @@
     "leads": 39,
     "jobs_booked": 8,
     "canceled_jobs": 2,
-    "Revenue": 4328.85,
+    "Revenue": 4328.849999999999,
     "jobs_completed": 10
   },
   {
@@ -64124,7 +64124,7 @@
     "leads": 42,
     "jobs_booked": 9,
     "canceled_jobs": 3,
-    "Revenue": 6384.11,
+    "Revenue": 6384.110000000001,
     "jobs_completed": 13
   },
   {
@@ -64160,7 +64160,7 @@
     "leads": 49,
     "jobs_booked": 14,
     "canceled_jobs": 2,
-    "Revenue": 4687.320000000001,
+    "Revenue": 4687.32,
     "jobs_completed": 11
   },
   {
@@ -64292,7 +64292,7 @@
     "leads": 38,
     "jobs_booked": 11,
     "canceled_jobs": 2,
-    "Revenue": 3882.61,
+    "Revenue": 3882.6099999999997,
     "jobs_completed": 10
   },
   {
@@ -64388,7 +64388,7 @@
     "leads": 11,
     "jobs_booked": 2,
     "canceled_jobs": 1,
-    "Revenue": 3282.9,
+    "Revenue": 3282.9000000000005,
     "jobs_completed": 5
   },
   {
@@ -64688,7 +64688,7 @@
     "leads": 33,
     "jobs_booked": 5,
     "canceled_jobs": 2,
-    "Revenue": 3776.8399999999997,
+    "Revenue": 3776.84,
     "jobs_completed": 7
   },
   {
@@ -64724,7 +64724,7 @@
     "leads": 46,
     "jobs_booked": 12,
     "canceled_jobs": 3,
-    "Revenue": 8705.949999999999,
+    "Revenue": 8705.95,
     "jobs_completed": 21
   },
   {
@@ -64748,7 +64748,7 @@
     "leads": 32,
     "jobs_booked": 10,
     "canceled_jobs": 2,
-    "Revenue": 4622.2300000000005,
+    "Revenue": 4622.23,
     "jobs_completed": 10
   },
   {
@@ -65240,7 +65240,7 @@
     "leads": 28,
     "jobs_booked": 5,
     "canceled_jobs": 0,
-    "Revenue": 3827.39,
+    "Revenue": 3827.3900000000003,
     "jobs_completed": 7
   },
   {
@@ -66104,7 +66104,7 @@
     "leads": 20,
     "jobs_booked": 4,
     "canceled_jobs": 0,
-    "Revenue": 3638.24,
+    "Revenue": 3638.2400000000002,
     "jobs_completed": 8
   },
   {
@@ -66296,7 +66296,7 @@
     "leads": 69,
     "jobs_booked": 22,
     "canceled_jobs": 3,
-    "Revenue": 8106.75,
+    "Revenue": 8106.750000000001,
     "jobs_completed": 11
   },
   {
@@ -66476,7 +66476,7 @@
     "leads": 20,
     "jobs_booked": 5,
     "canceled_jobs": 0,
-    "Revenue": 5284.139999999999,
+    "Revenue": 5284.14,
     "jobs_completed": 8
   },
   {
@@ -66656,7 +66656,7 @@
     "leads": 23,
     "jobs_booked": 2,
     "canceled_jobs": 0,
-    "Revenue": 4058.4600000000005,
+    "Revenue": 4058.46,
     "jobs_completed": 8
   },
   {
@@ -67100,7 +67100,7 @@
     "leads": 18,
     "jobs_booked": 6,
     "canceled_jobs": 1,
-    "Revenue": 4107.379999999999,
+    "Revenue": 4107.38,
     "jobs_completed": 8
   },
   {
@@ -67280,7 +67280,7 @@
     "leads": 34,
     "jobs_booked": 10,
     "canceled_jobs": 3,
-    "Revenue": 2750.6800000000003,
+    "Revenue": 2750.68,
     "jobs_completed": 6
   },
   {
@@ -67304,7 +67304,7 @@
     "leads": 30,
     "jobs_booked": 3,
     "canceled_jobs": 1,
-    "Revenue": 3534.5699999999997,
+    "Revenue": 3534.57,
     "jobs_completed": 6
   },
   {
@@ -67568,7 +67568,7 @@
     "leads": 72,
     "jobs_booked": 25,
     "canceled_jobs": 7,
-    "Revenue": 4919.7300000000005,
+    "Revenue": 4919.73,
     "jobs_completed": 10
   },
   {
@@ -67844,7 +67844,7 @@
     "leads": 29,
     "jobs_booked": 10,
     "canceled_jobs": 0,
-    "Revenue": 4876.98,
+    "Revenue": 4876.9800000000005,
     "jobs_completed": 8
   },
   {
@@ -67988,7 +67988,7 @@
     "leads": 41,
     "jobs_booked": 4,
     "canceled_jobs": 0,
-    "Revenue": 5033.96,
+    "Revenue": 5033.960000000001,
     "jobs_completed": 10
   },
   {
@@ -68012,7 +68012,7 @@
     "leads": 30,
     "jobs_booked": 13,
     "canceled_jobs": 1,
-    "Revenue": 7427.56,
+    "Revenue": 7427.5599999999995,
     "jobs_completed": 11
   },
   {
@@ -68744,7 +68744,7 @@
     "leads": 77,
     "jobs_booked": 17,
     "canceled_jobs": 3,
-    "Revenue": 7093.6,
+    "Revenue": 7093.599999999999,
     "jobs_completed": 15
   },
   {
@@ -69380,7 +69380,7 @@
     "leads": 35,
     "jobs_booked": 12,
     "canceled_jobs": 2,
-    "Revenue": 5831.49,
+    "Revenue": 5831.490000000001,
     "jobs_completed": 11
   },
   {
@@ -69404,7 +69404,7 @@
     "leads": 66,
     "jobs_booked": 21,
     "canceled_jobs": 3,
-    "Revenue": 7808.570000000001,
+    "Revenue": 7808.57,
     "jobs_completed": 18
   },
   {
@@ -69440,7 +69440,7 @@
     "leads": 47,
     "jobs_booked": 11,
     "canceled_jobs": 2,
-    "Revenue": 3141.23,
+    "Revenue": 3141.2299999999996,
     "jobs_completed": 8
   },
   {
@@ -69668,7 +69668,7 @@
     "leads": 36,
     "jobs_booked": 10,
     "canceled_jobs": 2,
-    "Revenue": 6438.570000000001,
+    "Revenue": 6438.57,
     "jobs_completed": 13
   },
   {
@@ -70256,7 +70256,7 @@
     "leads": 49,
     "jobs_booked": 9,
     "canceled_jobs": 1,
-    "Revenue": 3059.38,
+    "Revenue": 3059.3800000000006,
     "jobs_completed": 8
   },
   {
@@ -70304,7 +70304,7 @@
     "leads": 55,
     "jobs_booked": 16,
     "canceled_jobs": 3,
-    "Revenue": 6874.01,
+    "Revenue": 6874.009999999999,
     "jobs_completed": 16
   },
   {
@@ -70508,7 +70508,7 @@
     "leads": 16,
     "jobs_booked": 4,
     "canceled_jobs": 0,
-    "Revenue": 7998.339999999999,
+    "Revenue": 7998.34,
     "jobs_completed": 16
   },
   {
@@ -70556,7 +70556,7 @@
     "leads": 11,
     "jobs_booked": 6,
     "canceled_jobs": 3,
-    "Revenue": 3583.8000000000006,
+    "Revenue": 3583.8,
     "jobs_completed": 9
   },
   {
@@ -71336,7 +71336,7 @@
     "leads": 17,
     "jobs_booked": 3,
     "canceled_jobs": 0,
-    "Revenue": 2667.3199999999997,
+    "Revenue": 2667.32,
     "jobs_completed": 6
   },
   {
@@ -71600,7 +71600,7 @@
     "leads": 40,
     "jobs_booked": 10,
     "canceled_jobs": 1,
-    "Revenue": 6109.209999999999,
+    "Revenue": 6109.21,
     "jobs_completed": 12
   },
   {
@@ -71744,7 +71744,7 @@
     "leads": 10,
     "jobs_booked": 4,
     "canceled_jobs": 0,
-    "Revenue": 3073.9199999999996,
+    "Revenue": 3073.92,
     "jobs_completed": 6
   },
   {
@@ -71864,7 +71864,7 @@
     "leads": 21,
     "jobs_booked": 6,
     "canceled_jobs": 1,
-    "Revenue": 5686.7,
+    "Revenue": 5686.700000000001,
     "jobs_completed": 13
   },
   {
@@ -71912,7 +71912,7 @@
     "leads": 9,
     "jobs_booked": 1,
     "canceled_jobs": 0,
-    "Revenue": 1129.07,
+    "Revenue": 1129.0700000000002,
     "jobs_completed": 4
   },
   {
@@ -72260,7 +72260,7 @@
     "leads": 21,
     "jobs_booked": 9,
     "canceled_jobs": 1,
-    "Revenue": 4018.35,
+    "Revenue": 4018.3500000000004,
     "jobs_completed": 9
   },
   {
@@ -72380,7 +72380,7 @@
     "leads": 47,
     "jobs_booked": 11,
     "canceled_jobs": 0,
-    "Revenue": 7759.860000000001,
+    "Revenue": 7759.86,
     "jobs_completed": 13
   },
   {
@@ -72476,7 +72476,7 @@
     "leads": 19,
     "jobs_booked": 5,
     "canceled_jobs": 0,
-    "Revenue": 2630.46,
+    "Revenue": 2630.4599999999996,
     "jobs_completed": 8
   },
   {
@@ -72704,7 +72704,7 @@
     "leads": 22,
     "jobs_booked": 7,
     "canceled_jobs": 0,
-    "Revenue": 3904.1600000000003,
+    "Revenue": 3904.16,
     "jobs_completed": 9
   },
   {
@@ -72740,7 +72740,7 @@
     "leads": 37,
     "jobs_booked": 9,
     "canceled_jobs": 1,
-    "Revenue": 5254.609999999999,
+    "Revenue": 5254.61,
     "jobs_completed": 10
   },
   {
@@ -72800,7 +72800,7 @@
     "leads": 24,
     "jobs_booked": 4,
     "canceled_jobs": 0,
-    "Revenue": 3105.55,
+    "Revenue": 3105.5499999999997,
     "jobs_completed": 3
   },
   {
@@ -73136,7 +73136,7 @@
     "leads": 29,
     "jobs_booked": 13,
     "canceled_jobs": 1,
-    "Revenue": 6381.579999999999,
+    "Revenue": 6381.58,
     "jobs_completed": 10
   },
   {
@@ -73340,7 +73340,7 @@
     "leads": 19,
     "jobs_booked": 6,
     "canceled_jobs": 1,
-    "Revenue": 3714.06,
+    "Revenue": 3714.0599999999995,
     "jobs_completed": 8
   },
   {
@@ -73460,7 +73460,7 @@
     "leads": 16,
     "jobs_booked": 8,
     "canceled_jobs": 1,
-    "Revenue": 1483.32,
+    "Revenue": 1483.3200000000002,
     "jobs_completed": 4
   },
   {
@@ -74180,7 +74180,7 @@
     "leads": 20,
     "jobs_booked": 5,
     "canceled_jobs": 1,
-    "Revenue": 3808.6499999999996,
+    "Revenue": 3808.6500000000005,
     "jobs_completed": 7
   },
   {
@@ -74852,7 +74852,7 @@
     "leads": 19,
     "jobs_booked": 6,
     "canceled_jobs": 2,
-    "Revenue": 1590.0900000000001,
+    "Revenue": 1590.09,
     "jobs_completed": 4
   },
   {
@@ -75116,7 +75116,7 @@
     "leads": 23,
     "jobs_booked": 7,
     "canceled_jobs": 0,
-    "Revenue": 4721.490000000001,
+    "Revenue": 4721.49,
     "jobs_completed": 8
   },
   {
@@ -75320,7 +75320,7 @@
     "leads": 49,
     "jobs_booked": 9,
     "canceled_jobs": 0,
-    "Revenue": 7888.119999999999,
+    "Revenue": 7888.120000000001,
     "jobs_completed": 16
   },
   {
@@ -75560,7 +75560,7 @@
     "leads": 23,
     "jobs_booked": 6,
     "canceled_jobs": 2,
-    "Revenue": 2322.0600000000004,
+    "Revenue": 2322.06,
     "jobs_completed": 6
   },
   {
@@ -75920,7 +75920,7 @@
     "leads": 30,
     "jobs_booked": 9,
     "canceled_jobs": 2,
-    "Revenue": 4672.59,
+    "Revenue": 4672.589999999999,
     "jobs_completed": 9
   },
   {
@@ -76100,7 +76100,7 @@
     "leads": 19,
     "jobs_booked": 9,
     "canceled_jobs": 0,
-    "Revenue": 6645.990000000001,
+    "Revenue": 6645.99,
     "jobs_completed": 10
   },
   {
@@ -76352,7 +76352,7 @@
     "leads": 31,
     "jobs_booked": 8,
     "canceled_jobs": 2,
-    "Revenue": 3026.86,
+    "Revenue": 3026.8600000000006,
     "jobs_completed": 8
   },
   {
@@ -77552,7 +77552,7 @@
     "leads": 31,
     "jobs_booked": 8,
     "canceled_jobs": 0,
-    "Revenue": 3866.6600000000003,
+    "Revenue": 3866.66,
     "jobs_completed": 7
   },
   {
@@ -77768,7 +77768,7 @@
     "leads": 17,
     "jobs_booked": 11,
     "canceled_jobs": 2,
-    "Revenue": 3719.01,
+    "Revenue": 3719.0099999999998,
     "jobs_completed": 7
   },
   {
@@ -77960,7 +77960,7 @@
     "leads": 33,
     "jobs_booked": 11,
     "canceled_jobs": 5,
-    "Revenue": 5443.419999999999,
+    "Revenue": 5443.42,
     "jobs_completed": 10
   },
   {
@@ -78020,7 +78020,7 @@
     "leads": 10,
     "jobs_booked": 3,
     "canceled_jobs": 0,
-    "Revenue": 1998.8,
+    "Revenue": 1998.8000000000002,
     "jobs_completed": 3
   },
   {
@@ -78320,7 +78320,7 @@
     "leads": 29,
     "jobs_booked": 8,
     "canceled_jobs": 3,
-    "Revenue": 3698.18,
+    "Revenue": 3698.1800000000003,
     "jobs_completed": 8
   },
   {
@@ -78416,7 +78416,7 @@
     "leads": 42,
     "jobs_booked": 8,
     "canceled_jobs": 1,
-    "Revenue": 1748.54,
+    "Revenue": 1748.5400000000002,
     "jobs_completed": 4
   },
   {
@@ -78824,7 +78824,7 @@
     "leads": 56,
     "jobs_booked": 17,
     "canceled_jobs": 3,
-    "Revenue": 3707.06,
+    "Revenue": 3707.0600000000004,
     "jobs_completed": 8
   },
   {
@@ -79004,7 +79004,7 @@
     "leads": 27,
     "jobs_booked": 4,
     "canceled_jobs": 0,
-    "Revenue": 2880.3100000000004,
+    "Revenue": 2880.31,
     "jobs_completed": 9
   },
   {
@@ -79184,7 +79184,7 @@
     "leads": 22,
     "jobs_booked": 5,
     "canceled_jobs": 2,
-    "Revenue": 2475.2200000000003,
+    "Revenue": 2475.22,
     "jobs_completed": 4
   },
   {
@@ -79328,7 +79328,7 @@
     "leads": 33,
     "jobs_booked": 12,
     "canceled_jobs": 2,
-    "Revenue": 5658.67,
+    "Revenue": 5658.670000000001,
     "jobs_completed": 9
   },
   {
@@ -79688,7 +79688,7 @@
     "leads": 48,
     "jobs_booked": 10,
     "canceled_jobs": 2,
-    "Revenue": 3323.01,
+    "Revenue": 3323.0099999999998,
     "jobs_completed": 7
   },
   {
@@ -80204,7 +80204,7 @@
     "leads": 54,
     "jobs_booked": 13,
     "canceled_jobs": 3,
-    "Revenue": 6274.750000000001,
+    "Revenue": 6274.75,
     "jobs_completed": 11
   },
   {
@@ -81008,7 +81008,7 @@
     "leads": 17,
     "jobs_booked": 6,
     "canceled_jobs": 3,
-    "Revenue": 4330.72,
+    "Revenue": 4330.719999999999,
     "jobs_completed": 7
   },
   {
@@ -81404,7 +81404,7 @@
     "leads": 21,
     "jobs_booked": 7,
     "canceled_jobs": 0,
-    "Revenue": 3486.6899999999996,
+    "Revenue": 3486.69,
     "jobs_completed": 5
   },
   {
@@ -81536,7 +81536,7 @@
     "leads": 18,
     "jobs_booked": 9,
     "canceled_jobs": 0,
-    "Revenue": 3904.36,
+    "Revenue": 3904.3599999999997,
     "jobs_completed": 9
   },
   {
@@ -81584,7 +81584,7 @@
     "leads": 59,
     "jobs_booked": 11,
     "canceled_jobs": 0,
-    "Revenue": 7060.219999999999,
+    "Revenue": 7060.22,
     "jobs_completed": 13
   },
   {
@@ -81884,7 +81884,7 @@
     "leads": 39,
     "jobs_booked": 10,
     "canceled_jobs": 1,
-    "Revenue": 3648.7299999999996,
+    "Revenue": 3648.73,
     "jobs_completed": 9
   },
   {
@@ -81920,7 +81920,7 @@
     "leads": 11,
     "jobs_booked": 5,
     "canceled_jobs": 1,
-    "Revenue": 1781.82,
+    "Revenue": 1781.8200000000002,
     "jobs_completed": 5
   },
   {
@@ -82292,7 +82292,7 @@
     "leads": 30,
     "jobs_booked": 9,
     "canceled_jobs": 1,
-    "Revenue": 4095.42,
+    "Revenue": 4095.4200000000005,
     "jobs_completed": 10
   },
   {
@@ -82568,7 +82568,7 @@
     "leads": 19,
     "jobs_booked": 8,
     "canceled_jobs": 3,
-    "Revenue": 3271.55,
+    "Revenue": 3271.5499999999997,
     "jobs_completed": 7
   },
   {
@@ -82988,7 +82988,7 @@
     "leads": 40,
     "jobs_booked": 10,
     "canceled_jobs": 3,
-    "Revenue": 3086.06,
+    "Revenue": 3086.0600000000004,
     "jobs_completed": 5
   },
   {
@@ -83288,7 +83288,7 @@
     "leads": 59,
     "jobs_booked": 20,
     "canceled_jobs": 5,
-    "Revenue": 6567.999999999999,
+    "Revenue": 6568,
     "jobs_completed": 13
   },
   {
@@ -83384,7 +83384,7 @@
     "leads": 19,
     "jobs_booked": 6,
     "canceled_jobs": 3,
-    "Revenue": 3874.9999999999995,
+    "Revenue": 3875,
     "jobs_completed": 6
   },
   {
@@ -83588,7 +83588,7 @@
     "leads": 20,
     "jobs_booked": 8,
     "canceled_jobs": 1,
-    "Revenue": 5994.31,
+    "Revenue": 5994.3099999999995,
     "jobs_completed": 12
   },
   {
@@ -84380,7 +84380,7 @@
     "leads": 19,
     "jobs_booked": 11,
     "canceled_jobs": 4,
-    "Revenue": 3023.1099999999997,
+    "Revenue": 3023.11,
     "jobs_completed": 6
   },
   {
@@ -84608,7 +84608,7 @@
     "leads": 16,
     "jobs_booked": 2,
     "canceled_jobs": 0,
-    "Revenue": 3354.11,
+    "Revenue": 3354.1099999999997,
     "jobs_completed": 7
   },
   {
@@ -84644,7 +84644,7 @@
     "leads": 35,
     "jobs_booked": 5,
     "canceled_jobs": 1,
-    "Revenue": 1925.5500000000002,
+    "Revenue": 1925.55,
     "jobs_completed": 4
   },
   {
@@ -85028,7 +85028,7 @@
     "leads": 17,
     "jobs_booked": 6,
     "canceled_jobs": 2,
-    "Revenue": 3631.2300000000005,
+    "Revenue": 3631.23,
     "jobs_completed": 6
   },
   {
@@ -85208,7 +85208,7 @@
     "leads": 30,
     "jobs_booked": 6,
     "canceled_jobs": 1,
-    "Revenue": 3707.5199999999995,
+    "Revenue": 3707.52,
     "jobs_completed": 8
   },
   {
@@ -85292,7 +85292,7 @@
     "leads": 30,
     "jobs_booked": 6,
     "canceled_jobs": 1,
-    "Revenue": 3293.1000000000004,
+    "Revenue": 3293.1,
     "jobs_completed": 6
   },
   {
@@ -85412,7 +85412,7 @@
     "leads": 62,
     "jobs_booked": 13,
     "canceled_jobs": 4,
-    "Revenue": 4670.39,
+    "Revenue": 4670.389999999999,
     "jobs_completed": 9
   },
   {
@@ -85448,7 +85448,7 @@
     "leads": 38,
     "jobs_booked": 9,
     "canceled_jobs": 1,
-    "Revenue": 5043.0199999999995,
+    "Revenue": 5043.02,
     "jobs_completed": 11
   },
   {
@@ -85604,7 +85604,7 @@
     "leads": 20,
     "jobs_booked": 12,
     "canceled_jobs": 1,
-    "Revenue": 3376.8700000000003,
+    "Revenue": 3376.87,
     "jobs_completed": 6
   },
   {
@@ -85820,7 +85820,7 @@
     "leads": 11,
     "jobs_booked": 3,
     "canceled_jobs": 0,
-    "Revenue": 2183.4900000000002,
+    "Revenue": 2183.49,
     "jobs_completed": 5
   },
   {
@@ -86900,7 +86900,7 @@
     "leads": 19,
     "jobs_booked": 6,
     "canceled_jobs": 1,
-    "Revenue": 2023.49,
+    "Revenue": 2023.4899999999998,
     "jobs_completed": 5
   },
   {
@@ -87788,7 +87788,7 @@
     "leads": 39,
     "jobs_booked": 7,
     "canceled_jobs": 2,
-    "Revenue": 5961.6900000000005,
+    "Revenue": 5961.69,
     "jobs_completed": 13
   },
   {
@@ -87884,7 +87884,7 @@
     "leads": 13,
     "jobs_booked": 6,
     "canceled_jobs": 1,
-    "Revenue": 5193.56,
+    "Revenue": 5193.5599999999995,
     "jobs_completed": 9
   },
   {
@@ -87931,7 +87931,7 @@
     "Channel Category": "Core",
     "leads": 21,
     "jobs_booked": 6,
-    "canceled_jobs": 1,
+    "canceled_jobs": 0,
     "Revenue": 3748.79,
     "jobs_completed": 7
   },
@@ -88052,7 +88052,7 @@
     "leads": 42,
     "jobs_booked": 13,
     "canceled_jobs": 2,
-    "Revenue": 4502.530000000001,
+    "Revenue": 4502.53,
     "jobs_completed": 8
   },
   {
@@ -88352,7 +88352,7 @@
     "leads": 62,
     "jobs_booked": 22,
     "canceled_jobs": 2,
-    "Revenue": 6626.009999999999,
+    "Revenue": 6626.01,
     "jobs_completed": 13
   },
   {
@@ -88592,7 +88592,7 @@
     "leads": 31,
     "jobs_booked": 14,
     "canceled_jobs": 3,
-    "Revenue": 3075.37,
+    "Revenue": 3075.3700000000003,
     "jobs_completed": 7
   },
   {
@@ -88663,7 +88663,7 @@
     "Channel Category": "Brand",
     "leads": 9,
     "jobs_booked": 1,
-    "canceled_jobs": 1,
+    "canceled_jobs": 0,
     "Revenue": 699.91,
     "jobs_completed": 1
   },
@@ -88772,7 +88772,7 @@
     "leads": 21,
     "jobs_booked": 4,
     "canceled_jobs": 2,
-    "Revenue": 1559.1800000000003,
+    "Revenue": 1559.18,
     "jobs_completed": 3
   },
   {
@@ -88868,7 +88868,7 @@
     "leads": 23,
     "jobs_booked": 7,
     "canceled_jobs": 2,
-    "Revenue": 4049.0199999999995,
+    "Revenue": 4049.02,
     "jobs_completed": 8
   },
   {
@@ -89648,7 +89648,7 @@
     "leads": 15,
     "jobs_booked": 3,
     "canceled_jobs": 0,
-    "Revenue": 1900.14,
+    "Revenue": 1900.1399999999999,
     "jobs_completed": 5
   },
   {
@@ -89792,7 +89792,7 @@
     "leads": 22,
     "jobs_booked": 7,
     "canceled_jobs": 1,
-    "Revenue": 2593.7300000000005,
+    "Revenue": 2593.73,
     "jobs_completed": 6
   },
   {
@@ -89852,7 +89852,7 @@
     "leads": 16,
     "jobs_booked": 7,
     "canceled_jobs": 1,
-    "Revenue": 2171.0899999999997,
+    "Revenue": 2171.09,
     "jobs_completed": 6
   },
   {
@@ -90019,7 +90019,7 @@
     "Channel Category": "Core",
     "leads": 45,
     "jobs_booked": 10,
-    "canceled_jobs": 2,
+    "canceled_jobs": 3,
     "Revenue": 6348.6900000000005,
     "jobs_completed": 15
   },
@@ -90164,7 +90164,7 @@
     "leads": 24,
     "jobs_booked": 2,
     "canceled_jobs": 2,
-    "Revenue": 3166.62,
+    "Revenue": 3166.6199999999994,
     "jobs_completed": 6
   },
   {
@@ -90403,7 +90403,7 @@
     "Channel Category": "Core",
     "leads": 27,
     "jobs_booked": 10,
-    "canceled_jobs": 4,
+    "canceled_jobs": 3,
     "Revenue": 2010.27,
     "jobs_completed": 5
   },
@@ -90487,7 +90487,7 @@
     "Channel Category": "Core",
     "leads": 39,
     "jobs_booked": 11,
-    "canceled_jobs": 1,
+    "canceled_jobs": 2,
     "Revenue": 4912.27,
     "jobs_completed": 11
   },
@@ -90559,7 +90559,7 @@
     "Channel Category": "Core",
     "leads": 56,
     "jobs_booked": 24,
-    "canceled_jobs": 3,
+    "canceled_jobs": 4,
     "Revenue": 7348.45,
     "jobs_completed": 14
   },
@@ -90596,7 +90596,7 @@
     "leads": 27,
     "jobs_booked": 7,
     "canceled_jobs": 0,
-    "Revenue": 3694.74,
+    "Revenue": 3694.7400000000002,
     "jobs_completed": 7
   },
   {
@@ -90836,7 +90836,7 @@
     "leads": 37,
     "jobs_booked": 16,
     "canceled_jobs": 2,
-    "Revenue": 7808.409999999999,
+    "Revenue": 7808.41,
     "jobs_completed": 18
   },
   {
@@ -91004,7 +91004,7 @@
     "leads": 10,
     "jobs_booked": 1,
     "canceled_jobs": 1,
-    "Revenue": 1812.0099999999998,
+    "Revenue": 1812.01,
     "jobs_completed": 5
   },
   {
@@ -91027,8 +91027,8 @@
     "Channel Category": "Core",
     "leads": 36,
     "jobs_booked": 9,
-    "canceled_jobs": 1,
-    "Revenue": 2955.3400000000006,
+    "canceled_jobs": 3,
+    "Revenue": 2955.34,
     "jobs_completed": 6
   },
   {
@@ -91135,7 +91135,7 @@
     "Channel Category": "Core",
     "leads": 34,
     "jobs_booked": 6,
-    "canceled_jobs": 0,
+    "canceled_jobs": 1,
     "Revenue": 3347.5,
     "jobs_completed": 6
   },
@@ -91195,7 +91195,7 @@
     "Channel Category": "Core",
     "leads": 20,
     "jobs_booked": 8,
-    "canceled_jobs": 1,
+    "canceled_jobs": 2,
     "Revenue": 4152.78,
     "jobs_completed": 6
   },
@@ -91219,7 +91219,7 @@
     "Channel Category": "Referral",
     "leads": 7,
     "jobs_booked": 6,
-    "canceled_jobs": 1,
+    "canceled_jobs": 3,
     "Revenue": 0,
     "jobs_completed": 0
   },
@@ -91292,7 +91292,7 @@
     "leads": 31,
     "jobs_booked": 4,
     "canceled_jobs": 0,
-    "Revenue": 4545.09,
+    "Revenue": 4545.089999999999,
     "jobs_completed": 8
   },
   {
@@ -91315,7 +91315,7 @@
     "Channel Category": "Referral",
     "leads": 10,
     "jobs_booked": 5,
-    "canceled_jobs": 0,
+    "canceled_jobs": 1,
     "Revenue": 0,
     "jobs_completed": 0
   },
@@ -91363,7 +91363,7 @@
     "Channel Category": "Core",
     "leads": 48,
     "jobs_booked": 19,
-    "canceled_jobs": 2,
+    "canceled_jobs": 3,
     "Revenue": 7896.960000000001,
     "jobs_completed": 14
   },
@@ -91411,7 +91411,7 @@
     "Channel Category": "GBL",
     "leads": 9,
     "jobs_booked": 2,
-    "canceled_jobs": 0,
+    "canceled_jobs": 1,
     "Revenue": 0,
     "jobs_completed": 0
   },
@@ -91532,7 +91532,7 @@
     "leads": 26,
     "jobs_booked": 9,
     "canceled_jobs": 0,
-    "Revenue": 4741.27,
+    "Revenue": 4741.2699999999995,
     "jobs_completed": 8
   },
   {
@@ -91543,7 +91543,7 @@
     "Channel Category": "GBL",
     "leads": 12,
     "jobs_booked": 2,
-    "canceled_jobs": 0,
+    "canceled_jobs": 1,
     "Revenue": 0,
     "jobs_completed": 0
   },
@@ -91591,7 +91591,7 @@
     "Channel Category": "Core",
     "leads": 45,
     "jobs_booked": 6,
-    "canceled_jobs": 0,
+    "canceled_jobs": 1,
     "Revenue": 2256.35,
     "jobs_completed": 5
   },
@@ -91688,7 +91688,7 @@
     "leads": 16,
     "jobs_booked": 4,
     "canceled_jobs": 1,
-    "Revenue": 4879.21,
+    "Revenue": 4879.209999999999,
     "jobs_completed": 9
   },
   {
@@ -91735,7 +91735,7 @@
     "Channel Category": "Core",
     "leads": 17,
     "jobs_booked": 6,
-    "canceled_jobs": 0,
+    "canceled_jobs": 1,
     "Revenue": 2791.81,
     "jobs_completed": 5
   },
@@ -91769,11 +91769,11 @@
     "Day": "2026-03-29 00:00:00",
     "market": "Atlanta",
     "Channel Category": "Core",
-    "leads": 32,
+    "leads": 29,
     "jobs_booked": 8,
     "canceled_jobs": 0,
-    "Revenue": 5954.17,
-    "jobs_completed": 8
+    "Revenue": 6835.32,
+    "jobs_completed": 9
   },
   {
     "Month": "2026-03-01 00:00:00",
@@ -91781,7 +91781,7 @@
     "Day": "2026-03-29 00:00:00",
     "market": "Atlanta",
     "Channel Category": "GBL",
-    "leads": 3,
+    "leads": 6,
     "jobs_booked": 0,
     "canceled_jobs": 0,
     "Revenue": 0,
@@ -91805,7 +91805,7 @@
     "Day": "2026-03-29 00:00:00",
     "market": "Austin",
     "Channel Category": "Core",
-    "leads": 15,
+    "leads": 14,
     "jobs_booked": 6,
     "canceled_jobs": 0,
     "Revenue": 1561.47,
@@ -91817,7 +91817,7 @@
     "Day": "2026-03-29 00:00:00",
     "market": "Austin",
     "Channel Category": "GBL",
-    "leads": 1,
+    "leads": 2,
     "jobs_booked": 0,
     "canceled_jobs": 0,
     "Revenue": 0,
@@ -91841,10 +91841,10 @@
     "Day": "2026-03-29 00:00:00",
     "market": "Dallas",
     "Channel Category": "Core",
-    "leads": 28,
+    "leads": 27,
     "jobs_booked": 11,
     "canceled_jobs": 0,
-    "Revenue": 3829.2000000000007,
+    "Revenue": 3829.2,
     "jobs_completed": 8
   },
   {
@@ -91853,9 +91853,9 @@
     "Day": "2026-03-29 00:00:00",
     "market": "Dallas",
     "Channel Category": "GBL",
-    "leads": 4,
+    "leads": 6,
     "jobs_booked": 1,
-    "canceled_jobs": 0,
+    "canceled_jobs": 1,
     "Revenue": 0,
     "jobs_completed": 0
   },
@@ -91867,7 +91867,7 @@
     "Channel Category": "Referral",
     "leads": 8,
     "jobs_booked": 7,
-    "canceled_jobs": 0,
+    "canceled_jobs": 1,
     "Revenue": 0,
     "jobs_completed": 0
   },
@@ -91877,10 +91877,10 @@
     "Day": "2026-03-29 00:00:00",
     "market": "Houston",
     "Channel Category": "Core",
-    "leads": 25,
+    "leads": 22,
     "jobs_booked": 4,
     "canceled_jobs": 0,
-    "Revenue": 4029.56,
+    "Revenue": 4029.5600000000004,
     "jobs_completed": 7
   },
   {
@@ -91889,7 +91889,7 @@
     "Day": "2026-03-29 00:00:00",
     "market": "Houston",
     "Channel Category": "GBL",
-    "leads": 4,
+    "leads": 7,
     "jobs_booked": 0,
     "canceled_jobs": 0,
     "Revenue": 509.46,
@@ -92011,8 +92011,260 @@
     "Channel Category": "Core",
     "leads": 7,
     "jobs_booked": 3,
-    "canceled_jobs": 0,
+    "canceled_jobs": 1,
     "Revenue": 1109.62,
+    "jobs_completed": 2
+  },
+  {
+    "Month": "2026-03-01 00:00:00",
+    "Week": "2026-03-30 00:00:00",
+    "Day": "2026-03-30 00:00:00",
+    "market": "Atlanta",
+    "Channel Category": "Core",
+    "leads": 30,
+    "jobs_booked": 4,
+    "canceled_jobs": 0,
+    "Revenue": 3276.55,
+    "jobs_completed": 6
+  },
+  {
+    "Month": "2026-03-01 00:00:00",
+    "Week": "2026-03-30 00:00:00",
+    "Day": "2026-03-30 00:00:00",
+    "market": "Atlanta",
+    "Channel Category": "GBL",
+    "leads": 3,
+    "jobs_booked": 2,
+    "canceled_jobs": 0,
+    "Revenue": 0,
+    "jobs_completed": 0
+  },
+  {
+    "Month": "2026-03-01 00:00:00",
+    "Week": "2026-03-30 00:00:00",
+    "Day": "2026-03-30 00:00:00",
+    "market": "Atlanta",
+    "Channel Category": "Referral",
+    "leads": 4,
+    "jobs_booked": 2,
+    "canceled_jobs": 0,
+    "Revenue": 441.03,
+    "jobs_completed": 1
+  },
+  {
+    "Month": "2026-03-01 00:00:00",
+    "Week": "2026-03-30 00:00:00",
+    "Day": "2026-03-30 00:00:00",
+    "market": "Austin",
+    "Channel Category": "Core",
+    "leads": 27,
+    "jobs_booked": 7,
+    "canceled_jobs": 0,
+    "Revenue": 3485.38,
+    "jobs_completed": 7
+  },
+  {
+    "Month": "2026-03-01 00:00:00",
+    "Week": "2026-03-30 00:00:00",
+    "Day": "2026-03-30 00:00:00",
+    "market": "Austin",
+    "Channel Category": "GBL",
+    "leads": 3,
+    "jobs_booked": 0,
+    "canceled_jobs": 0,
+    "Revenue": 531.02,
+    "jobs_completed": 1
+  },
+  {
+    "Month": "2026-03-01 00:00:00",
+    "Week": "2026-03-30 00:00:00",
+    "Day": "2026-03-30 00:00:00",
+    "market": "Dallas",
+    "Channel Category": "Brand",
+    "leads": 1,
+    "jobs_booked": 2,
+    "canceled_jobs": 0,
+    "Revenue": 0,
+    "jobs_completed": 0
+  },
+  {
+    "Month": "2026-03-01 00:00:00",
+    "Week": "2026-03-30 00:00:00",
+    "Day": "2026-03-30 00:00:00",
+    "market": "Dallas",
+    "Channel Category": "Core",
+    "leads": 46,
+    "jobs_booked": 18,
+    "canceled_jobs": 0,
+    "Revenue": 7337.19,
+    "jobs_completed": 15
+  },
+  {
+    "Month": "2026-03-01 00:00:00",
+    "Week": "2026-03-30 00:00:00",
+    "Day": "2026-03-30 00:00:00",
+    "market": "Dallas",
+    "Channel Category": "GBL",
+    "leads": 14,
+    "jobs_booked": 3,
+    "canceled_jobs": 0,
+    "Revenue": 284.77,
+    "jobs_completed": 1
+  },
+  {
+    "Month": "2026-03-01 00:00:00",
+    "Week": "2026-03-30 00:00:00",
+    "Day": "2026-03-30 00:00:00",
+    "market": "Dallas",
+    "Channel Category": "Referral",
+    "leads": 5,
+    "jobs_booked": 3,
+    "canceled_jobs": 0,
+    "Revenue": 999.57,
+    "jobs_completed": 1
+  },
+  {
+    "Month": "2026-03-01 00:00:00",
+    "Week": "2026-03-30 00:00:00",
+    "Day": "2026-03-30 00:00:00",
+    "market": "Houston",
+    "Channel Category": "Core",
+    "leads": 31,
+    "jobs_booked": 11,
+    "canceled_jobs": 0,
+    "Revenue": 3473.99,
+    "jobs_completed": 8
+  },
+  {
+    "Month": "2026-03-01 00:00:00",
+    "Week": "2026-03-30 00:00:00",
+    "Day": "2026-03-30 00:00:00",
+    "market": "Houston",
+    "Channel Category": "GBL",
+    "leads": 2,
+    "jobs_booked": 1,
+    "canceled_jobs": 0,
+    "Revenue": 0,
+    "jobs_completed": 0
+  },
+  {
+    "Month": "2026-03-01 00:00:00",
+    "Week": "2026-03-30 00:00:00",
+    "Day": "2026-03-30 00:00:00",
+    "market": "Houston",
+    "Channel Category": "Referral",
+    "leads": 3,
+    "jobs_booked": 2,
+    "canceled_jobs": 0,
+    "Revenue": 436.87,
+    "jobs_completed": 1
+  },
+  {
+    "Month": "2026-03-01 00:00:00",
+    "Week": "2026-03-30 00:00:00",
+    "Day": "2026-03-30 00:00:00",
+    "market": "Louisville",
+    "Channel Category": "Core",
+    "leads": 1,
+    "jobs_booked": 0,
+    "canceled_jobs": 0,
+    "Revenue": 0,
+    "jobs_completed": 0
+  },
+  {
+    "Month": "2026-03-01 00:00:00",
+    "Week": "2026-03-30 00:00:00",
+    "Day": "2026-03-30 00:00:00",
+    "market": "Miami",
+    "Channel Category": "Core",
+    "leads": 14,
+    "jobs_booked": 7,
+    "canceled_jobs": 0,
+    "Revenue": 5327.2,
+    "jobs_completed": 3
+  },
+  {
+    "Month": "2026-03-01 00:00:00",
+    "Week": "2026-03-30 00:00:00",
+    "Day": "2026-03-30 00:00:00",
+    "market": "Nashville",
+    "Channel Category": "Brand",
+    "leads": 0,
+    "jobs_booked": 0,
+    "canceled_jobs": 0,
+    "Revenue": 457.1,
+    "jobs_completed": 1
+  },
+  {
+    "Month": "2026-03-01 00:00:00",
+    "Week": "2026-03-30 00:00:00",
+    "Day": "2026-03-30 00:00:00",
+    "market": "Nashville",
+    "Channel Category": "Core",
+    "leads": 15,
+    "jobs_booked": 5,
+    "canceled_jobs": 0,
+    "Revenue": 1410.8,
+    "jobs_completed": 4
+  },
+  {
+    "Month": "2026-03-01 00:00:00",
+    "Week": "2026-03-30 00:00:00",
+    "Day": "2026-03-30 00:00:00",
+    "market": "Nashville",
+    "Channel Category": "GBL",
+    "leads": 6,
+    "jobs_booked": 1,
+    "canceled_jobs": 0,
+    "Revenue": 0,
+    "jobs_completed": 0
+  },
+  {
+    "Month": "2026-03-01 00:00:00",
+    "Week": "2026-03-30 00:00:00",
+    "Day": "2026-03-30 00:00:00",
+    "market": "Nashville",
+    "Channel Category": "Referral",
+    "leads": 7,
+    "jobs_booked": 3,
+    "canceled_jobs": 0,
+    "Revenue": 440.58,
+    "jobs_completed": 1
+  },
+  {
+    "Month": "2026-03-01 00:00:00",
+    "Week": "2026-03-30 00:00:00",
+    "Day": "2026-03-30 00:00:00",
+    "market": "Orlando",
+    "Channel Category": "Core",
+    "leads": 17,
+    "jobs_booked": 5,
+    "canceled_jobs": 0,
+    "Revenue": 2436.83,
+    "jobs_completed": 6
+  },
+  {
+    "Month": "2026-03-01 00:00:00",
+    "Week": "2026-03-30 00:00:00",
+    "Day": "2026-03-30 00:00:00",
+    "market": "San Antonio",
+    "Channel Category": "Core",
+    "leads": 16,
+    "jobs_booked": 4,
+    "canceled_jobs": 0,
+    "Revenue": 0,
+    "jobs_completed": 0
+  },
+  {
+    "Month": "2026-03-01 00:00:00",
+    "Week": "2026-03-30 00:00:00",
+    "Day": "2026-03-30 00:00:00",
+    "market": "Tampa",
+    "Channel Category": "Core",
+    "leads": 12,
+    "jobs_booked": 3,
+    "canceled_jobs": 1,
+    "Revenue": 858.36,
     "jobs_completed": 2
   }
 ]
