@@ -34,5 +34,11 @@
     "dataset": "fact_nubrakes_technician_daily.json",
     "link": "https://raw.githubusercontent.com/nubrakes-analytics/NuBrakes-Copilot/main/data/fact_nubrakes_technician_daily.json",
     "description": "Daily technician performance dataset with day, week, month, market, technician name, and active status dimensions. Includes revenue, booked revenue, average ticket, jobs per day, AOV completion rate, total repairs, completed jobs with invoice, repairs per job, cancel rate, completed jobs, and days worked. Use this dataset to analyze technician productivity, revenue generation, repair output, job conversion, cancellations, and workday utilization by technician and market."
+  },
+  {
+    "sheet_name": "fact_nubrakes_vioc_referral_daily",
+    "dataset": "fact_nubrakes_vioc_referral_daily.json",
+    "link": "https://raw.githubusercontent.com/nubrakes-analytics/NuBrakes-Copilot/main/data/fact_nubrakes_vioc_referral_daily.json",
+    "description": "Daily VIOC Referral store-level performance dataset containing Day, Month, Week, Store Number, Market, Regional, Area, and Store Manager dimensions, with referral performance and target metrics including Leads, Completed Jobs, Referral Target, Completed Target, and Monthly Referral Target. Use this dataset to analyze daily referral lead volume, completed referral jobs, store-level target attainment, and performance by store, manager, area, region, and market. Best for tracking VIOC referral productivity, comparing store performance, and monitoring progress against daily and monthly referral goals."
   }
 ]
