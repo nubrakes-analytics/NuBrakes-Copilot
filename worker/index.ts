@@ -3965,16 +3965,6 @@ function calcHistoricalPacingForWorker(
   };
 }
 
-  const historicalPct = shares.reduce((a, b) => a + b, 0) / shares.length;
-
-  return {
-    actual: currentActual,
-    projected: historicalPct > 0 ? currentActual / historicalPct : currentActual,
-    pct: historicalPct,
-    method: "historical",
-    sampleSize: shares.length,
-  };
-}
 
 function maybeProjectMetricValue(args: {
   metricId: string;
